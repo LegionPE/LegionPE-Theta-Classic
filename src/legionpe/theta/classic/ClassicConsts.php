@@ -52,22 +52,23 @@ class ClassicConsts{
 		}
 		return 3;
 	}
-	public static function getAutoHeal(Session $session){
-		if($session->isOwner()){
-			return 6;
-		}
-		if($session->isAdmin(false)){
+	/**
+	 * @param Session $session
+	 * @return int number of half seconds
+	 */
+	public static function getAutoHealFrequency(Session $session){
+		if($session->isModerator(false)){
 			return 5;
 		}
-		if($session->isModerator(false)){
-			return 4;
-		}
 		if($session->isVIP()){
-			return 3;
+			return 10;
 		}
 		if($session->isDonator()){
-			return 2;
+			return 12;
 		}
-		return 1;
+		return 15;
+	}
+	public static function getAutoHeal(Session $session){
+		return $session->isVIP() ? 2 : 1;
 	}
 }
