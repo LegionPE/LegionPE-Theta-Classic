@@ -18,27 +18,22 @@
 
 namespace legionpe\theta\classic;
 
-use legionpe\theta\BasePlugin;
-use legionpe\theta\classic\query\ClassicLoginDataQuery;
-use legionpe\theta\classic\query\ClassicSaveSinglePlayerQuery;
-use pocketmine\Player;
+use pocketmine\level\Location;
+use pocketmine\math\Vector3;
+use pocketmine\Server;
 
-class ClassicPlugin extends BasePlugin{
-	const COINS_ON_KILL = 10;
-
-	public function getLoginQueryImpl(){
-		return ClassicLoginDataQuery::class;
+class ClassicConsts{
+	const COOLDOWN_TIMEOUT = 0.7;
+	public static function isSpawn(Vector3 $v){
+		return
+			(110 <= $v->x) and
+			($v->x <= 149) and
+			(-21 <= $v->z) and
+			(11 <= $v->z) and
+			(32 <= $v->y) and
+			($v->y <= 58);
 	}
-	public function getSaveSingleQueryImpl(){
-		return ClassicSaveSinglePlayerQuery::class;
-	}
-	public function sendFirstJoinMessages(Player $player){
-		// TODO: Implement sendFirstJoinMessages() method.
-	}
-	public function query_world(){
-		return "pvp-1";
-	}
-	protected function createSession(Player $player, array $loginData){
-		return new ClassicSession($this, $player, $loginData);
+	public static function getSpawnPosition(Server $server){
+		return new Location(123.5, 65, -2.5, 90.0, 0.0, $server->getLevelByName("world_pvp"));
 	}
 }

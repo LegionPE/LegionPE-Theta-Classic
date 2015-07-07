@@ -35,6 +35,10 @@ use pocketmine\Player;
 class ClassicSession extends Session{
 	/** @var BasePlugin */
 	private $main;
+	/** @var bool */
+	private $friendlyFire;
+	/** @var float */
+	private $lastHurtTime = 0.0;
 	/** @var Block|null */
 	private $lastDamagePosition = null;
 	/** @var float */
@@ -64,9 +68,32 @@ class ClassicSession extends Session{
 		return $this->getLoginDatum("pvp_deaths");
 	}
 	public function onDamage(EntityDamageEvent $event){
-		// TODO check friends
-		// TODO check spawn area
+		if(!parent::onDamage($event)){
+			return false;
+		}
+		$last = $this->lastHurtTime;
+		$this->lastHurtTime = microtime(true);
+		if($this->lastHurtTime - $last < ClassicConsts::COOLDOWN_TIMEOUT){
+			return false;
+		}
 		if($event instanceof EntityDamageByEntityEvent){
+			$fromEnt = $event->getDamager();
+			if($fromEnt instanceof Player){
+				$ses = $this->getMain()->getSession($fromEnt);
+				if($ses instanceof ClassicSession){
+					if(ClassicConsts::isSpawn($fromEnt) or ClassicConsts::isSpawn($this->getPlayer())){
+						return false;
+					}
+					$type = $this->getFriendType($ses->getUid());
+					if($type >= self::FRIEND_LEVEL_GOOD_FRIEND and !$this->isFriendlyFire() and !$ses->isFriendlyFire()){
+						$fromEnt->sendTip($this->translate(Phrases::PVP_ATTACK_FRIENDS, [
+							"target" => $this->getInGameName(),
+							"type" => $this->translate(self::$FRIEND_TYPES[$type])
+						]));
+						return false;
+					}
+				}
+			}
 			$this->lastDamagePosition = $this->getPlayer()->getLevel()->getBlock($this->getPlayer());
 			$this->lastDamageTime = microtime(true);
 		}elseif($event->getCause() === EntityDamageEvent::CAUSE_FALL){
@@ -75,6 +102,22 @@ class ClassicSession extends Session{
 				$this->lastFallCause = $last;
 			}
 		}
+		return true;
+	}
+	public function getMain(){
+		return $this->main;
+	}
+	/**
+	 * @return boolean
+	 */
+	public function isFriendlyFire(){
+		return $this->friendlyFire;
+	}
+	/**
+	 * @param boolean $friendlyFire
+	 */
+	public function setFriendlyFire($friendlyFire){
+		$this->friendlyFire = $friendlyFire;
 	}
 	public function onDeath(PlayerDeathEvent $event){
 		if(!parent::onDeath($event)){
@@ -171,8 +214,5 @@ class ClassicSession extends Session{
 	}
 	public function setCurrentStreak($kills = 0){
 		$this->setLoginDatum("pvp_curstreak", $kills);
-	}
-	public function getMain(){
-		return $this->main;
 	}
 }
