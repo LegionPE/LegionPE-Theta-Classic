@@ -18,6 +18,7 @@
 
 namespace legionpe\theta\classic;
 
+use legionpe\theta\Session;
 use pocketmine\level\Location;
 use pocketmine\math\Vector3;
 use pocketmine\Server;
@@ -35,5 +36,38 @@ class ClassicConsts{
 	}
 	public static function getSpawnPosition(Server $server){
 		return new Location(123.5, 65, -2.5, 90.0, 0.0, $server->getLevelByName("world_pvp"));
+	}
+	public static function getKillHeal(Session $session){
+		if($session->isVIPPlus()){
+			return 15;
+		}
+		if($session->isVIP()){
+			return 10;
+		}
+		if($session->isDonatorPlus()){
+			return 6;
+		}
+		if($session->isDonator()){
+			return 4;
+		}
+		return 3;
+	}
+	public static function getAutoHeal(Session $session){
+		if($session->isOwner()){
+			return 6;
+		}
+		if($session->isAdmin(false)){
+			return 5;
+		}
+		if($session->isModerator(false)){
+			return 4;
+		}
+		if($session->isVIP()){
+			return 3;
+		}
+		if($session->isDonator()){
+			return 2;
+		}
+		return 1;
 	}
 }

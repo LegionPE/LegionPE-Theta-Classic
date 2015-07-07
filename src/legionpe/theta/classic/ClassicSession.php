@@ -29,6 +29,7 @@ use pocketmine\entity\Snowball;
 use pocketmine\event\entity\EntityDamageByChildEntityEvent;
 use pocketmine\event\entity\EntityDamageByEntityEvent;
 use pocketmine\event\entity\EntityDamageEvent;
+use pocketmine\event\entity\EntityRegainHealthEvent;
 use pocketmine\event\player\PlayerDeathEvent;
 use pocketmine\Player;
 
@@ -45,6 +46,7 @@ class ClassicSession extends Session{
 	private $lastDamageTime = 0.0;
 	/** @var EntityDamageByEntityEvent|null */
 	private $lastFallCause = null;
+	private $counter = 0;
 	public function __construct(BasePlugin $main, Player $player, array $loginData){
 		$this->main = $main;
 		parent::__construct($player, $loginData);
@@ -82,6 +84,7 @@ class ClassicSession extends Session{
 				$ses = $this->getMain()->getSession($fromEnt);
 				if($ses instanceof ClassicSession){
 					if(ClassicConsts::isSpawn($fromEnt) or ClassicConsts::isSpawn($this->getPlayer())){
+						$fromEnt->sendTip($ses->translate(Phrases::PVP_ATTACK_SPAWN));
 						return false;
 					}
 					$type = $this->getFriendType($ses->getUid());
@@ -140,6 +143,8 @@ class ClassicSession extends Session{
 				$ks = $this->getMain()->getSession($killer);
 				if($ks instanceof Session){
 					$kn = $ks->getInGameName();
+					$amount = ClassicConsts::getKillHeal($ks);
+					$killer->heal($amount, new EntityRegainHealthEvent($killer, $amount, EntityRegainHealthEvent::CAUSE_CUSTOM));
 				}
 			}
 			if(!isset($kn)){
@@ -214,5 +219,15 @@ class ClassicSession extends Session{
 	}
 	public function setCurrentStreak($kills = 0){
 		$this->setLoginDatum("pvp_curstreak", $kills);
+	}
+	public function halfSecondTick(){
+		parent::halfSecondTick();
+		if((++$this->counter) === 10){
+			$this->counter = 0;
+			if($this->getPlayer()->getHealth() !== $this->getPlayer()->getMaxHealth()){
+				$amount = ClassicConsts::getAutoHeal($this);
+				$this->getPlayer()->heal($amount, new EntityRegainHealthEvent($this->getPlayer(), $amount, EntityRegainHealthEvent::CAUSE_REGEN));
+			}
+		}
 	}
 }
