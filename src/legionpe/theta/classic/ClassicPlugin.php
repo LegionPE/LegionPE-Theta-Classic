@@ -25,7 +25,15 @@ use pocketmine\Player;
 
 class ClassicPlugin extends BasePlugin{
 	const COINS_ON_KILL = 10;
-
+	protected static function defaultLoginData($uid, Player $player){
+		$data = parent::defaultLoginData($uid, $player);
+		$data["pvp_init"] = 0;
+		$data["pvp_kills"] = 0;
+		$data["pvp_deaths"] = 0;
+		$data["pvp_maxstreak"] = 0;
+		$data["pvp_curstreak"] = 0;
+		$data["pvp_kit"] = 0;
+	}
 	public function getLoginQueryImpl(){
 		return ClassicLoginDataQuery::class;
 	}
