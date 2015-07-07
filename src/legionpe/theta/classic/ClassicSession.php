@@ -31,6 +31,13 @@ use pocketmine\event\entity\EntityDamageByEntityEvent;
 use pocketmine\event\entity\EntityDamageEvent;
 use pocketmine\event\entity\EntityRegainHealthEvent;
 use pocketmine\event\player\PlayerDeathEvent;
+use pocketmine\event\player\PlayerRespawnEvent;
+use pocketmine\item\Apple;
+use pocketmine\item\IronBoots;
+use pocketmine\item\IronChestplate;
+use pocketmine\item\IronHelmet;
+use pocketmine\item\IronSword;
+use pocketmine\item\LeatherPants;
 use pocketmine\Player;
 
 class ClassicSession extends Session{
@@ -126,6 +133,7 @@ class ClassicSession extends Session{
 		if(!parent::onDeath($event)){
 			return false;
 		}
+		$event->setDeathMessage("");
 		$this->incrLoginDatum("pvp_deaths");
 		$streak = $this->getCurrentStreak();
 		$maxStreak = $this->getMaximumStreak();
@@ -219,6 +227,22 @@ class ClassicSession extends Session{
 	}
 	public function setCurrentStreak($kills = 0){
 		$this->setLoginDatum("pvp_curstreak", $kills);
+	}
+	public function login($method){
+		parent::login($method);
+		$this->onRespawn(new PlayerRespawnEvent($this->getPlayer(), $this->getPlayer()->getPosition()));
+	}
+	public function onRespawn(PlayerRespawnEvent $event){
+		parent::onRespawn($event);
+		$event->setRespawnPosition(ClassicConsts::getSpawnPosition($this->getMain()->getServer()));
+		$inv = $this->getPlayer()->getInventory();
+		$inv->clearAll();
+		$inv->setHelmet(new IronHelmet);
+		$inv->setChestplate(new IronChestplate);
+		$inv->setLeggings(new LeatherPants);
+		$inv->setBoots(new IronBoots);
+		$inv->addItem(new IronSword, new Apple);
+		$inv->sendContents([$this->getPlayer()]);
 	}
 	public function halfSecondTick(){
 		parent::halfSecondTick();
