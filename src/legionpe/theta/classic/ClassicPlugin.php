@@ -33,6 +33,7 @@ class ClassicPlugin extends BasePlugin{
 		$data["pvp_maxstreak"] = 0;
 		$data["pvp_curstreak"] = 0;
 		$data["pvp_kit"] = 0;
+		return $data;
 	}
 	public function getLoginQueryImpl(){
 		return ClassicLoginDataQuery::class;

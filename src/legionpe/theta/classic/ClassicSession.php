@@ -26,6 +26,8 @@ use pocketmine\block\Block;
 use pocketmine\entity\Egg;
 use pocketmine\entity\Projectile;
 use pocketmine\entity\Snowball;
+use pocketmine\event\block\BlockBreakEvent;
+use pocketmine\event\block\BlockPlaceEvent;
 use pocketmine\event\entity\EntityDamageByChildEntityEvent;
 use pocketmine\event\entity\EntityDamageByEntityEvent;
 use pocketmine\event\entity\EntityDamageEvent;
@@ -62,14 +64,6 @@ class ClassicSession extends Session{
 	public function joinedClassicSince(){
 		return $this->getLoginDatum("pvp_init");
 	}
-	public function addKill(){
-		$this->incrLoginDatum("pvp_kills");
-		$this->grantCoins(ClassicPlugin::COINS_ON_KILL);
-		$this->incrLoginDatum("pvp_curstreak");
-	}
-	public function addDeath(){
-		$this->incrLoginDatum("pvp_deaths");
-	}
 	public function getKills(){
 		return $this->getLoginDatum("pvp_kills");
 	}
@@ -82,16 +76,24 @@ class ClassicSession extends Session{
 		}
 		$last = $this->lastHurtTime;
 		$this->lastHurtTime = microtime(true);
+		if($event->getCause() === EntityDamageEvent::CAUSE_SUICIDE){
+			return true;
+		}
 		if($this->lastHurtTime - $last < ClassicConsts::COOLDOWN_TIMEOUT){
+			return false;
+		}
+		if(ClassicConsts::isSpawn($this->getPlayer())){
 			return false;
 		}
 		if($event instanceof EntityDamageByEntityEvent){
 			$fromEnt = $event->getDamager();
 			if($fromEnt instanceof Player){
+				if(ClassicConsts::isSpawn($fromEnt)){
+					return false;
+				}
 				$ses = $this->getMain()->getSession($fromEnt);
 				if($ses instanceof ClassicSession){
 					if(ClassicConsts::isSpawn($fromEnt) or ClassicConsts::isSpawn($this->getPlayer())){
-						$fromEnt->sendTip($ses->translate(Phrases::PVP_ATTACK_SPAWN));
 						return false;
 					}
 					$type = $this->getFriendType($ses->getUid());
@@ -141,6 +143,7 @@ class ClassicSession extends Session{
 		$this->setMaximumStreak(max($streak, $maxStreak));
 		$this->setCurrentStreak();
 		$cause = $this->getPlayer()->getLastDamageCause();
+		$this->addDeath();
 		if(!($cause instanceof EntityDamageEvent)){
 			$this->send(Phrases::PVP_DEATH_GENERIC);
 			return true;
@@ -173,9 +176,10 @@ class ClassicSession extends Session{
 				}
 			}
 			$this->send(Phrases::PVP_DEATH_KILLED, $data);
-			if(isset($ks) and ($ks instanceof Session)){
+			if(isset($ks) and ($ks instanceof ClassicSession)){
 				$data["victim"] = $this->getInGameName();
 				$ks->send(Phrases::PVP_KILL_KILLED, $data);
+				$ks->addKill();
 			}
 		}elseif($cause->getCause() === EntityDamageEvent::CAUSE_FALL and microtime(true) - $this->lastDamageTime < 2.5){
 			$knock = $this->lastFallCause;
@@ -199,7 +203,7 @@ class ClassicSession extends Session{
 				MUtils::word_camelToStd($kn);
 				MUtils::word_addSingularArticle($kn);
 			}
-			$data = ["killer" => $kn, "victim" => $this->getInGameName()];
+			$data = ["killer" => $kn, "victim" => $this->getInGameName(), "action" => $this->translate(Phrases::PVP_ACTION_GENERIC)];
 			if($knock instanceof EntityDamageByChildEntityEvent){
 				$child = $knock->getChild();
 				if($child instanceof Snowball){
@@ -211,8 +215,9 @@ class ClassicSession extends Session{
 				}
 			}
 			$this->send($deathPhrase, $data);
-			if(isset($ks) and $ks instanceof Session){
+			if(isset($ks) and $ks instanceof ClassicSession){
 				$ks->send($killPhrase, $data);
+				$ks->addKill();
 			}
 		}
 		return true;
@@ -229,6 +234,14 @@ class ClassicSession extends Session{
 	public function setCurrentStreak($kills = 0){
 		$this->setLoginDatum("pvp_curstreak", $kills);
 	}
+	public function addDeath(){
+		$this->incrLoginDatum("pvp_deaths");
+	}
+	public function addKill(){
+		$this->incrLoginDatum("pvp_kills");
+		$this->grantCoins(ClassicPlugin::COINS_ON_KILL);
+		$this->incrLoginDatum("pvp_curstreak");
+	}
 	public function login($method){
 		parent::login($method);
 		$this->onRespawn(new PlayerRespawnEvent($this->getPlayer(), $this->getPlayer()->getPosition()));
@@ -236,6 +249,7 @@ class ClassicSession extends Session{
 	public function onRespawn(PlayerRespawnEvent $event){
 		parent::onRespawn($event);
 		$event->setRespawnPosition(ClassicConsts::getSpawnPosition($this->getMain()->getServer()));
+		$this->getPlayer()->teleport(ClassicConsts::getSpawnPosition($this->getMain()->getServer()));
 		$inv = $this->getPlayer()->getInventory();
 		$inv->clearAll();
 		$inv->setHelmet(new IronHelmet);
@@ -244,6 +258,18 @@ class ClassicSession extends Session{
 		$inv->setBoots(new IronBoots);
 		$inv->addItem(new IronSword, new Apple);
 		$inv->sendContents([$this->getPlayer()]);
+	}
+	public function onPlace(BlockPlaceEvent $event){
+		if(!parent::onPlace($event)){
+			return false;
+		}
+		return $this->isBuilder();
+	}
+	public function onBreak(BlockBreakEvent $event){
+		if(!parent::onBreak($event)){
+			return false;
+		}
+		return $this->isBuilder();
 	}
 	public function halfSecondTick(){
 		parent::halfSecondTick();
