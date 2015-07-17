@@ -56,7 +56,9 @@ class ClassicSession extends Session{
 	public function __construct(BasePlugin $main, Player $player, array $loginData){
 		$this->main = $main;
 		parent::__construct($player, $loginData);
-		$this->setLoginDatum("pvp_init", time());
+		if(!$this->getLoginDatum("pvp_init")){
+			$this->setLoginDatum("pvp_init", time());
+		}
 	}
 	public function joinedClassicSince(){
 		return $this->getLoginDatum("pvp_init");
@@ -235,9 +237,10 @@ class ClassicSession extends Session{
 		$this->incrLoginDatum("pvp_deaths");
 	}
 	public function addKill(){
-		$this->incrLoginDatum("pvp_kills");
-		$this->grantCoins(ClassicPlugin::COINS_ON_KILL);
-		$this->incrLoginDatum("pvp_curstreak");
+		$kills = $this->incrLoginDatum("pvp_kills");
+		list($add, $final) = $this->grantCoins(ClassicPlugin::COINS_ON_KILL);
+		$streak = $this->incrLoginDatum("pvp_curstreak");
+		$this->send(Phrases::PVP_KILL_INFO, ["literal" => $kills, "ord" => MUtils::num_getOrdinal($kills), "streak" => $streak, "streakord" => MUtils::num_getOrdinal($streak), "coins" => $final, "added" => $add]);
 	}
 	public function login($method){
 		parent::login($method);

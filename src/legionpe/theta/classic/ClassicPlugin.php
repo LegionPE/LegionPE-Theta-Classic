@@ -24,7 +24,7 @@ class ClassicPlugin extends BasePlugin{
 	const COINS_ON_KILL = 10;
 	protected static function defaultLoginData($uid, Player $player){
 		$data = parent::defaultLoginData($uid, $player);
-		$data["pvp_init"] = 0;
+		$data["pvp_init"] = time();
 		$data["pvp_kills"] = 0;
 		$data["pvp_deaths"] = 0;
 		$data["pvp_maxstreak"] = 0;
