@@ -137,7 +137,6 @@ class ClassicSession extends Session{
 		}
 		$event->setDeathMessage("");
 		$event->setDrops([]);
-		$this->incrLoginDatum("pvp_deaths");
 		$streak = $this->getCurrentStreak();
 		$maxStreak = $this->getMaximumStreak();
 		$this->setMaximumStreak(max($streak, $maxStreak));
@@ -268,7 +267,7 @@ class ClassicSession extends Session{
 		$inv->setChestplate(new IronChestplate);
 		$inv->setLeggings(new LeatherPants);
 		$inv->setBoots(new IronBoots);
-		$inv->addItem(new IronSword, new Apple);
+		$inv->addItem(new IronSword, new Apple(0, 64));
 		$inv->sendContents([$this->getPlayer()]);
 	}
 	public function onPlace(BlockPlaceEvent $event){
