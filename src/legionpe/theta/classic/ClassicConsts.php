@@ -23,10 +23,8 @@ use pocketmine\Server;
 class ClassicConsts{
 	const COOLDOWN_TIMEOUT = 0.7;
 	public static function isSpawn(Vector3 $v){
-//		MainLogger::$logger->alert("Checking $v->x:$v->y:$v->z against spawn");
 		$result = (((110 <= $v->x) and ($v->x <= 149) and (-21 <= $v->z) and ($v->z <= 11)) or
 			((32 <= $v->y) and ($v->y <= 58) and (126 <= $v->x) and ($v->x <= 153) and (-16 <= $v->z) and ($v->z <= 11)));
-//		var_dump($result);
 		return $result;
 	}
 	public static function getSpawnPosition(Server $server){

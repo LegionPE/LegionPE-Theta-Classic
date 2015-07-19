@@ -73,15 +73,11 @@ class ClassicSession extends Session{
 		if(!parent::onDamage($event)){
 			return false;
 		}
-		$last = $this->lastHurtTime;
-		$this->lastHurtTime = microtime(true);
 		if($event->getCause() === EntityDamageEvent::CAUSE_SUICIDE){
 			return true;
 		}
-		if($this->lastHurtTime - $last < ClassicConsts::COOLDOWN_TIMEOUT){
-			return false;
-		}
 		if(ClassicConsts::isSpawn($this->getPlayer())){
+			$this->getPlayer()->sendTip($this->translate(Phrases::PVP_ATTACK_SPAWN));
 			return false;
 		}
 		if($event instanceof EntityDamageByEntityEvent){
@@ -103,6 +99,11 @@ class ClassicSession extends Session{
 						]));
 						return false;
 					}
+					$now = microtime(true);
+					if($now - $this->lastHurtTime < ClassicConsts::COOLDOWN_TIMEOUT){
+						return false;
+					}
+					$this->lastHurtTime = microtime(true);
 				}
 			}
 			$this->lastDamagePosition = $this->getPlayer()->getLevel()->getBlock($this->getPlayer());
@@ -233,14 +234,25 @@ class ClassicSession extends Session{
 	public function setCurrentStreak($kills = 0){
 		$this->setLoginDatum("pvp_curstreak", $kills);
 	}
-	public function addDeath(){
-		$this->incrLoginDatum("pvp_deaths");
-	}
 	public function addKill(){
 		$kills = $this->incrLoginDatum("pvp_kills");
 		list($add, $final) = $this->grantCoins(ClassicPlugin::COINS_ON_KILL);
 		$streak = $this->incrLoginDatum("pvp_curstreak");
-		$this->send(Phrases::PVP_KILL_INFO, ["literal" => $kills, "ord" => MUtils::num_getOrdinal($kills), "streak" => $streak, "streakord" => MUtils::num_getOrdinal($streak), "coins" => $final, "added" => $add]);
+		$this->send(Phrases::PVP_KILL_INFO, [
+			"literal" => $kills,
+			"ord" => $kills . MUtils::num_getOrdinal($kills),
+			"streak" => $streak,
+			"streakord" => $streak . MUtils::num_getOrdinal($streak),
+			"coins" => $final,
+			"added" => $add
+		]);
+	}
+	public function addDeath(){
+		$deaths = $this->incrLoginDatum("pvp_deaths");
+		$this->send(Phrases::PVP_DEATH_INFO, [
+			"literal" => $deaths,
+			"ord" => $deaths . MUtils::num_getOrdinal($deaths)
+		]);
 	}
 	public function login($method){
 		parent::login($method);
