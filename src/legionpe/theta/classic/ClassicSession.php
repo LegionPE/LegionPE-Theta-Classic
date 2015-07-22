@@ -32,10 +32,12 @@ use pocketmine\event\entity\EntityRegainHealthEvent;
 use pocketmine\event\player\PlayerDeathEvent;
 use pocketmine\event\player\PlayerRespawnEvent;
 use pocketmine\item\Apple;
+use pocketmine\item\Bow;
 use pocketmine\item\IronBoots;
 use pocketmine\item\IronChestplate;
 use pocketmine\item\IronHelmet;
 use pocketmine\item\IronSword;
+use pocketmine\item\Item;
 use pocketmine\item\LeatherPants;
 use pocketmine\Player;
 
@@ -267,7 +269,15 @@ class ClassicSession extends Session{
 		$inv->setChestplate(new IronChestplate);
 		$inv->setLeggings(new LeatherPants);
 		$inv->setBoots(new IronBoots);
-		$inv->addItem(new IronSword, new Apple(0, 64));
+//		$inv->addItem(new IronSword, new Apple(0, 64), new Bow);
+		$inv->setItem(0, new Bow);
+		$inv->setItem(1, new IronSword);
+		$inv->setItem(2, new Apple(0, 32));
+		$inv->setItem(3, Item::get(Item::ARROW, 0, 32));
+		$inv->setHotbarSlotIndex(0, 0);
+		$inv->setHotbarSlotIndex(1, 1);
+		$inv->setHotbarSlotIndex(2, 2);
+		$inv->setHotbarSlotIndex(3, 3);
 		$inv->sendContents([$this->getPlayer()]);
 	}
 	public function onPlace(BlockPlaceEvent $event){
