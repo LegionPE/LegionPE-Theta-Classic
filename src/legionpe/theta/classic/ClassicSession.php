@@ -118,6 +118,9 @@ class ClassicSession extends Session{
 		}
 		return true;
 	}
+	/**
+	 * @return ClassicPlugin
+	 */
 	public function getMain(){
 		return $this->main;
 	}
@@ -261,15 +264,20 @@ class ClassicSession extends Session{
 	}
 	public function onRespawn(PlayerRespawnEvent $event){
 		parent::onRespawn($event);
-		$event->setRespawnPosition(ClassicConsts::getSpawnPosition($this->getMain()->getServer()));
-		$this->getPlayer()->teleport(ClassicConsts::getSpawnPosition($this->getMain()->getServer()));
+		$spawn = ClassicConsts::getSpawnPosition($this->getMain()->getServer());
+		$this->getPlayer()->setSpawn($spawn);
+		$event->setRespawnPosition($spawn);
+		$this->getPlayer()->teleport($spawn);
+		$this->equip();
+	}
+	protected function equip(){
 		$inv = $this->getPlayer()->getInventory();
 		$inv->clearAll();
 		$inv->setHelmet(new IronHelmet);
 		$inv->setChestplate(new IronChestplate);
 		$inv->setLeggings(new LeatherPants);
 		$inv->setBoots(new IronBoots);
-//		$inv->addItem(new IronSword, new Apple(0, 64), new Bow);
+		$inv->sendArmorContents([$this->getPlayer()]);
 		$inv->setItem(0, new Bow);
 		$inv->setItem(1, new IronSword);
 		$inv->setItem(2, new Apple(0, 32));
