@@ -79,20 +79,19 @@ class ClassicSession extends Session{
 			return true;
 		}
 		if(ClassicConsts::isSpawn($this->getPlayer())){
-			$this->getPlayer()->sendTip($this->translate(Phrases::PVP_ATTACK_SPAWN));
 			return false;
 		}
 		if($event instanceof EntityDamageByEntityEvent){
 			$fromEnt = $event->getDamager();
 			if($fromEnt instanceof Player){
+				$ses = $this->getMain()->getSession($fromEnt);
 				if(ClassicConsts::isSpawn($fromEnt)){
+					if($ses instanceof ClassicSession){
+						$fromEnt->sendTip($ses->translate(Phrases::PVP_ATTACK_SPAWN));
+					}
 					return false;
 				}
-				$ses = $this->getMain()->getSession($fromEnt);
 				if($ses instanceof ClassicSession){
-					if(ClassicConsts::isSpawn($fromEnt) or ClassicConsts::isSpawn($this->getPlayer())){
-						return false;
-					}
 					$type = $this->getFriendType($ses->getUid());
 					if($type >= self::FRIEND_LEVEL_GOOD_FRIEND and !$this->isFriendlyFire() and !$ses->isFriendlyFire()){
 						$fromEnt->sendTip($this->translate(Phrases::PVP_ATTACK_FRIENDS, [
