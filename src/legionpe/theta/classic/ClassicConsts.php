@@ -21,7 +21,7 @@ use pocketmine\math\Vector3;
 use pocketmine\Server;
 
 class ClassicConsts{
-	const COOLDOWN_TIMEOUT = 0.7;
+	const DEFAULT_COOLDOWN_TIMEOUT = 0.7;
 	public static function isSpawn(Vector3 $v){
 		$result = (((110 <= $v->x) and ($v->x <= 149) and (-21 <= $v->z) and ($v->z <= 11)) or
 			((32 <= $v->y) and ($v->y <= 58) and (126 <= $v->x) and ($v->x <= 153) and (-16 <= $v->z) and ($v->z <= 11)));

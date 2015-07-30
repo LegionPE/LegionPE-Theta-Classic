@@ -47,7 +47,7 @@ class ClassicSession extends Session{
 	/** @var bool */
 	private $friendlyFire;
 	/** @var float */
-	private $lastHurtTime = 0.0;
+	public $lastHurtTime = 0.0, $nextCooldownTimeout = 0.0;
 	/** @var Block|null */
 	private $lastDamagePosition = null;
 	/** @var float */
@@ -101,10 +101,11 @@ class ClassicSession extends Session{
 						return false;
 					}
 					$now = microtime(true);
-					if($now - $this->lastHurtTime < ClassicConsts::COOLDOWN_TIMEOUT){
+					if($now - $this->lastHurtTime < $this->nextCooldownTimeout){
 						return false;
 					}
 					$this->lastHurtTime = microtime(true);
+					$this->nextCooldownTimeout = ClassicConsts::DEFAULT_COOLDOWN_TIMEOUT;
 				}
 			}
 			$this->lastDamagePosition = $this->getPlayer()->getLevel()->getBlock($this->getPlayer());
@@ -268,6 +269,8 @@ class ClassicSession extends Session{
 		$event->setRespawnPosition($spawn);
 		$this->getPlayer()->teleport($spawn);
 		$this->equip();
+		$this->getPlayer()->setMaxHealth(40);
+		$this->getPlayer()->setHealth(40);
 	}
 	protected function equip(){
 		$inv = $this->getPlayer()->getInventory();
