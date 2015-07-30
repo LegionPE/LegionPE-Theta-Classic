@@ -51,7 +51,7 @@ class ClassicSession extends Session{
 	/** @var Block|null */
 	private $lastDamagePosition = null;
 	/** @var float */
-	private $lastDamageTime = 0.0;
+	private $lastKillTime = 0.0, $nextKillstreakTimeout = ClassicConsts::KILLSTREAK_TIMEOUT_BASE, $lastDamageTime = 0.0;
 	/** @var EntityDamageByEntityEvent|null */
 	private $lastFallCause = null;
 	private $counter = 0;
@@ -241,7 +241,11 @@ class ClassicSession extends Session{
 	public function addKill(){
 		$kills = $this->incrLoginDatum("pvp_kills");
 		list($add, $final) = $this->grantCoins(ClassicPlugin::COINS_ON_KILL);
-		$streak = $this->incrLoginDatum("pvp_curstreak");
+		if(microtime(true) - $this->lastKillTime < $this->nextKillstreakTimeout){
+			$streak = $this->incrLoginDatum("pvp_curstreak");
+		}else{
+			$this->setLoginDatum("pvp_curstreak", $streak = 1);
+		}
 		$this->send(Phrases::PVP_KILL_INFO, [
 			"literal" => $kills,
 			"ord" => $kills . MUtils::num_getOrdinal($kills),
