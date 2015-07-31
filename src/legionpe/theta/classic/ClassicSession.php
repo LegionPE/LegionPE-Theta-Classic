@@ -20,7 +20,6 @@ use legionpe\theta\lang\Phrases;
 use legionpe\theta\Session;
 use legionpe\theta\utils\MUtils;
 use pocketmine\block\Block;
-use pocketmine\entity\Effect;
 use pocketmine\entity\Egg;
 use pocketmine\entity\Projectile;
 use pocketmine\entity\Snowball;
@@ -274,13 +273,10 @@ class ClassicSession extends Session{
 	}
 	public function onRespawn(PlayerRespawnEvent $event){
 		parent::onRespawn($event);
-		$spawn = ClassicConsts::getSpawnPosition($this->getMain()->getServer());
-		$event->setRespawnPosition($spawn);
-		$this->getPlayer()->teleport($spawn);
-		$this->equip();
-		$this->getPlayer()->addEffect(Effect::getEffect(Effect::HEALTH_BOOST)->setDuration(0x7FFFFF)->setVisible(false)->setAmplifier(9));
+		$event->setRespawnPosition(ClassicConsts::getSpawnPosition($this->getMain()->getServer()));
+		$this->getMain()->getServer()->getScheduler()->scheduleDelayedTask(new PostRespawnTask($this->getMain(), $this), 2);
 	}
-	protected function equip(){
+	public function equip(){
 		$inv = $this->getPlayer()->getInventory();
 		$inv->clearAll();
 		$inv->setHelmet(new IronHelmet);
