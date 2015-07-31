@@ -20,6 +20,7 @@ use legionpe\theta\lang\Phrases;
 use legionpe\theta\Session;
 use legionpe\theta\utils\MUtils;
 use pocketmine\block\Block;
+use pocketmine\entity\Effect;
 use pocketmine\entity\Egg;
 use pocketmine\entity\Projectile;
 use pocketmine\entity\Snowball;
@@ -72,6 +73,10 @@ class ClassicSession extends Session{
 		return $this->getLoginDatum("pvp_deaths");
 	}
 	public function onDamage(EntityDamageEvent $event){
+		$event->setDamage($event->getDamage() * 1.5);
+		if($event->isApplicable(EntityDamageEvent::MODIFIER_ARMOR)){
+			$event->setDamage($event->getDamage(EntityDamageEvent::MODIFIER_ARMOR) * 1.5, EntityDamageEvent::MODIFIER_ARMOR);
+		}
 		if(!parent::onDamage($event)){
 			return false;
 		}
@@ -264,17 +269,16 @@ class ClassicSession extends Session{
 	}
 	public function login($method){
 		parent::login($method);
+		$this->getPlayer()->setSpawn(ClassicConsts::getSpawnPosition($this->getMain()->getServer()));
 		$this->onRespawn(new PlayerRespawnEvent($this->getPlayer(), $this->getPlayer()->getPosition()));
 	}
 	public function onRespawn(PlayerRespawnEvent $event){
 		parent::onRespawn($event);
 		$spawn = ClassicConsts::getSpawnPosition($this->getMain()->getServer());
-		$this->getPlayer()->setSpawn($spawn);
 		$event->setRespawnPosition($spawn);
 		$this->getPlayer()->teleport($spawn);
 		$this->equip();
-		$this->getPlayer()->setMaxHealth(40);
-		$this->getPlayer()->setHealth(40);
+		$this->getPlayer()->addEffect(Effect::getEffect(Effect::HEALTH_BOOST)->setDuration(0x7FFFFF)->setVisible(false)->setAmplifier(9));
 	}
 	protected function equip(){
 		$inv = $this->getPlayer()->getInventory();
