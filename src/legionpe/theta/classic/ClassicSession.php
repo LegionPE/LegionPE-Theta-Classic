@@ -274,7 +274,7 @@ class ClassicSession extends Session{
 	public function onRespawn(PlayerRespawnEvent $event){
 		parent::onRespawn($event);
 		$event->setRespawnPosition(ClassicConsts::getSpawnPosition($this->getMain()->getServer()));
-		$this->getMain()->getServer()->getScheduler()->scheduleDelayedTask(new PostRespawnTask($this->getMain(), $this), 2);
+		$this->getMain()->getServer()->getScheduler()->scheduleDelayedTask(new PostRespawnTask($this->getMain(), $this), 10);
 	}
 	public function equip(){
 		$inv = $this->getPlayer()->getInventory();
