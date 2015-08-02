@@ -306,7 +306,7 @@ class ClassicSession extends Session{
 		parent::halfSecondTick();
 		if((++$this->counter) === 10){
 			$this->counter = 0;
-			if($this->getPlayer()->getHealth() !== $this->getPlayer()->getMaxHealth()){
+			if(!$this->getPlayer()->getHealth() > 0 and $this->getPlayer()->getHealth() !== $this->getPlayer()->getMaxHealth()){
 				$amount = ClassicConsts::getAutoHeal($this);
 				$this->getPlayer()->heal($amount, new EntityRegainHealthEvent($this->getPlayer(), $amount, EntityRegainHealthEvent::CAUSE_REGEN));
 			}
