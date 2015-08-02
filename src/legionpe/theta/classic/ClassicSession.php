@@ -72,10 +72,6 @@ class ClassicSession extends Session{
 		return $this->getLoginDatum("pvp_deaths");
 	}
 	public function onDamage(EntityDamageEvent $event){
-		$event->setDamage($event->getDamage() * 1.5);
-		if($event->isApplicable(EntityDamageEvent::MODIFIER_ARMOR)){
-			$event->setDamage($event->getDamage(EntityDamageEvent::MODIFIER_ARMOR) * 1.5, EntityDamageEvent::MODIFIER_ARMOR);
-		}
 		if(!parent::onDamage($event)){
 			return false;
 		}
