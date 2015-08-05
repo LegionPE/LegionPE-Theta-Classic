@@ -31,7 +31,6 @@ use pocketmine\event\entity\EntityDamageEvent;
 use pocketmine\event\entity\EntityRegainHealthEvent;
 use pocketmine\event\player\PlayerDeathEvent;
 use pocketmine\event\player\PlayerRespawnEvent;
-use pocketmine\item\Apple;
 use pocketmine\item\Bow;
 use pocketmine\item\IronBoots;
 use pocketmine\item\IronChestplate;
@@ -297,7 +296,7 @@ class ClassicSession extends Session{
 		$inv->sendArmorContents([$this->getPlayer()]);
 		$inv->setItem(0, new Bow);
 		$inv->setItem(1, new IronSword);
-		$inv->setItem(2, new Apple(0, 32));
+		$inv->setItem(2, Item::get(Item::BAKED_POTATO, 0, 32));
 		$inv->setItem(3, Item::get(Item::ARROW, 0, 32));
 		$inv->setHotbarSlotIndex(0, 0);
 		$inv->setHotbarSlotIndex(1, 1);

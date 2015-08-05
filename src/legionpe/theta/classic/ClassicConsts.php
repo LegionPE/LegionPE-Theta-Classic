@@ -33,18 +33,18 @@ class ClassicConsts{
 	}
 	public static function getKillHeal(Session $session){
 		if($session->isVIPPlus()){
-			return 15;
+			return 38;
 		}
 		if($session->isVIP()){
-			return 10;
+			return 30;
 		}
 		if($session->isDonatorPlus()){
-			return 6;
+			return 20;
 		}
 		if($session->isDonator()){
-			return 4;
+			return 15;
 		}
-		return 3;
+		return 10;
 	}
 	/**
 	 * @param Session $session
