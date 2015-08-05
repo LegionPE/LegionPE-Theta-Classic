@@ -44,6 +44,8 @@ use pocketmine\Player;
 class ClassicSession extends Session{
 	/** @var BasePlugin */
 	private $main;
+	/** @var int */
+	private $globalRank = 0;
 	/** @var bool */
 	private $friendlyFire;
 	/** @var float */
@@ -262,6 +264,18 @@ class ClassicSession extends Session{
 			"ord" => $deaths . MUtils::num_getOrdinal($deaths)
 		]);
 	}
+	/**
+	 * @return int
+	 */
+	public function getGlobalRank(){
+		return $this->globalRank;
+	}
+	/**
+	 * @param int $globalRank
+	 */
+	public function setGlobalRank($globalRank){
+		$this->globalRank = $globalRank;
+	}
 	public function login($method){
 		parent::login($method);
 		$this->getPlayer()->setSpawn(ClassicConsts::getSpawnPosition($this->getMain()->getServer()));
@@ -311,5 +325,8 @@ class ClassicSession extends Session{
 				$this->getPlayer()->heal($amount, new EntityRegainHealthEvent($this->getPlayer(), $amount, EntityRegainHealthEvent::CAUSE_REGEN));
 			}
 		}
+	}
+	protected function chatPrefix(){
+		return Phrases::VAR_symbol . "{" . Phrases::VAR_verbosemid . "#$this->globalRank" . Phrases::VAR_symbol . "}";
 	}
 }

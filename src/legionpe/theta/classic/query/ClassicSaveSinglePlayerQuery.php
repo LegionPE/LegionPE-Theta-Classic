@@ -20,16 +20,26 @@ use legionpe\theta\query\SaveSinglePlayerQuery;
 use legionpe\theta\Session;
 
 class ClassicSaveSinglePlayerQuery extends SaveSinglePlayerQuery{
+	private $kills;
 	public function getColumns(Session $session, $status){
 		$cols = parent::getColumns($session, $status);
 		if(!($session instanceof ClassicSession)){
 			return $cols; // shouldn't happen
 		}
 		$cols["pvp_init"] = ["v" => $session->joinedClassicSince(), "noupdate" => true];
-		$cols["pvp_kills"] = $session->getKills();
+		$cols["pvp_kills"] = $this->kills = $session->getKills();
 		$cols["pvp_deaths"] = $session->getDeaths();
-		$cols["pvp_curstreak"] = $session->getCurrentStreak();
+		$cols["pvp_curstreak"] = 0;
 		$cols["pvp_maxstreak"] = $session->getMaximumStreak();
 		return $cols;
+	}
+	public function onPreQuery(\mysqli $db){
+		$db->query($this->getUpdateQuery());
+	}
+	public function getQuery(){
+		return "SELECT COUNT(*) + 1 AS rank FROM users WHERE pvp_kills > $this->kills";
+	}
+	public function getResultType(){
+		return self::TYPE_ASSOC;
 	}
 }
