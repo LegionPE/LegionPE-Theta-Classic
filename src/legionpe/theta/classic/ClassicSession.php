@@ -224,6 +224,7 @@ class ClassicSession extends Session{
 			if(isset($ks) and $ks instanceof ClassicSession){
 				$ks->send($killPhrase, $data);
 				$ks->addKill();
+				$ks->killRewards();
 			}
 		}
 		return true;
@@ -328,8 +329,11 @@ class ClassicSession extends Session{
 	}
 	protected function chatPrefix(){
 		if($this->globalRank > 0){
-			return Phrases::VAR_symbol . "{" . Phrases::VAR_verbosemid . "#$this->globalRank" . Phrases::VAR_symbol . "}";
+			return Phrases::VAR_symbol . "{" . Phrases::VAR_em . $this->getKills() . Phrases::VAR_symbol . "#" . Phrases::VAR_em2 . "$this->globalRank" . Phrases::VAR_symbol . "}";
 		}
 		return "";
+	}
+	public function killRewards(){
+		$this->getPlayer()->getInventory()->addItem(Item::get(Item::ARROW, 0, 8));
 	}
 }
