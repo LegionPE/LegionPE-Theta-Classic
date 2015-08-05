@@ -42,4 +42,9 @@ class ClassicSaveSinglePlayerQuery extends SaveSinglePlayerQuery{
 	public function getResultType(){
 		return self::TYPE_ASSOC;
 	}
+	public function getExpectedColumns(){
+		return [
+			"rank" => self::COL_STRING
+		];
+	}
 }
