@@ -58,4 +58,7 @@ class ClassicSaveSinglePlayerQuery extends SaveSinglePlayerQuery{
 			$ses->setGlobalRank($this->getResult()["result"]["rank"]);
 		}
 	}
+	public function reportDebug(){
+		return false;
+	}
 }

@@ -39,6 +39,9 @@ use pocketmine\item\IronSword;
 use pocketmine\item\Item;
 use pocketmine\item\LeatherPants;
 use pocketmine\Player;
+use pocketmine\utils\TextFormat;
+
+const ENABLE_HEALTHBAR = true;
 
 class ClassicSession extends Session{
 	/** @var BasePlugin */
@@ -117,6 +120,7 @@ class ClassicSession extends Session{
 				$this->lastFallCause = $last;
 			}
 		}
+		$this->getPlayer()->setNameTag($this->calculateNameTag());
 		return true;
 	}
 	/**
@@ -334,5 +338,12 @@ class ClassicSession extends Session{
 	}
 	public function killRewards(){
 		$this->getPlayer()->getInventory()->addItem(Item::get(Item::ARROW, 0, 8));
+	}
+	public function calculateNameTag($nameColor = TextFormat::WHITE){
+		$out = parent::calculateNameTag();
+		if(ENABLE_HEALTHBAR){
+			$out .= "\n" . TextFormat::DARK_GREEN . ($this->getPlayer()->getHealth() / 2) . " / " . ($this->getPlayer()->getMaxHealth() / 2);
+		}
+		return $out;
 	}
 }
