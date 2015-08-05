@@ -15,13 +15,17 @@
 
 namespace legionpe\theta\classic\query;
 
+use legionpe\theta\BasePlugin;
 use legionpe\theta\classic\ClassicSession;
 use legionpe\theta\query\SaveSinglePlayerQuery;
 use legionpe\theta\Session;
+use pocketmine\Server;
 
 class ClassicSaveSinglePlayerQuery extends SaveSinglePlayerQuery{
 	private $kills;
+	private $userId;
 	public function getColumns(Session $session, $status){
+		$this->userId = $session->getUid();
 		$cols = parent::getColumns($session, $status);
 		if(!($session instanceof ClassicSession)){
 			return $cols; // shouldn't happen
@@ -44,7 +48,14 @@ class ClassicSaveSinglePlayerQuery extends SaveSinglePlayerQuery{
 	}
 	public function getExpectedColumns(){
 		return [
-			"rank" => self::COL_STRING
+			"rank" => self::COL_INT
 		];
+	}
+	public function onCompletion(Server $server){
+		$main = BasePlugin::getInstance($server);
+		$ses = $main->getSessionByUid($this->userId);
+		if($ses instanceof ClassicSession){
+			$ses->setGlobalRank($this->getResult()["result"]["rank"]);
+		}
 	}
 }

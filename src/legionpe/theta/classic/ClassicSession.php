@@ -327,6 +327,9 @@ class ClassicSession extends Session{
 		}
 	}
 	protected function chatPrefix(){
-		return Phrases::VAR_symbol . "{" . Phrases::VAR_verbosemid . "#$this->globalRank" . Phrases::VAR_symbol . "}";
+		if($this->globalRank > 0){
+			return Phrases::VAR_symbol . "{" . Phrases::VAR_verbosemid . "#$this->globalRank" . Phrases::VAR_symbol . "}";
+		}
+		return "";
 	}
 }
