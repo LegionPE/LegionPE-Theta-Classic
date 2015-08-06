@@ -60,6 +60,7 @@ class ClassicSession extends Session{
 	/** @var EntityDamageByEntityEvent|null */
 	private $lastFallCause = null;
 	private $counter = 0;
+	private $invincible = false;
 	public function __construct(BasePlugin $main, Player $player, array $loginData){
 		$this->main = $main;
 		parent::__construct($player, $loginData);
@@ -69,6 +70,18 @@ class ClassicSession extends Session{
 	}
 	public function joinedClassicSince(){
 		return $this->getLoginDatum("pvp_init");
+	}
+	/**
+	 * @return boolean
+	 */
+	public function isInvincible(){
+		return $this->invincible;
+	}
+	/**
+	 * @param boolean $invincible
+	 */
+	public function setInvincible($invincible){
+		$this->invincible = $invincible;
 	}
 	public function getKills(){
 		return $this->getLoginDatum("pvp_kills");
