@@ -20,6 +20,7 @@ use legionpe\theta\lang\Phrases;
 use legionpe\theta\Session;
 use legionpe\theta\utils\MUtils;
 use pocketmine\block\Block;
+use pocketmine\entity\Arrow;
 use pocketmine\entity\Egg;
 use pocketmine\entity\Projectile;
 use pocketmine\entity\Snowball;
@@ -110,6 +111,10 @@ class ClassicSession extends Session{
 					}
 					$this->lastHurtTime = microtime(true);
 					$this->nextCooldownTimeout = ClassicConsts::DEFAULT_COOLDOWN_TIMEOUT;
+					if($event instanceof EntityDamageByChildEntityEvent and $event->getChild() instanceof Arrow){
+						$fromEnt->getInventory()->addItem(Item::get(Item::ARROW));
+						$fromEnt->getInventory()->sendContents([$fromEnt]);
+					}
 				}
 			}
 			$this->lastDamagePosition = $this->getPlayer()->getLevel()->getBlock($this->getPlayer());
@@ -120,7 +125,7 @@ class ClassicSession extends Session{
 				$this->lastFallCause = $last;
 			}
 		}
-		$this->getPlayer()->setNameTag($this->calculateNameTag());
+		$this->getPlayer()->setNameTag($this->calculateNameTag(TextFormat::WHITE, $this->getPlayer()->getHealth() - $event->getFinalDamage()));
 		return true;
 	}
 	/**
@@ -227,9 +232,15 @@ class ClassicSession extends Session{
 			if(isset($ks) and $ks instanceof ClassicSession){
 				$ks->send($killPhrase, $data);
 				$ks->addKill();
-				$ks->killRewards();
 			}
 		}
+		return true;
+	}
+	public function onHeal(EntityRegainHealthEvent $event){
+		if(!parent::onHeal($event)){
+			return false;
+		}
+		$this->getPlayer()->setNameTag($this->calculateNameTag(TextFormat::WHITE, $event->getAmount() + $this->getPlayer()->getHealth()));
 		return true;
 	}
 	public function getCurrentStreak(){
@@ -289,6 +300,7 @@ class ClassicSession extends Session{
 		parent::onRespawn($event);
 		$event->setRespawnPosition(ClassicConsts::getSpawnPosition($this->getMain()->getServer()));
 		$this->getMain()->getServer()->getScheduler()->scheduleDelayedTask(new PostRespawnTask($this->getMain(), $this), 10);
+		$this->getPlayer()->setNameTag($this->calculateNameTag());
 	}
 	public function equip(){
 		$inv = $this->getPlayer()->getInventory();
@@ -301,7 +313,7 @@ class ClassicSession extends Session{
 		$inv->setItem(0, new Bow);
 		$inv->setItem(1, new IronSword);
 		$inv->setItem(2, Item::get(Item::BAKED_POTATO, 0, 32));
-		$inv->setItem(3, Item::get(Item::ARROW, 0, 32));
+		$inv->setItem(3, Item::get(Item::ARROW, 0, 16));
 		$inv->setHotbarSlotIndex(0, 0);
 		$inv->setHotbarSlotIndex(1, 1);
 		$inv->setHotbarSlotIndex(2, 2);
@@ -336,13 +348,13 @@ class ClassicSession extends Session{
 		}
 		return "";
 	}
-	public function killRewards(){
-		$this->getPlayer()->getInventory()->addItem(Item::get(Item::ARROW, 0, 8));
-	}
-	public function calculateNameTag($nameColor = TextFormat::WHITE){
+	public function calculateNameTag($nameColor = TextFormat::WHITE, $health = null){
 		$out = parent::calculateNameTag();
 		if(ENABLE_HEALTHBAR){
-			$out .= "\n" . TextFormat::DARK_GREEN . ($this->getPlayer()->getHealth() / 2) . " / " . ($this->getPlayer()->getMaxHealth() / 2);
+			if($health === null){
+				$health = $this->getPlayer()->getHealth();
+			}
+			$out .= "\n" . TextFormat::DARK_GREEN . ($health / 2) . " / " . ($this->getPlayer()->getMaxHealth() / 2);
 		}
 		return $out;
 	}

@@ -20,6 +20,9 @@ use legionpe\theta\classic\query\ClassicLoginDataQuery;
 use legionpe\theta\classic\query\ClassicSaveSinglePlayerQuery;
 use pocketmine\Player;
 
+//use pocketmine\level\Level;
+//use pocketmine\utils\Cache;
+
 class ClassicPlugin extends BasePlugin{
 	const COINS_ON_KILL = 10;
 	protected static function defaultLoginData($uid, Player $player){
@@ -31,6 +34,22 @@ class ClassicPlugin extends BasePlugin{
 		$data["pvp_curstreak"] = 0;
 		$data["pvp_kit"] = 0;
 		return $data;
+	}
+	public function onEnable(){
+		parent::onEnable();
+//		echo "fixing grass...\r";
+//		if(!$this->getServer()->isLevelLoaded("world_pvp")){
+//			$this->getServer()->loadLevel("world_pvp");
+//		}
+//		foreach($this->getServer()->getLevels() as $level){
+//			foreach($level->getChunks() as $chunk){
+//				for($x = 0; $x < 16; $x++){
+//					for($z = 0; $z < 16; $z++){
+//						$chunk->setBiomeColor($x, $z, 0x64, 0xFF, 0x00);
+//					}
+//				}
+//			}
+//		}
 	}
 	public function getLoginQueryImpl(){
 		return ClassicLoginDataQuery::class;

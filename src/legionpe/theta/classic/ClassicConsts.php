@@ -21,15 +21,13 @@ use pocketmine\math\Vector3;
 use pocketmine\Server;
 
 class ClassicConsts{
-	const DEFAULT_COOLDOWN_TIMEOUT = 0.7;
+	const DEFAULT_COOLDOWN_TIMEOUT = 0.55;
 	const KILLSTREAK_TIMEOUT_BASE = 15.0;
 	public static function isSpawn(Vector3 $v){
-		$result = (((110 <= $v->x) and ($v->x <= 149) and (-21 <= $v->z) and ($v->z <= 11)) or
-			((32 <= $v->y) and ($v->y <= 58) and (126 <= $v->x) and ($v->x <= 153) and (-16 <= $v->z) and ($v->z <= 11)));
-		return $result;
+		return ($v->y > 64) and (108.5 <= $v->x) and ($v->x <= 112.5) and (-24.5 <= $v->z) and ($v->z <= -20.5);
 	}
 	public static function getSpawnPosition(Server $server){
-		return new Location(123.5, 65, -2.5, 90.0, 0.0, $server->getLevelByName("world_pvp"));
+		return new Location(110.5, 65.0, -22.5, 0, 90, $server->getLevelByName("world_pvp"));
 	}
 	public static function getKillHeal(Session $session){
 		if($session->isVIPPlus()){
