@@ -16,18 +16,33 @@
 namespace legionpe\theta\classic;
 
 use legionpe\theta\Session;
-use pocketmine\level\Location;
+use pocketmine\level\Position;
 use pocketmine\math\Vector3;
+use pocketmine\Player;
 use pocketmine\Server;
 
 class ClassicConsts{
 	const DEFAULT_COOLDOWN_TIMEOUT = 0.55;
-	const KILLSTREAK_TIMEOUT_BASE = 15.0;
+	const KILLSTREAK_TIMEOUT_BASE = 60.0;
 	public static function isSpawn(Vector3 $v){
-		return ($v->y > 64) and (108.5 <= $v->x) and ($v->x <= 112.5) and (-24.5 <= $v->z) and ($v->z <= -20.5);
+		return ($v->y >= 18) and self::isSpawnArea($v);
+	}
+	public static function spawnPortal(Player $player){
+		return ($player->y < 18) and self::isSpawnArea($player);
+	}
+	private static function isSpawnArea(Vector3 $v){
+		return (270 <= $v->x) and ($v->x <= 344) and (-179 <= $v->z) and ($v->z <= -115);
 	}
 	public static function getSpawnPosition(Server $server){
-		return new Location(110.5, 65.0, -22.5, 0, 90, $server->getLevelByName("world_pvp"));
+		return new Position(304, 48, -153, $server->getLevelByName("world_pvp"));
+	}
+	public static function getRandomSpawnPosition(Server $server){
+		$spawns = [
+			new Vector3(227, 62, -123),
+			new Vector3(195, 61, 0),
+			new Vector3(111, 49, -63),
+		];
+		return Position::fromObject($spawns[mt_rand(0, 2)], $server->getLevelByName("world_pvp"));
 	}
 	public static function getKillHeal(Session $session){
 		if($session->isVIPPlus()){

@@ -21,6 +21,7 @@ use legionpe\theta\Session;
 use legionpe\theta\utils\MUtils;
 use pocketmine\block\Block;
 use pocketmine\entity\Arrow;
+use pocketmine\entity\Effect;
 use pocketmine\entity\Egg;
 use pocketmine\entity\Projectile;
 use pocketmine\entity\Snowball;
@@ -57,6 +58,7 @@ class ClassicSession extends Session{
 	private $lastDamagePosition = null;
 	/** @var float */
 	private $lastKillTime = 0.0, $nextKillstreakTimeout = ClassicConsts::KILLSTREAK_TIMEOUT_BASE, $lastDamageTime = 0.0;
+	private $lastRespawnTime;
 	/** @var EntityDamageByEntityEvent|null */
 	private $lastFallCause = null;
 	private $counter = 0;
@@ -110,14 +112,15 @@ class ClassicSession extends Session{
 					return false;
 				}
 				if($ses instanceof ClassicSession){
-					$type = $this->getFriendType($ses->getUid());
-					if($type >= self::FRIEND_LEVEL_GOOD_FRIEND and !$this->isFriendlyFire() and !$ses->isFriendlyFire()){
-						$fromEnt->sendTip($this->translate(Phrases::PVP_ATTACK_FRIENDS, [
-							"target" => $this->getInGameName(),
-							"type" => $this->translate(self::$FRIEND_TYPES[$type])
-						]));
-						return false;
-					}
+//					$type = $this->getFriendType($ses->getUid());
+//					if($type >= self::FRIEND_LEVEL_GOOD_FRIEND and !$this->isFriendlyFire() and !$ses->isFriendlyFire()){
+//						$fromEnt->sendTip($this->translate(Phrases::PVP_ATTACK_FRIENDS, [
+//							"target" => $this->getInGameName(),
+//							"type" => $this->translate(self::$FRIEND_TYPES[$type])
+//						]));
+//						return false;
+//					}
+					// TODO check friends
 					$now = microtime(true);
 					if($now - $this->lastHurtTime < $this->nextCooldownTimeout){
 						return false;
@@ -166,9 +169,9 @@ class ClassicSession extends Session{
 		$event->setDeathMessage("");
 		$event->setDrops([]);
 		$streak = $this->getCurrentStreak();
+		$this->setCurrentStreak();
 		$maxStreak = $this->getMaximumStreak();
 		$this->setMaximumStreak(max($streak, $maxStreak));
-		$this->setCurrentStreak();
 		$cause = $this->getPlayer()->getLastDamageCause();
 		$this->addDeath();
 		if(!($cause instanceof EntityDamageEvent)){
@@ -276,6 +279,7 @@ class ClassicSession extends Session{
 		}else{
 			$this->setLoginDatum("pvp_curstreak", $streak = 1);
 		}
+		$this->lastKillTime = microtime(true);
 		$this->send(Phrases::PVP_KILL_INFO, [
 			"literal" => $kills,
 			"ord" => $kills . MUtils::num_getOrdinal($kills),
@@ -306,14 +310,16 @@ class ClassicSession extends Session{
 	}
 	public function login($method){
 		parent::login($method);
-		$this->getPlayer()->setSpawn(ClassicConsts::getSpawnPosition($this->getMain()->getServer()));
 		$this->onRespawn(new PlayerRespawnEvent($this->getPlayer(), $this->getPlayer()->getPosition()));
 	}
 	public function onRespawn(PlayerRespawnEvent $event){
 		parent::onRespawn($event);
-		$event->setRespawnPosition(ClassicConsts::getSpawnPosition($this->getMain()->getServer()));
-		$this->getMain()->getServer()->getScheduler()->scheduleDelayedTask(new PostRespawnTask($this->getMain(), $this), 10);
-		$this->getPlayer()->setNameTag($this->calculateNameTag());
+		$event->setRespawnPosition($spawn = ClassicConsts::getSpawnPosition($this->getMain()->getServer()));
+		$this->getPlayer()->teleport($spawn);
+		$this->equip();
+		$this->getPlayer()->addEffect(Effect::getEffect(Effect::HEALTH_BOOST)->setDuration(0x7FFFFF)->setVisible(false)->setAmplifier(9));
+		$this->getPlayer()->setNameTag($this->calculateNameTag(TextFormat::WHITE, $this->getPlayer()->getMaxHealth()));
+		$this->lastRespawnTime = microtime(true);
 	}
 	public function equip(){
 		$inv = $this->getPlayer()->getInventory();
@@ -353,6 +359,15 @@ class ClassicSession extends Session{
 				$amount = ClassicConsts::getAutoHeal($this);
 				$this->getPlayer()->heal($amount, new EntityRegainHealthEvent($this->getPlayer(), $amount, EntityRegainHealthEvent::CAUSE_REGEN));
 			}
+		}
+		$respawn = (int)(15 - microtime(true) + $this->lastRespawnTime);
+		if($respawn > 0){
+			$this->setInvincible(true);
+			$this->setMaintainedPopup($this->translate(Phrases::PVP_INVINCIBILITY_LEFT, ["left" => $respawn]));
+		}elseif($respawn === 0){
+			$this->setMaintainedPopup();
+			$this->getPlayer()->sendPopup($this->translate(Phrases::PVP_INVINCIBILITY_OFF));
+			$this->setInvincible(false);
 		}
 	}
 	protected function chatPrefix(){

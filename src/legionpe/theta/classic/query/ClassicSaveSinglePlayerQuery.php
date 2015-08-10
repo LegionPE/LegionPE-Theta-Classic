@@ -24,6 +24,7 @@ use pocketmine\Server;
 class ClassicSaveSinglePlayerQuery extends SaveSinglePlayerQuery{
 	private $kills;
 	private $userId;
+	private $rank;
 	public function getColumns(Session $session, $status){
 		$this->userId = $session->getUid();
 		$cols = parent::getColumns($session, $status);
@@ -37,19 +38,10 @@ class ClassicSaveSinglePlayerQuery extends SaveSinglePlayerQuery{
 		$cols["pvp_maxstreak"] = $session->getMaximumStreak();
 		return $cols;
 	}
-	public function onPreQuery(\mysqli $db){
-		$db->query($this->getUpdateQuery());
-	}
-	public function getQuery(){
-		return "SELECT COUNT(*) + 1 AS rank FROM users WHERE pvp_kills > $this->kills";
-	}
-	public function getResultType(){
-		return self::TYPE_ASSOC;
-	}
-	public function getExpectedColumns(){
-		return [
-			"rank" => self::COL_INT
-		];
+	public function onPostQuery(\mysqli $db){
+		$result = $db->query("SELECT COUNT(*) + 1 AS rank FROM users WHERE pvp_kills > $this->kills");
+		$this->rank = $result->fetch_assoc()["rank"];
+		$result->close();
 	}
 	public function onCompletion(Server $server){
 		$main = BasePlugin::getInstance($server);
@@ -57,8 +49,5 @@ class ClassicSaveSinglePlayerQuery extends SaveSinglePlayerQuery{
 		if($ses instanceof ClassicSession){
 			$ses->setGlobalRank($this->getResult()["result"]["rank"]);
 		}
-	}
-	public function reportDebug(){
-		return false;
 	}
 }
