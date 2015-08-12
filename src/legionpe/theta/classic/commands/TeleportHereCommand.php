@@ -16,16 +16,22 @@
 namespace legionpe\theta\classic\commands;
 
 use legionpe\theta\BasePlugin;
-use legionpe\theta\classic\ClassicPlugin;
+use legionpe\theta\classic\ClassicSession;
 use legionpe\theta\command\SessionCommand;
 use legionpe\theta\Session;
 
-class TeleportRequestCommand extends SessionCommand{
+class TeleportHereCommand extends SessionCommand{
 	public function __construct(BasePlugin $main){
-		parent::__construct($main, "tp", "Send or accept teleport request", "/tpr <target>", ["tpr", "tpa"]);
+		parent::__construct($main, "tphere", "Send or accept request to teleport to you", "/tpa <player>", ["tphere"]);
 	}
 	protected function run(array $args, Session $sender){
-		/** @var ClassicPlugin $main */
-		$main = $this->getPlugin();
+		/** @var ClassicSession $sender */
+		if(!isset($args[0])){
+			return false;
+		}
+		$other = $this->getSession($name = array_shift($args));
+		if(!($other instanceof ClassicSession)){
+			return $this->notOnline($sender, $name);
+		}
 	}
 }

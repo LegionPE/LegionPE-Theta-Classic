@@ -63,7 +63,7 @@ class ClassicSession extends Session{
 	private $lastKillTime = 0.0, $nextKillstreakTimeout = ClassicConsts::KILLSTREAK_TIMEOUT_BASE, $lastDamageTime = 0.0;
 	private $lastRespawnTime;
 	/** @var EntityDamageByEntityEvent|null */
-	private $lastFallCause = null;
+	private $lastFallLavaCause = null;
 	private $counter = 0;
 	private $invincible = false;
 	public function __construct(BasePlugin $main, Player $player, array $loginData){
@@ -145,10 +145,10 @@ class ClassicSession extends Session{
 			}
 			$this->lastDamagePosition = $this->getPlayer()->getLevel()->getBlock($this->getPlayer());
 			$this->lastDamageTime = microtime(true);
-		}elseif($event->getCause() === EntityDamageEvent::CAUSE_FALL){
+		}elseif($event->getCause() === EntityDamageEvent::CAUSE_FALL or $event->getCause() === EntityDamageEvent::CAUSE_LAVA){
 			$last = $this->getPlayer()->getLastDamageCause();
 			if($last instanceof EntityDamageByEntityEvent){
-				$this->lastFallCause = $last;
+				$this->lastFallLavaCause = $last;
 			}
 		}
 		$this->getPlayer()->setNameTag($this->calculateNameTag(TextFormat::WHITE, $this->getPlayer()->getHealth() - $event->getFinalDamage()));
@@ -221,11 +221,14 @@ class ClassicSession extends Session{
 				$ks->send(Phrases::PVP_KILL_KILLED, $data);
 				$ks->addKill();
 			}
-		}elseif($cause->getCause() === EntityDamageEvent::CAUSE_FALL and microtime(true) - $this->lastDamageTime < 2.5){
-			$knock = $this->lastFallCause;
+		}elseif(($cause->getCause() === EntityDamageEvent::CAUSE_FALL or $cause->getCause() === EntityDamageEvent::CAUSE_LAVA) and microtime(true) - $this->lastDamageTime < 2.5){
+			$knock = $this->lastFallLavaCause;
 			$pos = $this->lastDamagePosition;
 			$id = $pos->getId();
-			if($id === Block::LADDER){
+			if($cause->getCause() === EntityDamageEvent::CAUSE_LAVA){
+				$deathPhrase = Phrases::PVP_DEATH_LAVA;
+				$killPhrase = Phrases::PVP_KILL_LAVA;
+			}elseif($id === Block::LADDER){
 				$deathPhrase = Phrases::PVP_DEATH_FALL_LADDER;
 				$killPhrase = Phrases::PVP_KILL_FALL_LADDER;
 			}elseif($id === Block::VINE){
@@ -336,6 +339,8 @@ class ClassicSession extends Session{
 		$this->getPlayer()->teleport($spawn);
 		$this->getPlayer()->addEffect(Effect::getEffect(Effect::HEALTH_BOOST)->setDuration(0x7FFFFF)->setVisible(false)->setAmplifier(9));
 		$this->getPlayer()->setNameTag($this->calculateNameTag(TextFormat::WHITE, $this->getPlayer()->getMaxHealth()));
+		$this->getPlayer()->getInventory()->setArmorContents([]);
+		$this->getPlayer()->getInventory()->sendArmorContents($this->getPlayer()->getInventory()->getViewers());
 	}
 	public function equip(){
 		$inv = $this->getPlayer()->getInventory();
@@ -408,4 +413,3 @@ class ClassicSession extends Session{
 		return $out;
 	}
 }
-
