@@ -32,6 +32,7 @@ use pocketmine\event\entity\EntityDamageByEntityEvent;
 use pocketmine\event\entity\EntityDamageEvent;
 use pocketmine\event\entity\EntityRegainHealthEvent;
 use pocketmine\event\player\PlayerDeathEvent;
+use pocketmine\event\player\PlayerMoveEvent;
 use pocketmine\event\player\PlayerRespawnEvent;
 use pocketmine\item\Bow;
 use pocketmine\item\IronBoots;
@@ -40,6 +41,8 @@ use pocketmine\item\IronHelmet;
 use pocketmine\item\IronSword;
 use pocketmine\item\Item;
 use pocketmine\item\LeatherPants;
+use pocketmine\level\particle\FloatingTextParticle;
+use pocketmine\math\Vector3;
 use pocketmine\Player;
 use pocketmine\utils\TextFormat;
 
@@ -95,6 +98,9 @@ class ClassicSession extends Session{
 		if(!parent::onDamage($event)){
 			return false;
 		}
+		if($this->invincible){
+			return false;
+		}
 		if($event->getCause() === EntityDamageEvent::CAUSE_SUICIDE){
 			return true;
 		}
@@ -112,6 +118,10 @@ class ClassicSession extends Session{
 					return false;
 				}
 				if($ses instanceof ClassicSession){
+					if($ses->isInvincible()){
+						$fromEnt->sendTip($ses->translate(Phrases::PVP_ATTACK_SPAWN));
+						return false;
+					}
 //					$type = $this->getFriendType($ses->getUid());
 //					if($type >= self::FRIEND_LEVEL_GOOD_FRIEND and !$this->isFriendlyFire() and !$ses->isFriendlyFire()){
 //						$fromEnt->sendTip($this->translate(Phrases::PVP_ATTACK_FRIENDS, [
@@ -259,6 +269,13 @@ class ClassicSession extends Session{
 		$this->getPlayer()->setNameTag($this->calculateNameTag(TextFormat::WHITE, $event->getAmount() + $this->getPlayer()->getHealth()));
 		return true;
 	}
+	public function onMove(PlayerMoveEvent $event){
+		if(ClassicConsts::spawnPortal($this->getPlayer())){
+			$this->getPlayer()->teleport(ClassicConsts::getRandomSpawnPosition($this->getMain()->getServer()));
+			$this->lastRespawnTime = microtime(true);
+			$this->getPlayer()->addEffect(Effect::getEffect(Effect::INVISIBILITY)->setDuration(ClassicConsts::RESPAWN_INVINCIBILITY * 20)->setVisible(false));
+		}
+	}
 	public function getCurrentStreak(){
 		return $this->getLoginDatum("pvp_curstreak");
 	}
@@ -311,15 +328,14 @@ class ClassicSession extends Session{
 	public function login($method){
 		parent::login($method);
 		$this->onRespawn(new PlayerRespawnEvent($this->getPlayer(), $this->getPlayer()->getPosition()));
+		$this->getMain()->getServer()->getLevelByName("world_pvp")->addParticle(new FloatingTextParticle(new Vector3(304, 49, -150), $this->translate(Phrases::PVP_LEAVE_SPAWN_HINT)), [$this->getPlayer()]);
 	}
 	public function onRespawn(PlayerRespawnEvent $event){
 		parent::onRespawn($event);
 		$event->setRespawnPosition($spawn = ClassicConsts::getSpawnPosition($this->getMain()->getServer()));
 		$this->getPlayer()->teleport($spawn);
-		$this->equip();
 		$this->getPlayer()->addEffect(Effect::getEffect(Effect::HEALTH_BOOST)->setDuration(0x7FFFFF)->setVisible(false)->setAmplifier(9));
 		$this->getPlayer()->setNameTag($this->calculateNameTag(TextFormat::WHITE, $this->getPlayer()->getMaxHealth()));
-		$this->lastRespawnTime = microtime(true);
 	}
 	public function equip(){
 		$inv = $this->getPlayer()->getInventory();
@@ -337,6 +353,8 @@ class ClassicSession extends Session{
 		$inv->setHotbarSlotIndex(1, 1);
 		$inv->setHotbarSlotIndex(2, 2);
 		$inv->setHotbarSlotIndex(3, 3);
+		$this->getPlayer()->removeAllEffects();
+		$this->getPlayer()->addEffect(Effect::getEffect(Effect::HEALTH_BOOST)->setDuration(0x7FFFFF)->setVisible(false)->setAmplifier(9));
 		$inv->sendContents([$this->getPlayer()]);
 	}
 	public function onPlace(BlockPlaceEvent $event){
@@ -360,18 +378,21 @@ class ClassicSession extends Session{
 				$this->getPlayer()->heal($amount, new EntityRegainHealthEvent($this->getPlayer(), $amount, EntityRegainHealthEvent::CAUSE_REGEN));
 			}
 		}
-		$respawn = (int)(15 - microtime(true) + $this->lastRespawnTime);
-		if($respawn > 0){
-			$this->setInvincible(true);
-			$this->setMaintainedPopup($this->translate(Phrases::PVP_INVINCIBILITY_LEFT, ["left" => $respawn]));
-		}elseif($respawn === 0){
-			$this->setMaintainedPopup();
-			$this->getPlayer()->sendPopup($this->translate(Phrases::PVP_INVINCIBILITY_OFF));
-			$this->setInvincible(false);
+		if($this->isPlaying()){
+			$respawn = (int)(ClassicConsts::RESPAWN_INVINCIBILITY - microtime(true) + $this->lastRespawnTime);
+			if($respawn > 0){
+				$this->setInvincible(true);
+				$this->setMaintainedPopup($this->translate(Phrases::PVP_INVINCIBILITY_LEFT, ["left" => $respawn]));
+			}elseif($respawn === 0){
+				$this->setMaintainedPopup();
+				$this->getPlayer()->sendPopup($this->translate(Phrases::PVP_INVINCIBILITY_OFF));
+				$this->setInvincible(false);
+				$this->equip();
+			}
 		}
 	}
 	protected function chatPrefix(){
-		if($this->globalRank > 0){
+		if($this->globalRank > 0 and $this->getKills() > 0){
 			return Phrases::VAR_symbol . "{" . Phrases::VAR_em . $this->getKills() . Phrases::VAR_symbol . "#" . Phrases::VAR_em2 . "$this->globalRank" . Phrases::VAR_symbol . "}";
 		}
 		return "";
@@ -387,3 +408,4 @@ class ClassicSession extends Session{
 		return $out;
 	}
 }
+

@@ -47,7 +47,7 @@ class ClassicSaveSinglePlayerQuery extends SaveSinglePlayerQuery{
 		$main = BasePlugin::getInstance($server);
 		$ses = $main->getSessionByUid($this->userId);
 		if($ses instanceof ClassicSession){
-			$ses->setGlobalRank($this->getResult()["result"]["rank"]);
+			$ses->setGlobalRank($this->rank);
 		}
 	}
 }

@@ -24,6 +24,7 @@ use pocketmine\Server;
 class ClassicConsts{
 	const DEFAULT_COOLDOWN_TIMEOUT = 0.55;
 	const KILLSTREAK_TIMEOUT_BASE = 60.0;
+	const RESPAWN_INVINCIBILITY = 15;
 	public static function isSpawn(Vector3 $v){
 		return ($v->y >= 18) and self::isSpawnArea($v);
 	}
