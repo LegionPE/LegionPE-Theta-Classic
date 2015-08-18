@@ -35,10 +35,10 @@ use pocketmine\event\player\PlayerDeathEvent;
 use pocketmine\event\player\PlayerMoveEvent;
 use pocketmine\event\player\PlayerRespawnEvent;
 use pocketmine\item\Bow;
-use pocketmine\item\IronBoots;
-use pocketmine\item\IronChestplate;
-use pocketmine\item\IronHelmet;
-use pocketmine\item\IronSword;
+use pocketmine\item\ChainChestplate;
+use pocketmine\item\DiamondSword;
+use pocketmine\item\GoldBoots;
+use pocketmine\item\GoldHelmet;
 use pocketmine\item\Item;
 use pocketmine\item\LeatherPants;
 use pocketmine\level\particle\FloatingTextParticle;
@@ -345,13 +345,13 @@ class ClassicSession extends Session{
 	public function equip(){
 		$inv = $this->getPlayer()->getInventory();
 		$inv->clearAll();
-		$inv->setHelmet(new IronHelmet);
-		$inv->setChestplate(new IronChestplate);
+		$inv->setHelmet(new GoldHelmet);
+		$inv->setChestplate(new ChainChestplate);
 		$inv->setLeggings(new LeatherPants);
-		$inv->setBoots(new IronBoots);
+		$inv->setBoots(new GoldBoots);
 		$inv->sendArmorContents([$this->getPlayer()]);
 		$inv->setItem(0, new Bow);
-		$inv->setItem(1, new IronSword);
+		$inv->setItem(1, new DiamondSword);
 		$inv->setItem(2, Item::get(Item::BAKED_POTATO, 0, 32));
 		$inv->setItem(3, Item::get(Item::ARROW, 0, 16));
 		$inv->setHotbarSlotIndex(0, 0);
@@ -398,7 +398,7 @@ class ClassicSession extends Session{
 	}
 	protected function chatPrefix(){
 		if($this->globalRank > 0 and $this->getKills() > 0){
-			return Phrases::VAR_symbol . "{" . Phrases::VAR_em . $this->getKills() . Phrases::VAR_symbol . "#" . Phrases::VAR_em2 . "$this->globalRank" . Phrases::VAR_symbol . "}";
+			return Phrases::VAR_symbol . "{" . Phrases::VAR_em . $this->getKills() . Phrases::VAR_em2 . "#" . $this->globalRank . Phrases::VAR_symbol . "}";
 		}
 		return "";
 	}
