@@ -20,11 +20,10 @@ use legionpe\theta\classic\query\ClassicLoginDataQuery;
 use legionpe\theta\classic\query\ClassicSaveSinglePlayerQuery;
 use pocketmine\Player;
 
-//use pocketmine\level\Level;
-//use pocketmine\utils\Cache;
-
 class ClassicPlugin extends BasePlugin{
 	const COINS_ON_KILL = 10;
+	/** @var TeleportManager */
+	private $tpMgr;
 	protected static function defaultLoginData($uid, Player $player){
 		$data = parent::defaultLoginData($uid, $player);
 		$data["pvp_init"] = time();
@@ -50,6 +49,7 @@ class ClassicPlugin extends BasePlugin{
 //				}
 //			}
 //		}
+		$this->tpMgr = new TeleportManager($this);
 	}
 	public function getLoginQueryImpl(){
 		return ClassicLoginDataQuery::class;
@@ -62,6 +62,12 @@ class ClassicPlugin extends BasePlugin{
 	}
 	public function query_world(){
 		return "pvp-1";
+	}
+	/**
+	 * @return TeleportManager
+	 */
+	public function getTeleportManager(){
+		return $this->tpMgr;
 	}
 	protected function createSession(Player $player, array $loginData){
 		return new ClassicSession($this, $player, $loginData);
