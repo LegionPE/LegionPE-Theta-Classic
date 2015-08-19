@@ -84,7 +84,7 @@ class TeleportToCommand extends SessionCommand{
 		$this->getPlugin()->getServer()->getScheduler()->scheduleDelayedTask(new TeleportTask($this->getMain(), $from, $to), ClassicConsts::TELEPORT_DELAY_TICKS);
 		return true;
 	}
-	public function checkPerm(Session $session, &$msg){
+	public function checkPerm(Session $session, &$msg = null){
 		if(ClassicConsts::isSpawn($session->getPlayer())){
 			$msg = "You can't teleport from spawn!";
 			return false;

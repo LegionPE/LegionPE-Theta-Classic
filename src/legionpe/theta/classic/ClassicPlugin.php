@@ -16,6 +16,8 @@
 namespace legionpe\theta\classic;
 
 use legionpe\theta\BasePlugin;
+use legionpe\theta\classic\commands\TeleportHereCommand;
+use legionpe\theta\classic\commands\TeleportToCommand;
 use legionpe\theta\classic\query\ClassicLoginDataQuery;
 use legionpe\theta\classic\query\ClassicSaveSinglePlayerQuery;
 use pocketmine\Player;
@@ -50,6 +52,10 @@ class ClassicPlugin extends BasePlugin{
 //			}
 //		}
 		$this->tpMgr = new TeleportManager($this);
+		$this->getServer()->getCommandMap()->registerAll("c", [
+			new TeleportHereCommand($this),
+			new TeleportToCommand($this),
+		]);
 	}
 	public function getLoginQueryImpl(){
 		return ClassicLoginDataQuery::class;

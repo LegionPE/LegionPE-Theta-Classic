@@ -25,10 +25,10 @@ class TeleportManager{
 	public function __construct(ClassicPlugin $main){
 		$this->main = $main;
 		$this->db = new \SQLite3(":memory:");
-		$this->db->exec("CREATE TABLE req (from INT, to INT, msg TEXT, reqByFrom BOOLEAN)");
+		$this->db->exec("CREATE TABLE req (src INT, targ INT, msg TEXT, reqByFrom BOOLEAN)");
 	}
 	public function sendToRequest(ClassicSession $from, ClassicSession $to, $msg){
-		$op = $this->db->prepare("SELECT msg,reqByFrom FROM req WHERE from=:src AND to=:targ");
+		$op = $this->db->prepare("SELECT msg,reqByFrom FROM req WHERE src=:src AND targ=:targ");
 		$op->bindValue(":src", $from->getUid());
 		$op->bindValue(":targ", $to->getUid());
 		$result = $op->execute()->fetchArray(SQLITE3_ASSOC);
@@ -36,7 +36,7 @@ class TeleportManager{
 			$isent = $result["reqByFrom"];
 			if($isent){
 				if($result["msg"] !== $msg){
-					$op = $this->db->prepare("UPDATE req SET msg=:msg WHERE from=:src AND to=:targ");
+					$op = $this->db->prepare("UPDATE req SET msg=:msg WHERE from=:src AND targ=:targ");
 					$op->bindValue(":src", $from->getUid());
 					$op->bindValue(":targ", $to->getUid());
 					$op->bindValue(":msg", $msg);
@@ -45,13 +45,13 @@ class TeleportManager{
 				}
 				return self::DUPLICATED_REQUEST;
 			}
-			$op = $this->db->prepare("DELETE FROM req WHERE from=:src AND to=:targ");
+			$op = $this->db->prepare("DELETE FROM req WHERE src=:src AND targ=:targ");
 			$op->bindValue(":src", $from->getUid());
 			$op->bindValue(":targ", $to->getUid());
 			$op->execute();
 			return self::REQUEST_ACCEPTED;
 		}
-		$op = $this->db->prepare("INSERT INTO req (from,to,msg,reqByFrom)VALUES(:from,:to,:msg,:out)");
+		$op = $this->db->prepare("INSERT INTO req (src,targ,msg,reqByFrom)VALUES(:src,:targ,:msg,:out)");
 		$op->bindValue(":src", $from->getUid(), SQLITE3_INTEGER);
 		$op->bindValue(":targ", $to->getUid(), SQLITE3_INTEGER);
 		$op->bindValue(":msg", $msg, SQLITE3_TEXT);
@@ -60,7 +60,7 @@ class TeleportManager{
 		return self::REQUEST_SENT;
 	}
 	public function sendHereRequest(ClassicSession $to, ClassicSession $from, $msg){
-		$op = $this->db->prepare("SELECT msg,reqByFrom FROM req WHERE from=:src AND to=:targ");
+		$op = $this->db->prepare("SELECT msg,reqByFrom FROM req WHERE src=:src AND targ=:targ");
 		$op->bindValue(":src", $from->getUid());
 		$op->bindValue(":targ", $to->getUid());
 		$result = $op->execute()->fetchArray(SQLITE3_ASSOC);
@@ -68,7 +68,7 @@ class TeleportManager{
 			$isent = !$result["reqByFrom"];
 			if($isent){
 				if($result["msg"] !== $msg){
-					$op = $this->db->prepare("UPDATE req SET msg=:msg WHERE from=:src AND to=:targ");
+					$op = $this->db->prepare("UPDATE req SET msg=:msg WHERE src=:src AND targ=:targ");
 					$op->bindValue(":src", $from->getUid());
 					$op->bindValue(":targ", $to->getUid());
 					$op->bindValue(":msg", $msg);
@@ -77,13 +77,13 @@ class TeleportManager{
 				}
 				return self::DUPLICATED_REQUEST;
 			}
-			$op = $this->db->prepare("DELETE FROM req WHERE from=:src AND to=:targ");
+			$op = $this->db->prepare("DELETE FROM req WHERE src=:src AND targ=:targ");
 			$op->bindValue(":src", $from->getUid());
 			$op->bindValue(":targ", $to->getUid());
 			$op->execute();
 			return self::REQUEST_ACCEPTED;
 		}
-		$op = $this->db->prepare("INSERT INTO req (from,to,msg,reqByFrom) VALUES (:from,:to,:msg,:in)");
+		$op = $this->db->prepare("INSERT INTO req (src,targ,msg,reqByFrom) VALUES (:src,:targ,:msg,:in)");
 		$op->bindValue(":src", $from->getUid(), SQLITE3_INTEGER);
 		$op->bindValue(":targ", $to->getUid(), SQLITE3_INTEGER);
 		$op->bindValue(":msg", $msg, SQLITE3_TEXT);

@@ -27,7 +27,7 @@ use legionpe\theta\Session;
 
 class TeleportHereCommand extends SessionCommand{
 	public function __construct(BasePlugin $main){
-		parent::__construct($main, "tphere", "Send or accept request to teleport to you", "/tpa <player>", ["tphere"]);
+		parent::__construct($main, "tphere", "Send or accept request to teleport to you", "/tpa <player>", ["tpa"]);
 	}
 	/**
 	 * @param array $args
@@ -46,7 +46,7 @@ class TeleportHereCommand extends SessionCommand{
 		}
 		$relation = $target->getFriend($sender->getUid())->type;
 		if($relation === Friend::FRIEND_BEST_FRIEND){
-			if($this->proceed($sender, $target)){
+			if($this->proceed($target, $sender)){
 				$target->send(Phrases::CMD_TPR_HERE_BEST_FRIEND_TO, ["to" => $sender->getInGameName()]);
 				return $sender->translate(Phrases::CMD_TPR_HERE_BEST_FRIEND_FROM, ["to" => $target->getInGameName()]);
 			}
@@ -60,7 +60,7 @@ class TeleportHereCommand extends SessionCommand{
 				$target->send(Phrases::CMD_TPR_HERE_RECEIVED, ["from" => $sender->getInGameName()]);
 				return $sender->translate(Phrases::CMD_TPR_HERE_SENT, ["to" => $target->getInGameName()]);
 			}elseif($result === TeleportManager::REQUEST_ACCEPTED){
-				if($this->proceed($sender, $target)){
+				if($this->proceed($target, $sender)){
 					$target->send(Phrases::CMD_TPR_HERE_BE_ACCEPTED, ["from" => $sender->getInGameName()]);
 					return $sender->translate(Phrases::CMD_TPR_HERE_ACCEPTED, ["to" => $target->getInGameName()]);
 				}
@@ -84,7 +84,7 @@ class TeleportHereCommand extends SessionCommand{
 		$this->getPlugin()->getServer()->getScheduler()->scheduleDelayedTask(new TeleportTask($this->getMain(), $from, $to), ClassicConsts::TELEPORT_DELAY_TICKS);
 		return true;
 	}
-	public function checkPerm(Session $session, &$msg){
+	public function checkPerm(Session $session, &$msg = null){
 		if(ClassicConsts::isSpawn($session->getPlayer())){
 			$msg = "You can't teleport to spawn!";
 			return false;

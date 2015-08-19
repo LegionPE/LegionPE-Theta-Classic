@@ -45,5 +45,6 @@ class TeleportTask extends PluginTask{
 			$from->send(Phrases::CMD_TPR_PROCEED_FAIL_OFFLINE, ["name" => $this->toName]);
 			return;
 		}
+		$from->getPlayer()->teleport($to->getPlayer());
 	}
 }

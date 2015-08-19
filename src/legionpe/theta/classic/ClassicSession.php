@@ -366,13 +366,15 @@ class ClassicSession extends Session{
 		if(!parent::onPlace($event)){
 			return false;
 		}
-		return $this->isBuilder();
+//		return $this->isBuilder();
+		return false;
 	}
 	public function onBreak(BlockBreakEvent $event){
 		if(!parent::onBreak($event)){
 			return false;
 		}
-		return $this->isBuilder();
+//		return $this->isBuilder();
+		return false;
 	}
 	public function halfSecondTick(){
 		parent::halfSecondTick();
