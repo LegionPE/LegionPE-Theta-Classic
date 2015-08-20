@@ -16,7 +16,9 @@
 namespace legionpe\theta\classic;
 
 use legionpe\theta\BasePlugin;
+use legionpe\theta\Friend;
 use legionpe\theta\lang\Phrases;
+use legionpe\theta\query\SetFriendQuery;
 use legionpe\theta\Session;
 use legionpe\theta\utils\MUtils;
 use pocketmine\block\Block;
@@ -54,7 +56,7 @@ class ClassicSession extends Session{
 	/** @var int */
 	private $globalRank = 0;
 	/** @var bool */
-	private $friendlyFire;
+	private $friendlyFireActivated;
 	/** @var float */
 	public $lastHurtTime = 0.0, $nextCooldownTimeout = 0.0;
 	/** @var Block|null */
@@ -130,7 +132,24 @@ class ClassicSession extends Session{
 //						]));
 //						return false;
 //					}
-					// TODO check friends
+					$type = $this->getFriend($ses->getUid())->type;
+					if($type >= Friend::FRIEND_GOOD_FRIEND){
+						if(!$this->isFriendlyFireActivated() and !$ses->isFriendlyFireActivated()){
+							$fromEnt->sendTip($ses->translate(Phrases::PVP_ATTACK_FRIENDS, [
+								"type" => SetFriendQuery::$TYPES[$type],
+								"target" => $this->getInGameName()
+							]));
+							return false;
+						}
+						$ffaName = $this->isFriendlyFireActivated() ? $this->getInGameName() : $ses->getInGameName();
+						$data = [
+							"source" => $ses->getInGameName(),
+							"target" => $this->getInGameName(),
+							"ffa" => $ffaName
+						];
+						$fromEnt->sendTip($ses->translate(Phrases::PVP_ATTACK_FFA_HINT, $data));
+						$this->getPlayer()->sendTip($this->translate(Phrases::PVP_ATTACK_FFA_HINT, $data));
+					}
 					$now = microtime(true);
 					if($now - $this->lastHurtTime < $this->nextCooldownTimeout){
 						return false;
@@ -163,14 +182,14 @@ class ClassicSession extends Session{
 	/**
 	 * @return boolean
 	 */
-	public function isFriendlyFire(){
-		return $this->friendlyFire;
+	public function isFriendlyFireActivated(){
+		return $this->friendlyFireActivated;
 	}
 	/**
-	 * @param boolean $friendlyFire
+	 * @param boolean $friendlyFireActivated
 	 */
-	public function setFriendlyFire($friendlyFire){
-		$this->friendlyFire = $friendlyFire;
+	public function setFriendlyFireActivated($friendlyFireActivated){
+		$this->friendlyFireActivated = $friendlyFireActivated;
 	}
 	public function onDeath(PlayerDeathEvent $event){
 		if(!parent::onDeath($event)){
