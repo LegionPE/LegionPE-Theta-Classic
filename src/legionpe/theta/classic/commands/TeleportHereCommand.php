@@ -44,6 +44,9 @@ class TeleportHereCommand extends SessionCommand{
 		if(!($target instanceof ClassicSession)){
 			return $this->notOnline($sender, $name);
 		}
+		if(ClassicConsts::isSpawn($target->getPlayer())){
+			return $sender->translate(Phrases::CMD_TPR_HERE_FAIL_SPAWN);
+		}
 		$relation = $target->getFriend($sender->getUid())->type;
 		if($relation === Friend::FRIEND_BEST_FRIEND){
 			if($this->proceed($target, $sender)){
@@ -72,7 +75,7 @@ class TeleportHereCommand extends SessionCommand{
 		foreach($this->getMain()->getSessions() as $enemy){
 			if($enemy->getPlayer()->distanceSquared($to->getPlayer()) <= 25){
 				if($enemy->getFriend($from->getUid()) === Friend::FRIEND_ENEMY or $enemy->getFriend($to->getUid()) === Friend::FRIEND_ENEMY){
-					$from->send(Phrases::CMD_TPR_FAIL_ENEMY_NEARBY, [
+					$from->send(Phrases::CMD_TPR_PROCEED_FAIL_ENEMY_NEARBY, [
 						"from" => $from->getInGameName(),
 						"to" => $to->getInGameName(),
 						"enemy" => $enemy->getInGameName(),
