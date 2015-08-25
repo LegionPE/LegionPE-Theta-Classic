@@ -20,6 +20,7 @@ use legionpe\theta\classic\commands\TeleportHereCommand;
 use legionpe\theta\classic\commands\TeleportToCommand;
 use legionpe\theta\classic\query\ClassicLoginDataQuery;
 use legionpe\theta\classic\query\ClassicSaveSinglePlayerQuery;
+use legionpe\theta\command\session\friend\FriendlyFireActivationCommand;
 use pocketmine\Player;
 
 class ClassicPlugin extends BasePlugin{
@@ -55,6 +56,7 @@ class ClassicPlugin extends BasePlugin{
 		$this->getServer()->getCommandMap()->registerAll("c", [
 			new TeleportHereCommand($this),
 			new TeleportToCommand($this),
+			new FriendlyFireActivationCommand($this)
 		]);
 	}
 	public function getLoginQueryImpl(){
