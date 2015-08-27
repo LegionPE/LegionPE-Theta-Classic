@@ -405,7 +405,7 @@ class ClassicSession extends Session{
 			}
 		}
 		if($this->isPlaying()){
-			$respawn = (int)(ClassicConsts::RESPAWN_INVINCIBILITY - microtime(true) + $this->lastRespawnTime);
+			$respawn = (int) (ClassicConsts::RESPAWN_INVINCIBILITY - microtime(true) + $this->lastRespawnTime);
 			if($respawn > 0){
 				$this->setInvincible(true);
 				$this->setMaintainedPopup($this->translate(Phrases::PVP_INVINCIBILITY_LEFT, ["left" => $respawn]));
