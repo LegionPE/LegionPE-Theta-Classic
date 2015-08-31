@@ -24,7 +24,6 @@ use legionpe\theta\command\session\friend\FriendlyFireActivationCommand;
 use pocketmine\Player;
 
 class ClassicPlugin extends BasePlugin{
-	const COINS_ON_KILL = 10;
 	/** @var TeleportManager */
 	private $tpMgr;
 	protected static function defaultLoginData($uid, Player $player){

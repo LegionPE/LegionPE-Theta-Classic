@@ -134,21 +134,13 @@ class ClassicSession extends Session{
 //					}
 					$type = $this->getFriend($ses->getUid())->type;
 					if($type >= Friend::FRIEND_GOOD_FRIEND){
-						if(!$this->isFriendlyFireActivated() and !$ses->isFriendlyFireActivated()){
+						if(!$this->isFriendlyFireActivated() or !$ses->isFriendlyFireActivated()){
 							$fromEnt->sendTip($ses->translate(Phrases::PVP_ATTACK_FRIENDS, [
 								"type" => SetFriendQuery::$TYPES[$type],
 								"target" => $this->getInGameName()
 							]));
 							return false;
 						}
-						$ffaName = $this->isFriendlyFireActivated() ? $this->getInGameName() : $ses->getInGameName();
-						$data = [
-							"source" => $ses->getInGameName(),
-							"target" => $this->getInGameName(),
-							"ffa" => $ffaName
-						];
-						$fromEnt->sendTip($ses->translate(Phrases::PVP_ATTACK_FFA_HINT, $data));
-						$this->getPlayer()->sendTip($this->translate(Phrases::PVP_ATTACK_FFA_HINT, $data));
 					}
 					$now = microtime(true);
 					if($now - $this->lastHurtTime < $this->nextCooldownTimeout){
@@ -312,12 +304,13 @@ class ClassicSession extends Session{
 	}
 	public function addKill(){
 		$kills = $this->incrLoginDatum("pvp_kills");
-		list($add, $final) = $this->grantCoins(ClassicPlugin::COINS_ON_KILL);
 		if(microtime(true) - $this->lastKillTime < $this->nextKillstreakTimeout){
 			$streak = $this->incrLoginDatum("pvp_curstreak");
 		}else{
 			$this->setLoginDatum("pvp_curstreak", $streak = 1);
 		}
+		$coins = round(ClassicConsts::COINS_ON_KILL * pow(log($streak + 1, 10), 2) * 11.04 / pow($streak, -0.25), 2);
+		list($add, $final) = $this->grantCoins($coins);
 		$this->lastKillTime = microtime(true);
 		$this->send(Phrases::PVP_KILL_INFO, [
 			"literal" => $kills,
@@ -327,6 +320,17 @@ class ClassicSession extends Session{
 			"coins" => $final,
 			"added" => $add
 		]);
+		$rand = mt_rand(0, 999);
+		if($rand < 1){
+			$bonus = mt_rand(5000, 10000);
+		}elseif($rand < 6){
+			$bonus = mt_rand(1000, 5000);
+		}elseif($rand < 16){
+			$bonus = mt_rand(500, 1000);
+		}
+		if(isset($bonus)){
+			$this->grantCoins($bonus, true);
+		}
 	}
 	public function addDeath(){
 		$deaths = $this->incrLoginDatum("pvp_deaths");

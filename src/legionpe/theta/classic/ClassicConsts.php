@@ -23,7 +23,9 @@ use pocketmine\Server;
 
 class ClassicConsts{
 	const DEFAULT_COOLDOWN_TIMEOUT = 0.55;
-	const KILLSTREAK_TIMEOUT_BASE = 60.0;
+	const KILLSTREAK_TIMEOUT_BASE = 90.0;
+	const COINS_ON_KILL = 10;
+	const CONS_PER_KS = 10;
 	const RESPAWN_INVINCIBILITY = 15;
 	const TELEPORT_DELAY_TICKS = 100;
 	public static function isSpawn(Vector3 $v){
