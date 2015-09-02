@@ -362,7 +362,7 @@ class ClassicSession extends Session{
 		$this->getPlayer()->teleport($spawn);
 		$this->getPlayer()->addEffect(Effect::getEffect(Effect::HEALTH_BOOST)->setDuration(0x7FFFFF)->setVisible(false)->setAmplifier(9));
 		$this->getPlayer()->setNameTag($this->calculateNameTag(TextFormat::WHITE, $this->getPlayer()->getMaxHealth()));
-		$this->getPlayer()->getInventory()->setArmorContents([]);
+		$this->getPlayer()->getInventory()->clearAll();
 		$this->getPlayer()->getInventory()->sendArmorContents($this->getPlayer()->getInventory()->getViewers());
 	}
 	public function equip(){
