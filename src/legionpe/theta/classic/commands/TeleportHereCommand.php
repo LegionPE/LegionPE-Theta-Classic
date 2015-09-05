@@ -73,7 +73,7 @@ class TeleportHereCommand extends SessionCommand{
 	}
 	public function proceed(Session $from, Session $to){
 		foreach($this->getMain()->getSessions() as $enemy){
-			if($enemy->getPlayer()->distanceSquared($to->getPlayer()) <= 25){
+			if($enemy->getPlayer()->distanceSquared($to->getPlayer()) <= 100){
 				if($enemy->getFriend($from->getUid()) === Friend::FRIEND_ENEMY or $enemy->getFriend($to->getUid()) === Friend::FRIEND_ENEMY){
 					$from->send(Phrases::CMD_TPR_PROCEED_FAIL_ENEMY_NEARBY, [
 						"from" => $from->getInGameName(),
