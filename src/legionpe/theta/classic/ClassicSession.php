@@ -331,6 +331,7 @@ class ClassicSession extends Session{
 		if(isset($bonus)){
 			$this->grantCoins($bonus, true);
 		}
+		$this->grantTeamPoints(10);
 	}
 	public function addDeath(){
 		$deaths = $this->incrLoginDatum("pvp_deaths");
@@ -338,6 +339,7 @@ class ClassicSession extends Session{
 			"literal" => $deaths,
 			"ord" => $deaths . MUtils::num_getOrdinal($deaths)
 		]);
+		$this->takeTeamPoints(5);
 	}
 	/**
 	 * @return int
