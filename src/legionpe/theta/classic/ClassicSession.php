@@ -34,6 +34,7 @@ use pocketmine\event\entity\EntityDamageByEntityEvent;
 use pocketmine\event\entity\EntityDamageEvent;
 use pocketmine\event\entity\EntityRegainHealthEvent;
 use pocketmine\event\player\PlayerDeathEvent;
+use pocketmine\event\player\PlayerItemConsumeEvent;
 use pocketmine\event\player\PlayerMoveEvent;
 use pocketmine\event\player\PlayerRespawnEvent;
 use pocketmine\item\Bow;
@@ -289,6 +290,46 @@ class ClassicSession extends Session{
 			$this->lastRespawnTime = microtime(true);
 			$this->getPlayer()->addEffect(Effect::getEffect(Effect::INVISIBILITY)->setDuration(ClassicConsts::RESPAWN_INVINCIBILITY * 20)->setVisible(false));
 		}
+	}
+	public function onConsume(PlayerItemConsumeEvent $event){
+		$items = [ //TODO: move this to item classes
+			Item::APPLE => 4,
+			Item::MUSHROOM_STEW => 10,
+			Item::BEETROOT_SOUP => 10,
+			Item::BREAD => 5,
+			Item::RAW_PORKCHOP => 3,
+			Item::COOKED_PORKCHOP => 8,
+			Item::RAW_BEEF => 3,
+			Item::STEAK => 8,
+			Item::COOKED_CHICKEN => 6,
+			Item::RAW_CHICKEN => 2,
+			Item::MELON_SLICE => 2,
+			Item::GOLDEN_APPLE => 10,
+			Item::PUMPKIN_PIE => 8,
+			Item::CARROT => 4,
+			Item::POTATO => 1,
+			Item::BAKED_POTATO => 6,
+			Item::COOKIE => 2,
+			Item::COOKED_FISH => [
+				0 => 5,
+				1 => 6
+			],
+			Item::RAW_FISH => [
+				0 => 2,
+				1 => 2,
+				2 => 1,
+				3 => 1
+			],
+		];
+		if(isset($items[$id = $event->getItem()->getId()])){
+			$health = $items[$id];
+			if(is_array($health)){
+				$health = $health[$event->getItem()->getDamage()];
+			}
+			$this->getPlayer()->heal($health, new EntityRegainHealthEvent($this->getPlayer(), $health, EntityRegainHealthEvent::CAUSE_CUSTOM));
+			return false;
+		}
+		return true;
 	}
 	public function getCurrentStreak(){
 		return $this->getLoginDatum("pvp_curstreak");
