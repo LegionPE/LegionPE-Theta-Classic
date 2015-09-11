@@ -18,6 +18,7 @@ namespace legionpe\theta\classic\commands;
 use legionpe\theta\BasePlugin;
 use legionpe\theta\classic\ClassicSession;
 use legionpe\theta\command\SessionCommand;
+use legionpe\theta\Friend;
 use legionpe\theta\lang\Phrases;
 use legionpe\theta\Session;
 
@@ -31,6 +32,12 @@ class PvpStatsCommand extends SessionCommand{
 			$session = $this->getSession($name = array_shift($args));
 			if($session === null){
 				return $this->notOnline($sender, $name);
+			}
+			if(!$session->isStatsPublic() and $sender->getFriend($session->getUid())->type < Friend::FRIEND_ACQUAINTANCE){
+				return $sender->translate(Phrases::PVP_CMD_STATS_PRIVATE, [
+					"name" => $session->getInGameName(),
+					"plainname" => $session->getPlayer()->getName()
+				]);
 			}
 		}else{
 			$session = $sender;
