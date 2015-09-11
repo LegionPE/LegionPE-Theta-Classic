@@ -17,6 +17,7 @@ namespace legionpe\theta\classic\query;
 
 use legionpe\theta\BasePlugin;
 use legionpe\theta\classic\ClassicSession;
+use legionpe\theta\config\Settings;
 use legionpe\theta\query\SaveSinglePlayerQuery;
 use legionpe\theta\Session;
 use pocketmine\Server;
@@ -39,7 +40,8 @@ class ClassicSaveSinglePlayerQuery extends SaveSinglePlayerQuery{
 		return $cols;
 	}
 	public function onPostQuery(\mysqli $db){
-		$result = $db->query("SELECT COUNT(*) + 1 AS rank FROM users WHERE pvp_kills > $this->kills");
+		$statsPublic = Settings::CONFIG_STATS_PUBLIC;
+		$result = $db->query("SELECT COUNT(*) + 1 AS rank FROM users WHERE pvp_kills > $this->kills AND (config & $statsPublic) = $statsPublic");
 		$this->rank = $result->fetch_assoc()["rank"];
 		$result->close();
 	}

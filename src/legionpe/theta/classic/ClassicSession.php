@@ -465,7 +465,7 @@ class ClassicSession extends Session{
 		}
 	}
 	protected function chatPrefix(){
-		if($this->globalRank > 0 and $this->getKills() > 0){
+		if($this->isStatsPublic() and $this->globalRank > 0 and $this->getKills() > 0){
 			return Phrases::VAR_symbol . "{" . Phrases::VAR_em . $this->getKills() . Phrases::VAR_em2 . "#" . $this->globalRank . Phrases::VAR_symbol . "}";
 		}
 		return "";
