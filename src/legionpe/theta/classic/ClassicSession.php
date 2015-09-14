@@ -34,6 +34,7 @@ use pocketmine\event\entity\EntityDamageByEntityEvent;
 use pocketmine\event\entity\EntityDamageEvent;
 use pocketmine\event\entity\EntityRegainHealthEvent;
 use pocketmine\event\player\PlayerDeathEvent;
+use pocketmine\event\player\PlayerInteractEvent;
 use pocketmine\event\player\PlayerItemConsumeEvent;
 use pocketmine\event\player\PlayerMoveEvent;
 use pocketmine\event\player\PlayerRespawnEvent;
@@ -67,7 +68,7 @@ class ClassicSession extends Session{
 	private $lastRespawnTime;
 	/** @var EntityDamageByEntityEvent|null */
 	private $lastFallLavaCause = null;
-	private $counter = 0;
+	private $counter = 0, $lastEat = 0;
 	private $invincible = false;
 	public function __construct(BasePlugin $main, Player $player, array $loginData){
 		$this->main = $main;
@@ -163,7 +164,7 @@ class ClassicSession extends Session{
 				$this->lastFallLavaCause = $last;
 			}
 		}
-		$this->getPlayer()->setNameTag($this->calculateNameTag(TextFormat::WHITE, $this->getPlayer()->getHealth() - $event->getFinalDamage()));
+//		$this->getPlayer()->setNameTag($this->calculateNameTag(TextFormat::WHITE, $this->getPlayer()->getHealth() - $event->getFinalDamage()));
 		return true;
 	}
 	/**
@@ -281,7 +282,7 @@ class ClassicSession extends Session{
 		if(!parent::onHeal($event)){
 			return false;
 		}
-		$this->getPlayer()->setNameTag($this->calculateNameTag(TextFormat::WHITE, $event->getAmount() + $this->getPlayer()->getHealth()));
+//		$this->getPlayer()->setNameTag($this->calculateNameTag(TextFormat::WHITE, $event->getAmount() + $this->getPlayer()->getHealth()));
 		return true;
 	}
 	public function onMove(PlayerMoveEvent $event){
@@ -326,7 +327,59 @@ class ClassicSession extends Session{
 			if(is_array($health)){
 				$health = $health[$event->getItem()->getDamage()];
 			}
+			$this->getPlayer()->heal($health, new EntityRegainHealthEvent($this->getPlayer(), $health, EntityRegainHealthEvent::CAUSE_EATING));
+			return false;
+		}
+		return true;
+	}
+	public function onInteract(PlayerInteractEvent $event){
+		$items = [ //TODO: move this to item classes
+			Item::APPLE => 4,
+			Item::MUSHROOM_STEW => 10,
+			Item::BEETROOT_SOUP => 10,
+			Item::BREAD => 5,
+			Item::RAW_PORKCHOP => 3,
+			Item::COOKED_PORKCHOP => 8,
+			Item::RAW_BEEF => 3,
+			Item::STEAK => 8,
+			Item::COOKED_CHICKEN => 6,
+			Item::RAW_CHICKEN => 2,
+			Item::MELON_SLICE => 2,
+			Item::GOLDEN_APPLE => 10,
+			Item::PUMPKIN_PIE => 8,
+			Item::CARROT => 4,
+			Item::POTATO => 1,
+			Item::BAKED_POTATO => 6,
+			Item::COOKIE => 2,
+			Item::COOKED_FISH => [
+				0 => 5,
+				1 => 6
+			],
+			Item::RAW_FISH => [
+				0 => 2,
+				1 => 2,
+				2 => 1,
+				3 => 1
+			],
+		];
+		if($event->getAction() !== PlayerInteractEvent::RIGHT_CLICK_BLOCK and isset($items[$id = $event->getItem()->getId()])){
+			$health = $items[$id];
+			if(is_array($health)){
+				$health = $health[$event->getItem()->getDamage()];
+			}
 			$this->getPlayer()->heal($health, new EntityRegainHealthEvent($this->getPlayer(), $health, EntityRegainHealthEvent::CAUSE_CUSTOM));
+			$effect = $this->getPlayer()->getEffect(Effect::SLOWNESS);
+			if(microtime(true) - $this->lastEat < 1){
+				return false;
+			}
+			$this->lastEat = microtime(true);
+			if($effect === null){
+				$effect = Effect::getEffect(Effect::SLOWNESS)->setDuration(20);
+			}else{
+				$this->getPlayer()->removeEffect(Effect::SLOWNESS);
+				$effect->setDuration(20);
+			}
+			$this->getPlayer()->addEffect($effect);
 			return false;
 		}
 		return true;
@@ -404,7 +457,7 @@ class ClassicSession extends Session{
 		$event->setRespawnPosition($spawn = ClassicConsts::getSpawnPosition($this->getMain()->getServer()));
 		$this->getPlayer()->teleport($spawn);
 		$this->getPlayer()->addEffect(Effect::getEffect(Effect::HEALTH_BOOST)->setDuration(0x7FFFFF)->setVisible(false)->setAmplifier(9));
-		$this->getPlayer()->setNameTag($this->calculateNameTag(TextFormat::WHITE, $this->getPlayer()->getMaxHealth()));
+//		$this->getPlayer()->setNameTag($this->calculateNameTag(TextFormat::WHITE, $this->getPlayer()->getMaxHealth()));
 		$this->getPlayer()->getInventory()->clearAll();
 		$this->getPlayer()->getInventory()->sendArmorContents($this->getPlayer()->getInventory()->getViewers());
 	}
@@ -462,6 +515,10 @@ class ClassicSession extends Session{
 				$this->setInvincible(false);
 				$this->equip();
 			}
+		}
+		$nameTag = $this->calculateNameTag();
+		if($nameTag !== $this->getPlayer()->getNameTag()){
+			$this->getPlayer()->setNameTag($nameTag);
 		}
 	}
 	protected function chatPrefix(){
