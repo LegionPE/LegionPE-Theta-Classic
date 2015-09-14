@@ -292,45 +292,47 @@ class ClassicSession extends Session{
 			$this->getPlayer()->addEffect(Effect::getEffect(Effect::INVISIBILITY)->setDuration(ClassicConsts::RESPAWN_INVINCIBILITY * 20)->setVisible(false));
 		}
 	}
-	public function onConsume(PlayerItemConsumeEvent $event){
-		$items = [ //TODO: move this to item classes
-			Item::APPLE => 4,
-			Item::MUSHROOM_STEW => 10,
-			Item::BEETROOT_SOUP => 10,
-			Item::BREAD => 5,
-			Item::RAW_PORKCHOP => 3,
-			Item::COOKED_PORKCHOP => 8,
-			Item::RAW_BEEF => 3,
-			Item::STEAK => 8,
-			Item::COOKED_CHICKEN => 6,
-			Item::RAW_CHICKEN => 2,
-			Item::MELON_SLICE => 2,
-			Item::GOLDEN_APPLE => 10,
-			Item::PUMPKIN_PIE => 8,
-			Item::CARROT => 4,
-			Item::POTATO => 1,
-			Item::BAKED_POTATO => 6,
-			Item::COOKIE => 2,
-			Item::COOKED_FISH => [
-				0 => 5,
-				1 => 6
-			],
-			Item::RAW_FISH => [
-				0 => 2,
-				1 => 2,
-				2 => 1,
-				3 => 1
-			],
-		];
-		if(isset($items[$id = $event->getItem()->getId()])){
-			$health = $items[$id];
-			if(is_array($health)){
-				$health = $health[$event->getItem()->getDamage()];
-			}
-			$this->getPlayer()->heal($health, new EntityRegainHealthEvent($this->getPlayer(), $health, EntityRegainHealthEvent::CAUSE_EATING));
-			return false;
-		}
-		return true;
+	public function onConsume(PlayerItemConsumeEvent $event){ // TODO add this back when hunger is implemented
+		parent::onConsume($event);
+		return false;
+//		$items = [ //TODO: move this to item classes
+//			Item::APPLE => 4,
+//			Item::MUSHROOM_STEW => 10,
+//			Item::BEETROOT_SOUP => 10,
+//			Item::BREAD => 5,
+//			Item::RAW_PORKCHOP => 3,
+//			Item::COOKED_PORKCHOP => 8,
+//			Item::RAW_BEEF => 3,
+//			Item::STEAK => 8,
+//			Item::COOKED_CHICKEN => 6,
+//			Item::RAW_CHICKEN => 2,
+//			Item::MELON_SLICE => 2,
+//			Item::GOLDEN_APPLE => 10,
+//			Item::PUMPKIN_PIE => 8,
+//			Item::CARROT => 4,
+//			Item::POTATO => 1,
+//			Item::BAKED_POTATO => 6,
+//			Item::COOKIE => 2,
+//			Item::COOKED_FISH => [
+//				0 => 5,
+//				1 => 6
+//			],
+//			Item::RAW_FISH => [
+//				0 => 2,
+//				1 => 2,
+//				2 => 1,
+//				3 => 1
+//			],
+//		];
+//		if(isset($items[$id = $event->getItem()->getId()])){
+//			$health = $items[$id];
+//			if(is_array($health)){
+//				$health = $health[$event->getItem()->getDamage()];
+//			}
+//			$this->getPlayer()->heal($health, new EntityRegainHealthEvent($this->getPlayer(), $health, EntityRegainHealthEvent::CAUSE_EATING));
+//			return false;
+//		}
+//		return true;
 	}
 	public function onInteract(PlayerInteractEvent $event){
 		$items = [ //TODO: move this to item classes
@@ -367,22 +369,32 @@ class ClassicSession extends Session{
 			if(is_array($health)){
 				$health = $health[$event->getItem()->getDamage()];
 			}
-			$this->getPlayer()->heal($health, new EntityRegainHealthEvent($this->getPlayer(), $health, EntityRegainHealthEvent::CAUSE_CUSTOM));
-			$effect = $this->getPlayer()->getEffect(Effect::SLOWNESS);
-			if(microtime(true) - $this->lastEat < 1){
-				return false;
-			}
-			$this->lastEat = microtime(true);
-			if($effect === null){
-				$effect = Effect::getEffect(Effect::SLOWNESS)->setDuration(20);
-			}else{
-				$this->getPlayer()->removeEffect(Effect::SLOWNESS);
-				$effect->setDuration(20);
-			}
-			$this->getPlayer()->addEffect($effect);
+			$this->eatFoodAction($health);
+			$this->decrementHandItem();
 			return false;
 		}
 		return true;
+	}
+	public function eatFoodAction($health){
+		$this->getPlayer()->heal($health, new EntityRegainHealthEvent($this->getPlayer(), $health, EntityRegainHealthEvent::CAUSE_EATING));
+		$effect = $this->getPlayer()->getEffect(Effect::SLOWNESS);
+		if(microtime(true) - $this->lastEat < 2){
+			return;
+		}
+		$this->lastEat = microtime(true);
+		if($effect === null){
+			$effect = Effect::getEffect(Effect::SLOWNESS)->setDuration(40)->setVisible(false)->setAmplifier(1);
+		}else{
+			$this->getPlayer()->removeEffect(Effect::SLOWNESS);
+			$effect->setDuration(40);
+		}
+		$this->getPlayer()->addEffect($effect);
+	}
+	public function decrementHandItem(){
+		$inv = $this->getPlayer()->getInventory();
+		$item = $inv->getItemInHand();
+		$item->setCount($item->getCount() - 1);
+		$inv->setItemInHand($item);
 	}
 	public function getCurrentStreak(){
 		return $this->getLoginDatum("pvp_curstreak");
