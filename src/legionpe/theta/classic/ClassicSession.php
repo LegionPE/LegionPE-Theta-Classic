@@ -468,6 +468,7 @@ class ClassicSession extends Session{
 		parent::onRespawn($event);
 		$event->setRespawnPosition($spawn = ClassicConsts::getSpawnPosition($this->getMain()->getServer()));
 		$this->getPlayer()->teleport($spawn);
+		$this->getPlayer()->removeAllEffects();
 		$this->getPlayer()->addEffect(Effect::getEffect(Effect::HEALTH_BOOST)->setDuration(0x7FFFFF)->setVisible(false)->setAmplifier(9));
 //		$this->getPlayer()->setNameTag($this->calculateNameTag(TextFormat::WHITE, $this->getPlayer()->getMaxHealth()));
 		$this->getPlayer()->getInventory()->clearAll();
