@@ -490,8 +490,6 @@ class ClassicSession extends Session{
 		$inv->setHotbarSlotIndex(1, 1);
 		$inv->setHotbarSlotIndex(2, 2);
 		$inv->setHotbarSlotIndex(3, 3);
-		$this->getPlayer()->removeAllEffects();
-		$this->getPlayer()->addEffect(Effect::getEffect(Effect::HEALTH_BOOST)->setDuration(0x7FFFFF)->setVisible(false)->setAmplifier(9));
 		$inv->sendContents([$this->getPlayer()]);
 	}
 	public function onPlace(BlockPlaceEvent $event){
@@ -527,6 +525,8 @@ class ClassicSession extends Session{
 				$this->getPlayer()->sendPopup($this->translate(Phrases::PVP_INVINCIBILITY_OFF));
 				$this->setInvincible(false);
 				$this->equip();
+				$this->getPlayer()->removeAllEffects();
+				$this->getPlayer()->addEffect(Effect::getEffect(Effect::HEALTH_BOOST)->setDuration(0x7FFFFF)->setVisible(false)->setAmplifier(9));
 			}
 		}
 		$nameTag = $this->calculateNameTag();
