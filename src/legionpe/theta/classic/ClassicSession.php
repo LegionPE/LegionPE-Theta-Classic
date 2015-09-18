@@ -335,6 +335,13 @@ class ClassicSession extends Session{
 //		return true;
 	}
 	public function onInteract(PlayerInteractEvent $event){
+		if(!parent::onInteract($event)){
+			return false;
+		}
+		$this->checkInteractWithFood($event);
+		return true;
+	}
+	protected function checkInteractWithFood(PlayerInteractEvent $event){
 		$items = [ //TODO: move this to item classes
 			Item::APPLE => 4,
 			Item::MUSHROOM_STEW => 10,
@@ -371,9 +378,7 @@ class ClassicSession extends Session{
 			}
 			$this->eatFoodAction($health);
 			$this->decrementHandItem();
-			return false;
 		}
-		return true;
 	}
 	public function eatFoodAction($health){
 		$this->getPlayer()->heal($health, new EntityRegainHealthEvent($this->getPlayer(), $health, EntityRegainHealthEvent::CAUSE_EATING));
