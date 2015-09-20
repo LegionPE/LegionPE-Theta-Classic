@@ -18,6 +18,7 @@ namespace legionpe\theta\classic;
 use legionpe\theta\BasePlugin;
 use legionpe\theta\classic\commands\TeleportHereCommand;
 use legionpe\theta\classic\commands\TeleportToCommand;
+use legionpe\theta\classic\commands\TopCommand;
 use legionpe\theta\classic\query\ClassicLoginDataQuery;
 use legionpe\theta\classic\query\ClassicSaveSinglePlayerQuery;
 use legionpe\theta\command\session\friend\FriendlyFireActivationCommand;
@@ -55,7 +56,8 @@ class ClassicPlugin extends BasePlugin{
 		$this->getServer()->getCommandMap()->registerAll("c", [
 			new TeleportHereCommand($this),
 			new TeleportToCommand($this),
-			new FriendlyFireActivationCommand($this)
+			new FriendlyFireActivationCommand($this),
+			new TopCommand($this),
 		]);
 	}
 	public function getLoginQueryImpl(){
