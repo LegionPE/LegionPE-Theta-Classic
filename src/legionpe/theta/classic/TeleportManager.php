@@ -36,7 +36,7 @@ class TeleportManager{
 			$isent = $result["reqByFrom"];
 			if($isent){
 				if($result["msg"] !== $msg){
-					$op = $this->db->prepare("UPDATE req SET msg=:msg WHERE from=:src AND targ=:targ");
+					$op = $this->db->prepare("UPDATE req SET msg=:msg WHERE src=:src AND targ=:targ");
 					$op->bindValue(":src", $from->getUid());
 					$op->bindValue(":targ", $to->getUid());
 					$op->bindValue(":msg", $msg);
