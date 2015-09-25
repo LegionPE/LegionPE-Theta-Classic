@@ -415,9 +415,9 @@ class ClassicSession extends Session{
 		$this->setLoginDatum("pvp_curstreak", $kills);
 	}
 	public function addKill(){
-		$kills = $this->incrLoginDatum("pvp_kills");
+		$kills = $this->incrementLoginDatum("pvp_kills");
 		if(microtime(true) - $this->lastKillTime < $this->nextKillstreakTimeout){
-			$streak = $this->incrLoginDatum("pvp_curstreak");
+			$streak = $this->incrementLoginDatum("pvp_curstreak");
 		}else{
 			$this->setLoginDatum("pvp_curstreak", $streak = 1);
 		}
@@ -446,7 +446,7 @@ class ClassicSession extends Session{
 		$this->grantTeamPoints(10);
 	}
 	public function addDeath(){
-		$deaths = $this->incrLoginDatum("pvp_deaths");
+		$deaths = $this->incrementLoginDatum("pvp_deaths");
 		$this->send(Phrases::PVP_DEATH_INFO, [
 			"literal" => $deaths,
 			"ord" => $deaths . MUtils::num_getOrdinal($deaths)
