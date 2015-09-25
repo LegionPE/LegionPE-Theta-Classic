@@ -39,19 +39,6 @@ class ClassicPlugin extends BasePlugin{
 	}
 	public function onEnable(){
 		parent::onEnable();
-//		echo "fixing grass...\r";
-//		if(!$this->getServer()->isLevelLoaded("world_pvp")){
-//			$this->getServer()->loadLevel("world_pvp");
-//		}
-//		foreach($this->getServer()->getLevels() as $level){
-//			foreach($level->getChunks() as $chunk){
-//				for($x = 0; $x < 16; $x++){
-//					for($z = 0; $z < 16; $z++){
-//						$chunk->setBiomeColor($x, $z, 0x64, 0xFF, 0x00);
-//					}
-//				}
-//			}
-//		}
 		$this->tpMgr = new TeleportManager($this);
 		$this->getServer()->getCommandMap()->registerAll("c", [
 			new TeleportHereCommand($this),
