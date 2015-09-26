@@ -382,19 +382,19 @@ class ClassicSession extends Session{
 		}
 	}
 	public function eatFoodAction($health){
-		$this->getPlayer()->heal($health, new EntityRegainHealthEvent($this->getPlayer(), $health, EntityRegainHealthEvent::CAUSE_EATING));
-		$effect = $this->getPlayer()->getEffect(Effect::SLOWNESS);
-		if(microtime(true) - $this->lastEat < 2){
-			return;
-		}
-		$this->lastEat = microtime(true);
-		if($effect === null){
-			$effect = Effect::getEffect(Effect::SLOWNESS)->setDuration(40)->setVisible(false)->setAmplifier(1);
-		}else{
-			$this->getPlayer()->removeEffect(Effect::SLOWNESS);
-			$effect->setDuration(40);
-		}
-		$this->getPlayer()->addEffect($effect);
+//		$this->getPlayer()->heal($health, new EntityRegainHealthEvent($this->getPlayer(), $health, EntityRegainHealthEvent::CAUSE_EATING));
+//		$effect = $this->getPlayer()->getEffect(Effect::SLOWNESS);
+//		if(microtime(true) - $this->lastEat < 2){
+//			return;
+//		}
+//		$this->lastEat = microtime(true);
+//		if($effect === null){
+//			$effect = Effect::getEffect(Effect::SLOWNESS)->setDuration(40)->setVisible(false)->setAmplifier(1);
+//		}else{
+//			$this->getPlayer()->removeEffect(Effect::SLOWNESS);
+//			$effect->setDuration(40);
+//		}
+//		$this->getPlayer()->addEffect($effect);
 	}
 	public function decrementHandItem(){
 		$inv = $this->getPlayer()->getInventory();
