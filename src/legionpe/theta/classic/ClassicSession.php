@@ -68,7 +68,8 @@ class ClassicSession extends Session{
 	private $lastRespawnTime;
 	/** @var EntityDamageByEntityEvent|null */
 	private $lastFallLavaCause = null;
-	private $counter = 0, $lastEat = 0;
+	private $counter = 0, /** @noinspection PhpUnusedPrivateFieldInspection */
+		$lastEat = 0;
 	private $invincible = false;
 	public function __construct(BasePlugin $main, Player $player, array $loginData){
 		$this->main = $main;
@@ -422,6 +423,7 @@ class ClassicSession extends Session{
 			$this->setLoginDatum("pvp_curstreak", $streak = 1);
 		}
 		$coins = round(ClassicConsts::COINS_ON_KILL * pow(log($streak + 1, 10), 2) * 11.04 / pow($streak, -0.25), 2);
+		$this->grantTeamPoints(floor($coins));
 		list($add, $final) = $this->grantCoins($coins);
 		$this->lastKillTime = microtime(true);
 		$this->send(Phrases::PVP_KILL_INFO, [
@@ -443,7 +445,6 @@ class ClassicSession extends Session{
 		if(isset($bonus)){
 			$this->grantCoins($bonus, true);
 		}
-		$this->grantTeamPoints(10);
 	}
 	public function addDeath(){
 		$deaths = $this->incrementLoginDatum("pvp_deaths");
