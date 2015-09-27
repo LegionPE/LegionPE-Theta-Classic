@@ -24,7 +24,11 @@ use legionpe\theta\classic\query\ClassicSaveSinglePlayerQuery;
 use legionpe\theta\command\session\friend\FriendlyFireActivationCommand;
 use pocketmine\Player;
 
+//use legionpe\theta\classic\commands\OneVsOneCommand;
+
 class ClassicPlugin extends BasePlugin{
+	/** @var OneVsOneMatch|null */
+	public $currentMatch = null;
 	/** @var TeleportManager */
 	private $tpMgr;
 	protected static function defaultLoginData($uid, Player $player){
@@ -45,6 +49,7 @@ class ClassicPlugin extends BasePlugin{
 			new TeleportToCommand($this),
 			new FriendlyFireActivationCommand($this),
 			new TopCommand($this),
+//			new OneVsOneCommand($this),
 		]);
 	}
 	public function getLoginQueryImpl(){

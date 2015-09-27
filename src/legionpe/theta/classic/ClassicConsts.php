@@ -82,4 +82,10 @@ class ClassicConsts{
 	public static function getAutoHeal(Session $session){
 		return $session->isVIP() ? 2 : 1;
 	}
+	public static function get1v1HostPos(Server $server){
+		return new Position(196, 16, 4, $server->getLevelByName("world_pvp"));
+	}
+	public static function get1v1GuestPos(Server $server){
+		return new Position(214, 16, 23, $server->getLevelByName("world_pvp"));
+	}
 }

@@ -62,15 +62,14 @@ class ClassicSession extends Session{
 	/** @var float */
 	public $lastHurtTime = 0.0, $nextCooldownTimeout = 0.0;
 	/** @var Block|null */
-	private $lastDamagePosition = null;
+	private $lastDamageBlock = null;
 	/** @var float */
 	private $lastKillTime = 0.0, $nextKillstreakTimeout = ClassicConsts::KILLSTREAK_TIMEOUT_BASE, $lastDamageTime = 0.0;
 	private $lastRespawnTime;
 	/** @var EntityDamageByEntityEvent|null */
 	private $lastFallLavaCause = null;
-	private $counter = 0, /** @noinspection PhpUnusedPrivateFieldInspection */
-		$lastEat = 0;
-	private $invincible = false;
+	private $counter = 0;
+	private $invincible = false, $movementBlocked = false;
 	public function __construct(BasePlugin $main, Player $player, array $loginData){
 		$this->main = $main;
 		parent::__construct($player, $loginData);
@@ -92,6 +91,18 @@ class ClassicSession extends Session{
 	 */
 	public function setInvincible($invincible){
 		$this->invincible = $invincible;
+	}
+	/**
+	 * @return boolean
+	 */
+	public function isMovementBlocked(){
+		return $this->movementBlocked;
+	}
+	/**
+	 * @param boolean $movementBlocked
+	 */
+	public function setMovementBlocked($movementBlocked){
+		$this->movementBlocked = $movementBlocked;
 	}
 	public function getKills(){
 		return $this->getLoginDatum("pvp_kills");
@@ -157,7 +168,7 @@ class ClassicSession extends Session{
 					}
 				}
 			}
-			$this->lastDamagePosition = $this->getPlayer()->getLevel()->getBlock($this->getPlayer());
+			$this->lastDamageBlock = $this->getPlayer()->getLevel()->getBlock($this->getPlayer());
 			$this->lastDamageTime = microtime(true);
 		}elseif($event->getCause() === EntityDamageEvent::CAUSE_FALL or $event->getCause() === EntityDamageEvent::CAUSE_LAVA){
 			$last = $this->getPlayer()->getLastDamageCause();
@@ -237,8 +248,11 @@ class ClassicSession extends Session{
 			}
 		}elseif(($cause->getCause() === EntityDamageEvent::CAUSE_FALL or $cause->getCause() === EntityDamageEvent::CAUSE_LAVA) and microtime(true) - $this->lastDamageTime < 2.5){
 			$knock = $this->lastFallLavaCause;
-			$pos = $this->lastDamagePosition;
-			$id = $pos->getId();
+			if($knock === null){
+				return true;
+			}
+			$block = $this->lastDamageBlock;
+			$id = $block->getId();
 			if($cause->getCause() === EntityDamageEvent::CAUSE_LAVA){
 				$deathPhrase = Phrases::PVP_DEATH_LAVA;
 				$killPhrase = Phrases::PVP_KILL_LAVA;
@@ -287,11 +301,15 @@ class ClassicSession extends Session{
 		return true;
 	}
 	public function onMove(PlayerMoveEvent $event){
+		if(!parent::onMove($event) or $this->movementBlocked){
+			return false;
+		}
 		if(ClassicConsts::spawnPortal($this->getPlayer())){
 			$this->getPlayer()->teleport(ClassicConsts::getRandomSpawnPosition($this->getMain()->getServer()));
 			$this->lastRespawnTime = microtime(true);
 			$this->getPlayer()->addEffect(Effect::getEffect(Effect::INVISIBILITY)->setDuration(ClassicConsts::RESPAWN_INVINCIBILITY * 20)->setVisible(false));
 		}
+		return true;
 	}
 	public function onConsume(PlayerItemConsumeEvent $event){ // TODO add this back when hunger is implemented
 		parent::onConsume($event);
@@ -445,6 +463,10 @@ class ClassicSession extends Session{
 		if(isset($bonus)){
 			$this->grantCoins($bonus, true);
 		}
+		$match = $this->getMain()->currentMatch;
+		if($match->host === $this or $match->guest === $this){
+			$match->onWin($this);
+		}
 	}
 	public function addDeath(){
 		$deaths = $this->incrementLoginDatum("pvp_deaths");
@@ -470,6 +492,13 @@ class ClassicSession extends Session{
 		parent::login($method);
 		$this->onRespawn(new PlayerRespawnEvent($this->getPlayer(), $this->getPlayer()->getPosition()));
 		$this->getMain()->getServer()->getLevelByName("world_pvp")->addParticle(new FloatingTextParticle(new Vector3(304, 49, -150), $this->translate(Phrases::PVP_LEAVE_SPAWN_HINT)), [$this->getPlayer()]);
+	}
+	public function onQuit(){
+		$match = $this->getMain()->currentMatch;
+		if($match->host === $this or $match->guest === $this){
+			$match->onQuit($this);
+		}
+		parent::onQuit();
 	}
 	public function onRespawn(PlayerRespawnEvent $event){
 		parent::onRespawn($event);
