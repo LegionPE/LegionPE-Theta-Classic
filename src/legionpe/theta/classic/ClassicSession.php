@@ -464,8 +464,10 @@ class ClassicSession extends Session{
 			$this->grantCoins($bonus, true);
 		}
 		$match = $this->getMain()->currentMatch;
-		if($match->host === $this or $match->guest === $this){
-			$match->onWin($this);
+		if($match !== null){
+			if($match->host === $this or $match->guest === $this){
+				$match->onWin($this);
+			}
 		}
 	}
 	public function addDeath(){
@@ -495,8 +497,10 @@ class ClassicSession extends Session{
 	}
 	public function onQuit(){
 		$match = $this->getMain()->currentMatch;
-		if($match->host === $this or $match->guest === $this){
-			$match->onQuit($this);
+		if($match !== null){
+			if($match->host === $this or $match->guest === $this){
+				$match->onQuit($this);
+			}
 		}
 		parent::onQuit();
 	}
@@ -512,6 +516,9 @@ class ClassicSession extends Session{
 	}
 	public function equip(){
 		$inv = $this->getPlayer()->getInventory();
+		if($inv === null){
+			return;
+		}
 		$inv->clearAll();
 		$inv->setHelmet(new GoldHelmet);
 		$inv->setChestplate(new ChainChestplate);
