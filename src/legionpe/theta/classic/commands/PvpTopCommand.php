@@ -20,7 +20,7 @@ use legionpe\theta\classic\query\TopKillsQuery;
 use legionpe\theta\command\SessionCommand;
 use legionpe\theta\Session;
 
-class TopCommand extends SessionCommand{
+class PvpTopCommand extends SessionCommand{
 	public function __construct(BasePlugin $main){
 		parent::__construct($main, "top", "List the top 5 users", "/top [kd]");
 	}

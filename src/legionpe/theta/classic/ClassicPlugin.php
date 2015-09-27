@@ -16,9 +16,10 @@
 namespace legionpe\theta\classic;
 
 use legionpe\theta\BasePlugin;
+use legionpe\theta\classic\commands\PvpStatsCommand;
+use legionpe\theta\classic\commands\PvpTopCommand;
 use legionpe\theta\classic\commands\TeleportHereCommand;
 use legionpe\theta\classic\commands\TeleportToCommand;
-use legionpe\theta\classic\commands\TopCommand;
 use legionpe\theta\classic\query\ClassicLoginDataQuery;
 use legionpe\theta\classic\query\ClassicSaveSinglePlayerQuery;
 use legionpe\theta\command\session\friend\FriendlyFireActivationCommand;
@@ -48,7 +49,8 @@ class ClassicPlugin extends BasePlugin{
 			new TeleportHereCommand($this),
 			new TeleportToCommand($this),
 			new FriendlyFireActivationCommand($this),
-			new TopCommand($this),
+			new PvpStatsCommand($this),
+			new PvpTopCommand($this),
 //			new OneVsOneCommand($this),
 		]);
 	}
