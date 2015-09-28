@@ -33,11 +33,13 @@ use pocketmine\event\entity\EntityDamageByChildEntityEvent;
 use pocketmine\event\entity\EntityDamageByEntityEvent;
 use pocketmine\event\entity\EntityDamageEvent;
 use pocketmine\event\entity\EntityRegainHealthEvent;
+use pocketmine\event\inventory\InventoryOpenEvent;
 use pocketmine\event\player\PlayerDeathEvent;
 use pocketmine\event\player\PlayerInteractEvent;
 use pocketmine\event\player\PlayerItemConsumeEvent;
 use pocketmine\event\player\PlayerMoveEvent;
 use pocketmine\event\player\PlayerRespawnEvent;
+use pocketmine\inventory\ChestInventory;
 use pocketmine\item\Bow;
 use pocketmine\item\ChainChestplate;
 use pocketmine\item\DiamondSword;
@@ -548,6 +550,12 @@ class ClassicSession extends Session{
 		}
 //		return $this->isBuilder();
 		return false;
+	}
+	public function onOpenInv(InventoryOpenEvent $event){
+		if(!parent::onOpenInv($event)){
+			return false;
+		}
+		return !($event->getInventory() instanceof ChestInventory);
 	}
 	public function halfSecondTick(){
 		parent::halfSecondTick();
