@@ -506,6 +506,7 @@ class ClassicSession extends Session{
 	}
 	public function onRespawn(PlayerRespawnEvent $event){
 		parent::onRespawn($event);
+		$this->getPlayer()->setMaxHealth(60);
 		$health = $this->getPlayer()->getAttribute()->getAttribute(AttributeManager::MAX_HEALTH);
 		$health->setMaxValue(60);
 		$health->setDefaultValue(60);
@@ -585,12 +586,6 @@ class ClassicSession extends Session{
 				$this->setInvincible(false);
 				$this->equip();
 				$this->getPlayer()->setMaxHealth(60);
-				$health = $this->getPlayer()->getAttribute()->getAttribute(AttributeManager::MAX_HEALTH);
-				$this->getPlayer()->setHealth(60);
-				$health->send();
-				$hunger = $this->getPlayer()->getAttribute()->getAttribute(AttributeManager::MAX_HUNGER);
-				$hunger->setValue(5);
-				$hunger->send();
 			}
 		}
 		$nameTag = $this->calculateNameTag();
