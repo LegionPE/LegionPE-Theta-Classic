@@ -23,6 +23,7 @@ use legionpe\theta\Session;
 use legionpe\theta\utils\MUtils;
 use pocketmine\block\Block;
 use pocketmine\entity\Arrow;
+use pocketmine\entity\AttributeManager;
 use pocketmine\entity\Effect;
 use pocketmine\entity\Egg;
 use pocketmine\entity\Projectile;
@@ -314,53 +315,50 @@ class ClassicSession extends Session{
 		return true;
 	}
 	public function onConsume(PlayerItemConsumeEvent $event){ // TODO add this back when hunger is implemented
-		parent::onConsume($event);
+		$items = [ //TODO: move this to item classes
+			Item::APPLE => 4,
+			Item::MUSHROOM_STEW => 10,
+			Item::BEETROOT_SOUP => 10,
+			Item::BREAD => 5,
+			Item::RAW_PORKCHOP => 3,
+			Item::COOKED_PORKCHOP => 8,
+			Item::RAW_BEEF => 3,
+			Item::STEAK => 8,
+			Item::COOKED_CHICKEN => 6,
+			Item::RAW_CHICKEN => 2,
+			Item::MELON_SLICE => 2,
+			Item::GOLDEN_APPLE => 10,
+			Item::PUMPKIN_PIE => 8,
+			Item::CARROT => 4,
+			Item::POTATO => 1,
+			Item::BAKED_POTATO => 6,
+			Item::COOKIE => 2,
+			Item::COOKED_FISH => [
+				0 => 5,
+				1 => 6
+			],
+			Item::RAW_FISH => [
+				0 => 2,
+				1 => 2,
+				2 => 1,
+				3 => 1
+			],
+		];
+		if(isset($items[$id = $event->getItem()->getId()])){
+			$health = $items[$id];
+			if(is_array($health)){
+				$health = $health[$event->getItem()->getDamage()];
+			}
+			$this->getPlayer()->heal($health, new EntityRegainHealthEvent($this->getPlayer(), $health, EntityRegainHealthEvent::CAUSE_EATING));
+			return false;
+		}
 		return true;
-//		return false;
-//		$items = [ //TODO: move this to item classes
-//			Item::APPLE => 4,
-//			Item::MUSHROOM_STEW => 10,
-//			Item::BEETROOT_SOUP => 10,
-//			Item::BREAD => 5,
-//			Item::RAW_PORKCHOP => 3,
-//			Item::COOKED_PORKCHOP => 8,
-//			Item::RAW_BEEF => 3,
-//			Item::STEAK => 8,
-//			Item::COOKED_CHICKEN => 6,
-//			Item::RAW_CHICKEN => 2,
-//			Item::MELON_SLICE => 2,
-//			Item::GOLDEN_APPLE => 10,
-//			Item::PUMPKIN_PIE => 8,
-//			Item::CARROT => 4,
-//			Item::POTATO => 1,
-//			Item::BAKED_POTATO => 6,
-//			Item::COOKIE => 2,
-//			Item::COOKED_FISH => [
-//				0 => 5,
-//				1 => 6
-//			],
-//			Item::RAW_FISH => [
-//				0 => 2,
-//				1 => 2,
-//				2 => 1,
-//				3 => 1
-//			],
-//		];
-//		if(isset($items[$id = $event->getItem()->getId()])){
-//			$health = $items[$id];
-//			if(is_array($health)){
-//				$health = $health[$event->getItem()->getDamage()];
-//			}
-//			$this->getPlayer()->heal($health, new EntityRegainHealthEvent($this->getPlayer(), $health, EntityRegainHealthEvent::CAUSE_EATING));
-//			return false;
-//		}
-//		return true;
 	}
 	public function onInteract(PlayerInteractEvent $event){
 		if(!parent::onInteract($event)){
 			return false;
 		}
-		$this->checkInteractWithFood($event);
+//		$this->checkInteractWithFood($event);
 		return true;
 	}
 	protected function checkInteractWithFood(PlayerInteractEvent $event){
@@ -510,8 +508,6 @@ class ClassicSession extends Session{
 		parent::onRespawn($event);
 		$event->setRespawnPosition($spawn = ClassicConsts::getSpawnPosition($this->getMain()->getServer()));
 		$this->getPlayer()->teleport($spawn);
-		$this->getPlayer()->removeAllEffects();
-		$this->getPlayer()->addEffect(Effect::getEffect(Effect::HEALTH_BOOST)->setDuration(0x7FFFFF)->setVisible(false)->setAmplifier(9));
 //		$this->getPlayer()->setNameTag($this->calculateNameTag(TextFormat::WHITE, $this->getPlayer()->getMaxHealth()));
 		$this->getPlayer()->getInventory()->clearAll();
 		$this->getPlayer()->getInventory()->sendArmorContents($this->getPlayer()->getInventory()->getViewers());
@@ -576,8 +572,14 @@ class ClassicSession extends Session{
 				$this->getPlayer()->sendPopup($this->translate(Phrases::PVP_INVINCIBILITY_OFF));
 				$this->setInvincible(false);
 				$this->equip();
-				$this->getPlayer()->removeAllEffects();
-				$this->getPlayer()->addEffect(Effect::getEffect(Effect::HEALTH_BOOST)->setDuration(0x7FFFFF)->setVisible(false)->setAmplifier(9));
+				$this->getPlayer()->setMaxHealth(60);
+				$health = $this->getPlayer()->getAttribute()->getAttribute(AttributeManager::MAX_HEALTH);
+				$health->setMaxValue(60);
+				$this->getPlayer()->setHealth(60);
+				$health->send();
+				$hunger = $this->getPlayer()->getAttribute()->getAttribute(AttributeManager::MAX_HUNGER);
+				$hunger->setValue(10);
+				$hunger->send();
 			}
 		}
 		$nameTag = $this->calculateNameTag();
