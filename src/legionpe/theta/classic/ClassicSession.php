@@ -506,6 +506,7 @@ class ClassicSession extends Session{
 	}
 	public function onRespawn(PlayerRespawnEvent $event){
 		parent::onRespawn($event);
+		$this->getPlayer()->getAttribute()->getAttribute(AttributeManager::MAX_HEALTH)->setMaxValue(60);
 		$event->setRespawnPosition($spawn = ClassicConsts::getSpawnPosition($this->getMain()->getServer()));
 		$this->getPlayer()->teleport($spawn);
 //		$this->getPlayer()->setNameTag($this->calculateNameTag(TextFormat::WHITE, $this->getPlayer()->getMaxHealth()));
