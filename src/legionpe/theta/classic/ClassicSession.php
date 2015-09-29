@@ -80,6 +80,12 @@ class ClassicSession extends Session{
 			$this->setLoginDatum("pvp_init", time());
 		}
 	}
+	/**
+	 * @return ClassicPlugin
+	 */
+	public function getMain(){
+		return $this->main;
+	}
 	public function joinedClassicSince(){
 		return $this->getLoginDatum("pvp_init");
 	}
@@ -112,6 +118,18 @@ class ClassicSession extends Session{
 	}
 	public function getDeaths(){
 		return $this->getLoginDatum("pvp_deaths");
+	}
+	/**
+	 * @return boolean
+	 */
+	public function isFriendlyFireActivated(){
+		return $this->friendlyFireActivated;
+	}
+	/**
+	 * @param boolean $friendlyFireActivated
+	 */
+	public function setFriendlyFireActivated($friendlyFireActivated){
+		$this->friendlyFireActivated = $friendlyFireActivated;
 	}
 	public function onDamage(EntityDamageEvent $event){
 		if(!parent::onDamage($event)){
@@ -181,24 +199,6 @@ class ClassicSession extends Session{
 		}
 //		$this->getPlayer()->setNameTag($this->calculateNameTag(TextFormat::WHITE, $this->getPlayer()->getHealth() - $event->getFinalDamage()));
 		return true;
-	}
-	/**
-	 * @return ClassicPlugin
-	 */
-	public function getMain(){
-		return $this->main;
-	}
-	/**
-	 * @return boolean
-	 */
-	public function isFriendlyFireActivated(){
-		return $this->friendlyFireActivated;
-	}
-	/**
-	 * @param boolean $friendlyFireActivated
-	 */
-	public function setFriendlyFireActivated($friendlyFireActivated){
-		$this->friendlyFireActivated = $friendlyFireActivated;
 	}
 	public function onDeath(PlayerDeathEvent $event){
 		if(!parent::onDeath($event)){
@@ -506,19 +506,14 @@ class ClassicSession extends Session{
 	}
 	public function onRespawn(PlayerRespawnEvent $event){
 		parent::onRespawn($event);
-		$this->getPlayer()->setMaxHealth(60);
-		$health = $this->getPlayer()->getAttribute()->getAttribute(AttributeManager::MAX_HEALTH);
-		$health->setMaxValue(60);
-		$health->setDefaultValue(60);
-		$health->setValue(60);
-		$health->setMinValue(0);
+//		$health = $this->getPlayer()->getAttribute()->getAttribute(AttributeManager::MAX_HEALTH);
+		$health = $this->getPlayer()->getAttribute()->addAttribute(AttributeManager::MAX_HEALTH, "generic.health", 0.0, 60.0, 60.0, true);
 		$health->send();
-		$hunger = $this->getPlayer()->getAttribute()->getAttribute(AttributeManager::MAX_HUNGER);
-		$hunger->setDefaultValue(5);
-		$hunger->setValue(5);
-		$hunger->setMinValue(0);
+		$hunger = $this->getPlayer()->getAttribute()->addAttribute(AttributeManager::MAX_HUNGER, "player.health", 0.0, 20.0, 10.0, true);
+		$hunger->setValue(10.0);
 		$hunger->send();
-
+		$this->getPlayer()->setMaxHealth(60);
+		$this->getPlayer()->setHealth(60); // float(20)
 		$event->setRespawnPosition($spawn = ClassicConsts::getSpawnPosition($this->getMain()->getServer()));
 		$this->getPlayer()->teleport($spawn);
 //		$this->getPlayer()->setNameTag($this->calculateNameTag(TextFormat::WHITE, $this->getPlayer()->getMaxHealth()));
@@ -585,7 +580,6 @@ class ClassicSession extends Session{
 				$this->getPlayer()->sendPopup($this->translate(Phrases::PVP_INVINCIBILITY_OFF));
 				$this->setInvincible(false);
 				$this->equip();
-				$this->getPlayer()->setMaxHealth(60);
 			}
 		}
 		$nameTag = $this->calculateNameTag();
