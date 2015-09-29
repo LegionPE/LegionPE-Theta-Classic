@@ -509,8 +509,8 @@ class ClassicSession extends Session{
 //		$health = $this->getPlayer()->getAttribute()->getAttribute(AttributeManager::MAX_HEALTH);
 		$health = $this->getPlayer()->getAttribute()->addAttribute(AttributeManager::MAX_HEALTH, "generic.health", 0.0, 60.0, 60.0, true);
 		$health->send();
-		$hunger = $this->getPlayer()->getAttribute()->addAttribute(AttributeManager::MAX_HUNGER, "player.health", 0.0, 20.0, 10.0, true);
-		$hunger->setValue(10.0);
+		$hunger = $this->getPlayer()->getAttribute()->addAttribute(AttributeManager::MAX_HUNGER, "player.health", 0.0, 5.0, 5.0, true);
+		$hunger->setValue(5.0);
 		$hunger->send();
 		$this->getPlayer()->setMaxHealth(60);
 		$this->getPlayer()->setHealth(60); // float(20)
