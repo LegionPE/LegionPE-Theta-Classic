@@ -198,6 +198,10 @@ class ClassicSession extends Session{
 			}
 		}
 //		$this->getPlayer()->setNameTag($this->calculateNameTag(TextFormat::WHITE, $this->getPlayer()->getHealth() - $event->getFinalDamage()));
+		$deficit = $event->getFinalDamage() - $this->getPlayer()->getHealth();
+		if($deficit > 0){
+			$event->setDamage($event->getDamage() - $deficit);
+		}
 		return true;
 	}
 	public function onDeath(PlayerDeathEvent $event){
@@ -510,6 +514,9 @@ class ClassicSession extends Session{
 //		$health = $this->getPlayer()->getAttribute()->getAttribute(AttributeManager::MAX_HEALTH);
 		$health = $this->getPlayer()->getAttribute()->addAttribute(AttributeManager::MAX_HEALTH, "generic.health", 0.0, 60.0, 60.0, true);
 		$health->send();
+		$hunger = $this->getPlayer()->getAttribute()->getAttribute(AttributeManager::MAX_HUNGER);
+		$hunger->setValue(5.0);
+		$hunger->send();
 		$hunger = $this->getPlayer()->getAttribute()->addAttribute(AttributeManager::MAX_HUNGER, "player.health", 0.0, 5.0, 5.0, true);
 		$hunger->setValue(5.0);
 		$hunger->send();
@@ -581,6 +588,12 @@ class ClassicSession extends Session{
 				$this->getPlayer()->sendPopup($this->translate(Phrases::PVP_INVINCIBILITY_OFF));
 				$this->setInvincible(false);
 				$this->equip();
+				$hunger = $this->getPlayer()->getAttribute()->getAttribute(AttributeManager::MAX_HUNGER);
+				$hunger->setValue(5.0);
+				$hunger->send();
+				$hunger = $this->getPlayer()->getAttribute()->addAttribute(AttributeManager::MAX_HUNGER, "player.health", 0.0, 5.0, 5.0, true);
+				$hunger->setValue(5.0);
+				$hunger->send();
 			}
 		}
 		$nameTag = $this->calculateNameTag();
