@@ -506,7 +506,18 @@ class ClassicSession extends Session{
 	}
 	public function onRespawn(PlayerRespawnEvent $event){
 		parent::onRespawn($event);
-		$this->getPlayer()->getAttribute()->getAttribute(AttributeManager::MAX_HEALTH)->setMaxValue(60);
+		$health = $this->getPlayer()->getAttribute()->getAttribute(AttributeManager::MAX_HEALTH);
+		$health->setMaxValue(60);
+		$health->setDefaultValue(60);
+		$health->setValue(60);
+		$health->setMinValue(0);
+		$health->send();
+		$hunger = $this->getPlayer()->getAttribute()->getAttribute(AttributeManager::MAX_HUNGER);
+		$hunger->setDefaultValue(5);
+		$hunger->setValue(5);
+		$hunger->setMinValue(0);
+		$hunger->send();
+
 		$event->setRespawnPosition($spawn = ClassicConsts::getSpawnPosition($this->getMain()->getServer()));
 		$this->getPlayer()->teleport($spawn);
 //		$this->getPlayer()->setNameTag($this->calculateNameTag(TextFormat::WHITE, $this->getPlayer()->getMaxHealth()));
@@ -575,11 +586,10 @@ class ClassicSession extends Session{
 				$this->equip();
 				$this->getPlayer()->setMaxHealth(60);
 				$health = $this->getPlayer()->getAttribute()->getAttribute(AttributeManager::MAX_HEALTH);
-				$health->setMaxValue(60);
 				$this->getPlayer()->setHealth(60);
 				$health->send();
 				$hunger = $this->getPlayer()->getAttribute()->getAttribute(AttributeManager::MAX_HUNGER);
-				$hunger->setValue(10);
+				$hunger->setValue(5);
 				$hunger->send();
 			}
 		}
