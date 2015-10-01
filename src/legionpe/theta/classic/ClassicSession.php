@@ -319,6 +319,9 @@ class ClassicSession extends Session{
 		return true;
 	}
 	public function onConsume(PlayerItemConsumeEvent $event){ // TODO add this back when hunger is implemented
+		if(!parent::onConsume($event)){
+			return false;
+		}
 		$items = [ //TODO: move this to item classes
 			Item::APPLE => 4,
 			Item::MUSHROOM_STEW => 10,
@@ -335,7 +338,7 @@ class ClassicSession extends Session{
 			Item::PUMPKIN_PIE => 8,
 			Item::CARROT => 4,
 			Item::POTATO => 1,
-			Item::BAKED_POTATO => 6,
+			Item::BAKED_POTATO => 2,
 			Item::COOKIE => 2,
 			Item::COOKED_FISH => [
 				0 => 5,
