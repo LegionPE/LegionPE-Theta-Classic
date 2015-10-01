@@ -356,7 +356,6 @@ class ClassicSession extends Session{
 			if(is_array($health)){
 				$health = $health[$event->getItem()->getDamage()];
 			}
-			$health = min($health, $this->getPlayer()->getMaxHealth() - $this->getPlayer()->getHealth());
 			$this->getPlayer()->heal($health, new EntityRegainHealthEvent($this->getPlayer(), $health, EntityRegainHealthEvent::CAUSE_EATING));
 			return false;
 		}
