@@ -545,7 +545,7 @@ class ClassicSession extends Session{
 		$inv->setItem(0, new Bow);
 		$inv->setItem(1, new DiamondSword);
 		$inv->setItem(2, Item::get(Item::BAKED_POTATO, 0, 32));
-		$inv->setItem(3, Item::get(Item::ARROW, 0, 16));
+//		$inv->setItem(3, Item::get(Item::ARROW, 0, 16));
 		$inv->setHotbarSlotIndex(0, 0);
 		$inv->setHotbarSlotIndex(1, 1);
 		$inv->setHotbarSlotIndex(2, 2);
