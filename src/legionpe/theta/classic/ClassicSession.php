@@ -338,7 +338,7 @@ class ClassicSession extends Session{
 			Item::PUMPKIN_PIE => 8,
 			Item::CARROT => 4,
 			Item::POTATO => 1,
-			Item::BAKED_POTATO => 2,
+			Item::BAKED_POTATO => 6,
 			Item::COOKIE => 2,
 			Item::COOKED_FISH => [
 				0 => 5,
@@ -356,6 +356,7 @@ class ClassicSession extends Session{
 			if(is_array($health)){
 				$health = $health[$event->getItem()->getDamage()];
 			}
+			$health /= 3;
 			$this->getPlayer()->heal($health, new EntityRegainHealthEvent($this->getPlayer(), $health, EntityRegainHealthEvent::CAUSE_EATING));
 			return false;
 		}
