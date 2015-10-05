@@ -36,7 +36,6 @@ use pocketmine\event\entity\EntityDamageEvent;
 use pocketmine\event\entity\EntityRegainHealthEvent;
 use pocketmine\event\inventory\InventoryOpenEvent;
 use pocketmine\event\player\PlayerDeathEvent;
-use pocketmine\event\player\PlayerInteractEvent;
 use pocketmine\event\player\PlayerItemConsumeEvent;
 use pocketmine\event\player\PlayerMoveEvent;
 use pocketmine\event\player\PlayerRespawnEvent;
@@ -184,7 +183,7 @@ class ClassicSession extends Session{
 					$this->lastHurtTime = microtime(true);
 					$this->nextCooldownTimeout = ClassicConsts::DEFAULT_COOLDOWN_TIMEOUT;
 					if($event instanceof EntityDamageByChildEntityEvent and $event->getChild() instanceof Arrow){
-						$fromEnt->getInventory()->addItem(Item::get(Item::ARROW));
+						$fromEnt->getInventory()->addItem(Item::get(Item::ARROW, 0, 2));
 						$fromEnt->getInventory()->sendContents([$fromEnt]);
 					}
 				}
@@ -362,53 +361,53 @@ class ClassicSession extends Session{
 		}
 		return true;
 	}
-	public function onInteract(PlayerInteractEvent $event){
-		if(!parent::onInteract($event)){
-			return false;
-		}
+//	public function onInteract(PlayerInteractEvent $event){
+//		if(!parent::onInteract($event)){
+//			return false;
+//		}
 //		$this->checkInteractWithFood($event);
-		return true;
-	}
-	protected function checkInteractWithFood(PlayerInteractEvent $event){
-		$items = [ //TODO: move this to item classes
-			Item::APPLE => 4,
-			Item::MUSHROOM_STEW => 10,
-			Item::BEETROOT_SOUP => 10,
-			Item::BREAD => 5,
-			Item::RAW_PORKCHOP => 3,
-			Item::COOKED_PORKCHOP => 8,
-			Item::RAW_BEEF => 3,
-			Item::STEAK => 8,
-			Item::COOKED_CHICKEN => 6,
-			Item::RAW_CHICKEN => 2,
-			Item::MELON_SLICE => 2,
-			Item::GOLDEN_APPLE => 10,
-			Item::PUMPKIN_PIE => 8,
-			Item::CARROT => 4,
-			Item::POTATO => 1,
-			Item::BAKED_POTATO => 6,
-			Item::COOKIE => 2,
-			Item::COOKED_FISH => [
-				0 => 5,
-				1 => 6
-			],
-			Item::RAW_FISH => [
-				0 => 2,
-				1 => 2,
-				2 => 1,
-				3 => 1
-			],
-		];
-		if($event->getAction() !== PlayerInteractEvent::RIGHT_CLICK_BLOCK and isset($items[$id = $event->getItem()->getId()])){
-			$health = $items[$id];
-			if(is_array($health)){
-				$health = $health[$event->getItem()->getDamage()];
-			}
-			$this->eatFoodAction($health);
-			$this->decrementHandItem();
-		}
-	}
-	public function eatFoodAction($health){
+//		return true;
+//	}
+//	protected function checkInteractWithFood(PlayerInteractEvent $event){
+//		$items = [ //TODO: move this to item classes
+//			Item::APPLE => 4,
+//			Item::MUSHROOM_STEW => 10,
+//			Item::BEETROOT_SOUP => 10,
+//			Item::BREAD => 5,
+//			Item::RAW_PORKCHOP => 3,
+//			Item::COOKED_PORKCHOP => 8,
+//			Item::RAW_BEEF => 3,
+//			Item::STEAK => 8,
+//			Item::COOKED_CHICKEN => 6,
+//			Item::RAW_CHICKEN => 2,
+//			Item::MELON_SLICE => 2,
+//			Item::GOLDEN_APPLE => 10,
+//			Item::PUMPKIN_PIE => 8,
+//			Item::CARROT => 4,
+//			Item::POTATO => 1,
+//			Item::BAKED_POTATO => 6,
+//			Item::COOKIE => 2,
+//			Item::COOKED_FISH => [
+//				0 => 5,
+//				1 => 6
+//			],
+//			Item::RAW_FISH => [
+//				0 => 2,
+//				1 => 2,
+//				2 => 1,
+//				3 => 1
+//			],
+//		];
+//		if($event->getAction() !== PlayerInteractEvent::RIGHT_CLICK_BLOCK and isset($items[$id = $event->getItem()->getId()])){
+//			$health = $items[$id];
+//			if(is_array($health)){
+//				$health = $health[$event->getItem()->getDamage()];
+//			}
+//			$this->eatFoodAction($health);
+//			$this->decrementHandItem();
+//		}
+//	}
+//	public function eatFoodAction($health){
 //		$this->getPlayer()->heal($health, new EntityRegainHealthEvent($this->getPlayer(), $health, EntityRegainHealthEvent::CAUSE_EATING));
 //		$effect = $this->getPlayer()->getEffect(Effect::SLOWNESS);
 //		if(microtime(true) - $this->lastEat < 2){
@@ -422,7 +421,7 @@ class ClassicSession extends Session{
 //			$effect->setDuration(40);
 //		}
 //		$this->getPlayer()->addEffect($effect);
-	}
+//	}
 	public function decrementHandItem(){
 		$inv = $this->getPlayer()->getInventory();
 		$item = $inv->getItemInHand();
@@ -544,7 +543,7 @@ class ClassicSession extends Session{
 		$inv->sendArmorContents([$this->getPlayer()]);
 		$inv->setItem(0, new Bow);
 		$inv->setItem(1, new DiamondSword);
-		$inv->setItem(2, Item::get(Item::BAKED_POTATO, 0, 32));
+//		$inv->setItem(2, Item::get(Item::BAKED_POTATO, 0, 32));
 //		$inv->setItem(3, Item::get(Item::ARROW, 0, 16));
 		$inv->setHotbarSlotIndex(0, 0);
 		$inv->setHotbarSlotIndex(1, 1);

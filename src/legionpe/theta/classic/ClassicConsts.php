@@ -28,6 +28,8 @@ class ClassicConsts{
 	const CONS_PER_KS = 10;
 	const RESPAWN_INVINCIBILITY = 15;
 	const TELEPORT_DELAY_TICKS = 100;
+	const AUTO_HEAL_AMPLIFIER = 2;
+	const KILL_HEAL_AMPLIFIER = 3;
 	public static function isSpawn(Vector3 $v){
 		return ($v->y >= 18) and self::isSpawnArea($v);
 	}
@@ -49,6 +51,9 @@ class ClassicConsts{
 		return Position::fromObject($spawns[mt_rand(0, 2)], $server->getLevelByName("world_pvp"));
 	}
 	public static function getKillHeal(Session $session){
+		return self::getKillHeal0($session) * self::KILL_HEAL_AMPLIFIER;
+	}
+	private static function getKillHeal0(Session $session){
 		if($session->isVIPPlus()){
 			return 38;
 		}
@@ -80,7 +85,7 @@ class ClassicConsts{
 		return 15;
 	}
 	public static function getAutoHeal(Session $session){
-		return $session->isVIP() ? 2 : 1;
+		return ($session->isVIP() ? 2 : 1) * self::AUTO_HEAL_AMPLIFIER;
 	}
 	public static function get1v1HostPos(Server $server){
 		return new Position(196, 16, 4, $server->getLevelByName("world_pvp"));
