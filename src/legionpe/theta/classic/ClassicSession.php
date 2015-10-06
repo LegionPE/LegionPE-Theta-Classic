@@ -447,7 +447,8 @@ class ClassicSession extends Session{
 		}else{
 			$this->setLoginDatum("pvp_curstreak", $streak = 1);
 		}
-		$coins = round(ClassicConsts::COINS_ON_KILL * pow(log($streak + 1, 10), 2) * 11.04 / pow($streak, -0.25), 2);
+		$ceilStreak = ceil($streak / 5) * 5;
+		$coins = round(ClassicConsts::COINS_ON_KILL * 3.322 * log($ceilStreak + 1, 10) * $ceilStreak ** -0.2);
 		$this->grantTeamPoints(floor($coins));
 		list($add, $final) = $this->grantCoins($coins);
 		$this->lastKillTime = microtime(true);
