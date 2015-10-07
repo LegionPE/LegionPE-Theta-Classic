@@ -160,6 +160,7 @@ class ClassicSession extends Session{
 		if(!parent::onDeath($event)){
 			return false;
 		}
+		$this->setCombatMode(false);
 		$event->setDeathMessage("");
 		$event->setDrops([]);
 		$streak = $this->getCurrentStreak();
@@ -179,6 +180,7 @@ class ClassicSession extends Session{
 				$ks = $this->getMain()->getSession($killer);
 				if($ks instanceof Session){
 					$kn = $ks->getInGameName();
+					$ks->setCombatMode(false);
 					$amount = ClassicConsts::getKillHeal($ks);
 					$killer->heal($amount, new EntityRegainHealthEvent($killer, $amount, EntityRegainHealthEvent::CAUSE_CUSTOM));
 				}
@@ -590,6 +592,7 @@ class ClassicSession extends Session{
 	}
 	protected function sendMaintainedPopup(){
 		$popup = $this->getPopup();
+		$popup = $popup === null ? "" : $popup;
 		$popupLines = MUtils::align($popup, " ", MUtils::ALIGN_CENTER, true);
 		$out = "";
 		if($this->isCombatMode($time)){
@@ -599,7 +602,14 @@ class ClassicSession extends Session{
 			]), " ", MUtils::ALIGN_CENTER, true);
 			$size = max(count($popupLines), count($pvpLogLines));
 			for($i = 0; $i < $size; $i++){
-				$out .= $popupLines[$i] . $pvpLogLines . "\n";
+				if(!isset($popupLines[$i])){
+					$popupLines[$i] = MUtils::align($pvpLogLines[$i] . "\n", " ", MUtils::ALIGN_LEFT, true)[1];
+				}elseif(!isset($pvpLogLines[$i])){
+					$pvpLogLines[$i] = MUtils::align($popupLines[$i] . "\n", " ", MUtils::ALIGN_LEFT, true)[1];
+				}
+			}
+			for($i = 0; $i < $size; $i++){
+				$out .= $popupLines[$i] . $pvpLogLines[$i] . "\n";
 			}
 		}else{
 			$out = implode("\n", $popupLines);
