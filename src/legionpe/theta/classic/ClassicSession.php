@@ -271,7 +271,7 @@ class ClassicSession extends Session{
 		}
 		return true;
 	}
-	public function onConsume(PlayerItemConsumeEvent $event){ // TODO add this back when hunger is implemented
+	public function onConsume(PlayerItemConsumeEvent $event){
 		if(!parent::onConsume($event)){
 			return false;
 		}
