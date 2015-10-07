@@ -32,7 +32,7 @@ class ClassicSaveSinglePlayerQuery extends SaveSinglePlayerQuery{
 		if(!($session instanceof ClassicSession)){
 			return $cols; // shouldn't happen
 		}
-		$cols["pvp_init"] = ["v" => $session->joinedClassicSince(), "noupdate" => true];
+		$cols["pvp_init"] = ["v" => $session->getJoinedClassicSince(), "noupdate" => true];
 		$cols["pvp_kills"] = $this->kills = $session->getKills();
 		$cols["pvp_deaths"] = $session->getDeaths();
 		$cols["pvp_curstreak"] = 0;

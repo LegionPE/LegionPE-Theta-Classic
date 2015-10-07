@@ -30,6 +30,7 @@ class ClassicConsts{
 	const TELEPORT_DELAY_TICKS = 100;
 	const AUTO_HEAL_AMPLIFIER = 2;
 	const KILL_HEAL_AMPLIFIER = 3;
+	const COMBAT_MODE_COOLDOWN = 10;
 	public static function isSpawn(Vector3 $v){
 		return ($v->y >= 18) and self::isSpawnArea($v);
 	}

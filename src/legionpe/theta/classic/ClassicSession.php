@@ -72,6 +72,7 @@ class ClassicSession extends Session{
 	private $lastFallLavaCause = null;
 	private $counter = 0;
 	private $invincible = false, $movementBlocked = false;
+	private $combatModeExpiry = 0;
 	public function __construct(BasePlugin $main, Player $player, array $loginData){
 		$this->main = $main;
 		parent::__construct($player, $loginData);
@@ -79,57 +80,7 @@ class ClassicSession extends Session{
 			$this->setLoginDatum("pvp_init", time());
 		}
 	}
-	/**
-	 * @return ClassicPlugin
-	 */
-	public function getMain(){
-		return $this->main;
-	}
-	public function joinedClassicSince(){
-		return $this->getLoginDatum("pvp_init");
-	}
-	/**
-	 * @return boolean
-	 */
-	public function isInvincible(){
-		return $this->invincible;
-	}
-	/**
-	 * @param boolean $invincible
-	 */
-	public function setInvincible($invincible){
-		$this->invincible = $invincible;
-	}
-	/**
-	 * @return boolean
-	 */
-	public function isMovementBlocked(){
-		return $this->movementBlocked;
-	}
-	/**
-	 * @param boolean $movementBlocked
-	 */
-	public function setMovementBlocked($movementBlocked){
-		$this->movementBlocked = $movementBlocked;
-	}
-	public function getKills(){
-		return $this->getLoginDatum("pvp_kills");
-	}
-	public function getDeaths(){
-		return $this->getLoginDatum("pvp_deaths");
-	}
-	/**
-	 * @return boolean
-	 */
-	public function isFriendlyFireActivated(){
-		return $this->friendlyFireActivated;
-	}
-	/**
-	 * @param boolean $friendlyFireActivated
-	 */
-	public function setFriendlyFireActivated($friendlyFireActivated){
-		$this->friendlyFireActivated = $friendlyFireActivated;
-	}
+
 	public function onDamage(EntityDamageEvent $event){
 		if(!parent::onDamage($event)){
 			return false;
@@ -154,6 +105,8 @@ class ClassicSession extends Session{
 					return false;
 				}
 				if($ses instanceof ClassicSession){
+					$this->setCombatMode();
+					$ses->setCombatMode();
 					if($ses->isInvincible()){
 						$fromEnt->sendTip($ses->translate(Phrases::PVP_ATTACK_SPAWN));
 						return false;
@@ -297,6 +250,7 @@ class ClassicSession extends Session{
 				$ks->addKill();
 			}
 		}
+		$this->setCombatMode(false);
 		return true;
 	}
 	public function onHeal(EntityRegainHealthEvent $event){
@@ -361,67 +315,64 @@ class ClassicSession extends Session{
 		}
 		return true;
 	}
-//	public function onInteract(PlayerInteractEvent $event){
-//		if(!parent::onInteract($event)){
-//			return false;
-//		}
-//		$this->checkInteractWithFood($event);
-//		return true;
-//	}
-//	protected function checkInteractWithFood(PlayerInteractEvent $event){
-//		$items = [ //TODO: move this to item classes
-//			Item::APPLE => 4,
-//			Item::MUSHROOM_STEW => 10,
-//			Item::BEETROOT_SOUP => 10,
-//			Item::BREAD => 5,
-//			Item::RAW_PORKCHOP => 3,
-//			Item::COOKED_PORKCHOP => 8,
-//			Item::RAW_BEEF => 3,
-//			Item::STEAK => 8,
-//			Item::COOKED_CHICKEN => 6,
-//			Item::RAW_CHICKEN => 2,
-//			Item::MELON_SLICE => 2,
-//			Item::GOLDEN_APPLE => 10,
-//			Item::PUMPKIN_PIE => 8,
-//			Item::CARROT => 4,
-//			Item::POTATO => 1,
-//			Item::BAKED_POTATO => 6,
-//			Item::COOKIE => 2,
-//			Item::COOKED_FISH => [
-//				0 => 5,
-//				1 => 6
-//			],
-//			Item::RAW_FISH => [
-//				0 => 2,
-//				1 => 2,
-//				2 => 1,
-//				3 => 1
-//			],
-//		];
-//		if($event->getAction() !== PlayerInteractEvent::RIGHT_CLICK_BLOCK and isset($items[$id = $event->getItem()->getId()])){
-//			$health = $items[$id];
-//			if(is_array($health)){
-//				$health = $health[$event->getItem()->getDamage()];
-//			}
-//			$this->eatFoodAction($health);
-//			$this->decrementHandItem();
-//		}
-//	}
-//	public function eatFoodAction($health){
-//		$this->getPlayer()->heal($health, new EntityRegainHealthEvent($this->getPlayer(), $health, EntityRegainHealthEvent::CAUSE_EATING));
-//		$effect = $this->getPlayer()->getEffect(Effect::SLOWNESS);
-//		if(microtime(true) - $this->lastEat < 2){
-//			return;
-//		}
-//		$this->lastEat = microtime(true);
-//		if($effect === null){
-//			$effect = Effect::getEffect(Effect::SLOWNESS)->setDuration(40)->setVisible(false)->setAmplifier(1);
-//		}else{
-//			$this->getPlayer()->removeEffect(Effect::SLOWNESS);
-//			$effect->setDuration(40);
-//		}
-//		$this->getPlayer()->addEffect($effect);
-//	}
+	public function login($method){
+		parent::login($method);
+		$this->onRespawn(new PlayerRespawnEvent($this->getPlayer(), $this->getPlayer()->getPosition()));
+		$this->getMain()->getServer()->getLevelByName("world_pvp")->addParticle(new FloatingTextParticle(new Vector3(304, 49, -150), $this->translate(Phrases::PVP_LEAVE_SPAWN_HINT)), [$this->getPlayer()]);
+	}
+	public function onQuit(){
+		$match = $this->getMain()->currentMatch;
+		if($match !== null){
+			if($match->host === $this or $match->guest === $this){
+				$match->onQuit($this);
+			}
+		}
+		if($this->isCombatMode()){
+			$this->setCoins($this->getCoins() - ($take = $this->getCombatLogPenalty()));
+			$this->getMain()->sendPrivateMessage($this->getUid(), "You logged out while in combat mode, so $take coins have been taken from you as penalty.");
+		}
+		parent::onQuit();
+	}
+	public function onRespawn(PlayerRespawnEvent $event){
+		parent::onRespawn($event);
+//		$health = $this->getPlayer()->getAttribute()->getAttribute(AttributeManager::MAX_HEALTH);
+		$health = $this->getPlayer()->getAttribute()->addAttribute(AttributeManager::MAX_HEALTH, "generic.health", 0.0, 60.0, 60.0, true);
+		$health->send();
+		$hunger = $this->getPlayer()->getAttribute()->getAttribute(AttributeManager::MAX_HUNGER);
+		$hunger->setValue(19.0);
+		$hunger->send();
+		$hunger = $this->getPlayer()->getAttribute()->addAttribute(AttributeManager::MAX_HUNGER, "player.health", 0.0, 20.0, 19.0, true);
+		$hunger->setValue(19.0);
+		$hunger->send();
+		$this->getPlayer()->setMaxHealth(60);
+		$this->getPlayer()->setHealth(60); // float(20)
+		$event->setRespawnPosition($spawn = ClassicConsts::getSpawnPosition($this->getMain()->getServer()));
+		$this->getPlayer()->teleport($spawn);
+//		$this->getPlayer()->setNameTag($this->calculateNameTag(TextFormat::WHITE, $this->getPlayer()->getMaxHealth()));
+		$this->getPlayer()->getInventory()->clearAll();
+		$this->getPlayer()->getInventory()->sendArmorContents($this->getPlayer()->getInventory()->getViewers());
+	}
+	public function onPlace(BlockPlaceEvent $event){
+		if(!parent::onPlace($event)){
+			return false;
+		}
+//		return $this->isBuilder();
+		return false;
+	}
+	public function onBreak(BlockBreakEvent $event){
+		if(!parent::onBreak($event)){
+			return false;
+		}
+//		return $this->isBuilder();
+		return false;
+	}
+	public function onOpenInv(InventoryOpenEvent $event){
+		if(!parent::onOpenInv($event)){
+			return false;
+		}
+		return !($event->getInventory() instanceof ChestInventory);
+	}
+
 	public function decrementHandItem(){
 		$inv = $this->getPlayer()->getInventory();
 		$item = $inv->getItemInHand();
@@ -498,39 +449,76 @@ class ClassicSession extends Session{
 	public function setGlobalRank($globalRank){
 		$this->globalRank = $globalRank;
 	}
-	public function login($method){
-		parent::login($method);
-		$this->onRespawn(new PlayerRespawnEvent($this->getPlayer(), $this->getPlayer()->getPosition()));
-		$this->getMain()->getServer()->getLevelByName("world_pvp")->addParticle(new FloatingTextParticle(new Vector3(304, 49, -150), $this->translate(Phrases::PVP_LEAVE_SPAWN_HINT)), [$this->getPlayer()]);
+	/**
+	 * @return ClassicPlugin
+	 */
+	public function getMain(){
+		return $this->main;
 	}
-	public function onQuit(){
-		$match = $this->getMain()->currentMatch;
-		if($match !== null){
-			if($match->host === $this or $match->guest === $this){
-				$match->onQuit($this);
-			}
-		}
-		parent::onQuit();
+	public function getJoinedClassicSince(){
+		return $this->getLoginDatum("pvp_init");
 	}
-	public function onRespawn(PlayerRespawnEvent $event){
-		parent::onRespawn($event);
-//		$health = $this->getPlayer()->getAttribute()->getAttribute(AttributeManager::MAX_HEALTH);
-		$health = $this->getPlayer()->getAttribute()->addAttribute(AttributeManager::MAX_HEALTH, "generic.health", 0.0, 60.0, 60.0, true);
-		$health->send();
-		$hunger = $this->getPlayer()->getAttribute()->getAttribute(AttributeManager::MAX_HUNGER);
-		$hunger->setValue(19.0);
-		$hunger->send();
-		$hunger = $this->getPlayer()->getAttribute()->addAttribute(AttributeManager::MAX_HUNGER, "player.health", 0.0, 20.0, 19.0, true);
-		$hunger->setValue(19.0);
-		$hunger->send();
-		$this->getPlayer()->setMaxHealth(60);
-		$this->getPlayer()->setHealth(60); // float(20)
-		$event->setRespawnPosition($spawn = ClassicConsts::getSpawnPosition($this->getMain()->getServer()));
-		$this->getPlayer()->teleport($spawn);
-//		$this->getPlayer()->setNameTag($this->calculateNameTag(TextFormat::WHITE, $this->getPlayer()->getMaxHealth()));
-		$this->getPlayer()->getInventory()->clearAll();
-		$this->getPlayer()->getInventory()->sendArmorContents($this->getPlayer()->getInventory()->getViewers());
+	/**
+	 * @return boolean
+	 */
+	public function isInvincible(){
+		return $this->invincible;
 	}
+	/**
+	 * @param boolean $invincible
+	 */
+	public function setInvincible($invincible){
+		$this->invincible = $invincible;
+	}
+	/**
+	 * @return boolean
+	 */
+	public function isMovementBlocked(){
+		return $this->movementBlocked;
+	}
+	/**
+	 * @param boolean $movementBlocked
+	 */
+	public function setMovementBlocked($movementBlocked){
+		$this->movementBlocked = $movementBlocked;
+	}
+	/**
+	 * @param int $left
+	 * @return bool
+	 */
+	public function isCombatMode(&$left = 0){
+		$left = $this->combatModeExpiry - microtime(true);
+		return $left > 0;
+	}
+	/**
+	 * @param bool $on
+	 * @internal param bool $combatMode
+	 */
+	public function setCombatMode($on = true){
+		$this->combatModeExpiry = ($on ? (microtime(true) + ClassicConsts::COMBAT_MODE_COOLDOWN) : 0);
+	}
+	public function getKills(){
+		return $this->getLoginDatum("pvp_kills");
+	}
+	public function getDeaths(){
+		return $this->getLoginDatum("pvp_deaths");
+	}
+	/**
+	 * @return boolean
+	 */
+	public function isFriendlyFireActivated(){
+		return $this->friendlyFireActivated;
+	}
+	/**
+	 * @param boolean $friendlyFireActivated
+	 */
+	public function setFriendlyFireActivated($friendlyFireActivated){
+		$this->friendlyFireActivated = $friendlyFireActivated;
+	}
+	public function getCombatLogPenalty(){
+		return max(10, ceil($this->getCoins() * 0.0375));
+	}
+
 	public function equip(){
 		$inv = $this->getPlayer()->getInventory();
 		if($inv === null){
@@ -551,26 +539,6 @@ class ClassicSession extends Session{
 		$inv->setHotbarSlotIndex(2, 2);
 		$inv->setHotbarSlotIndex(3, 3);
 		$inv->sendContents([$this->getPlayer()]);
-	}
-	public function onPlace(BlockPlaceEvent $event){
-		if(!parent::onPlace($event)){
-			return false;
-		}
-//		return $this->isBuilder();
-		return false;
-	}
-	public function onBreak(BlockBreakEvent $event){
-		if(!parent::onBreak($event)){
-			return false;
-		}
-//		return $this->isBuilder();
-		return false;
-	}
-	public function onOpenInv(InventoryOpenEvent $event){
-		if(!parent::onOpenInv($event)){
-			return false;
-		}
-		return !($event->getInventory() instanceof ChestInventory);
 	}
 	public function halfSecondTick(){
 		parent::halfSecondTick();
@@ -620,4 +588,83 @@ class ClassicSession extends Session{
 		}
 		return $out;
 	}
+	protected function sendMaintainedPopup(){
+		$popup = $this->getPopup();
+		$popupLines = MUtils::align($popup, " ", MUtils::ALIGN_CENTER, true);
+		$out = "";
+		if($this->isCombatMode($time)){
+			$pvpLogLines = MUtils::align($this->translate(Phrases::PVP_CMD_PVP_LOG_POPUP, [
+				"penalty" => $this->getCombatLogPenalty(),
+				"time" => (int) $time
+			]), " ", MUtils::ALIGN_CENTER, true);
+			$size = max(count($popupLines), count($pvpLogLines));
+			for($i = 0; $i < $size; $i++){
+				$out .= $popupLines[$i] . $pvpLogLines . "\n";
+			}
+		}else{
+			$out = implode("\n", $popupLines);
+		}
+		$this->getPlayer()->sendPopup($out);
+	}
+//	public function onInteract(PlayerInteractEvent $event){
+//		if(!parent::onInteract($event)){
+//			return false;
+//		}
+//		$this->checkInteractWithFood($event);
+//		return true;
+//	}
+//	protected function checkInteractWithFood(PlayerInteractEvent $event){
+//		$items = [ //TODO: move this to item classes
+//			Item::APPLE => 4,
+//			Item::MUSHROOM_STEW => 10,
+//			Item::BEETROOT_SOUP => 10,
+//			Item::BREAD => 5,
+//			Item::RAW_PORKCHOP => 3,
+//			Item::COOKED_PORKCHOP => 8,
+//			Item::RAW_BEEF => 3,
+//			Item::STEAK => 8,
+//			Item::COOKED_CHICKEN => 6,
+//			Item::RAW_CHICKEN => 2,
+//			Item::MELON_SLICE => 2,
+//			Item::GOLDEN_APPLE => 10,
+//			Item::PUMPKIN_PIE => 8,
+//			Item::CARROT => 4,
+//			Item::POTATO => 1,
+//			Item::BAKED_POTATO => 6,
+//			Item::COOKIE => 2,
+//			Item::COOKED_FISH => [
+//				0 => 5,
+//				1 => 6
+//			],
+//			Item::RAW_FISH => [
+//				0 => 2,
+//				1 => 2,
+//				2 => 1,
+//				3 => 1
+//			],
+//		];
+//		if($event->getAction() !== PlayerInteractEvent::RIGHT_CLICK_BLOCK and isset($items[$id = $event->getItem()->getId()])){
+//			$health = $items[$id];
+//			if(is_array($health)){
+//				$health = $health[$event->getItem()->getDamage()];
+//			}
+//			$this->eatFoodAction($health);
+//			$this->decrementHandItem();
+//		}
+//	}
+//	public function eatFoodAction($health){
+//		$this->getPlayer()->heal($health, new EntityRegainHealthEvent($this->getPlayer(), $health, EntityRegainHealthEvent::CAUSE_EATING));
+//		$effect = $this->getPlayer()->getEffect(Effect::SLOWNESS);
+//		if(microtime(true) - $this->lastEat < 2){
+//			return;
+//		}
+//		$this->lastEat = microtime(true);
+//		if($effect === null){
+//			$effect = Effect::getEffect(Effect::SLOWNESS)->setDuration(40)->setVisible(false)->setAmplifier(1);
+//		}else{
+//			$this->getPlayer()->removeEffect(Effect::SLOWNESS);
+//			$effect->setDuration(40);
+//		}
+//		$this->getPlayer()->addEffect($effect);
+//	}
 }
