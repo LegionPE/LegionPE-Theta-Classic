@@ -38,7 +38,9 @@ class TeleportTask extends PluginTask{
 		$from = $main->getSessionByUid($this->fromUid);
 		$to = $main->getSessionByUid($this->toUid);
 		if(!($from instanceof ClassicSession)){
-			$to->send(Phrases::CMD_TPR_PROCEED_FAIL_OFFLINE, ["name" => $this->fromName]);
+			if($to instanceof ClassicSession){
+				$to->send(Phrases::CMD_TPR_PROCEED_FAIL_OFFLINE, ["name" => $this->fromName]);
+			}
 			return;
 		}
 		if(!($to instanceof ClassicSession)){
