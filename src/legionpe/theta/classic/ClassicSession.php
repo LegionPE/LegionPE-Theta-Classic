@@ -494,7 +494,6 @@ class ClassicSession extends Session{
 	}
 	/**
 	 * @param bool $on
-	 * @internal param bool $combatMode
 	 */
 	public function setCombatMode($on = true){
 		$this->combatModeExpiry = ($on ? (microtime(true) + ClassicConsts::COMBAT_MODE_COOLDOWN) : 0);
