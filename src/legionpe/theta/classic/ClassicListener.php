@@ -16,6 +16,9 @@
 namespace legionpe\theta\classic;
 
 use legionpe\theta\BaseListener;
+use legionpe\theta\utils\CallbackPluginTask;
+use pocketmine\entity\Arrow;
+use pocketmine\event\entity\ProjectileHitEvent;
 use pocketmine\event\server\DataPacketReceiveEvent;
 use pocketmine\network\protocol\DisconnectPacket;
 
@@ -30,6 +33,19 @@ class ClassicListener extends BaseListener{
 					$ses->setCombatMode(false);
 				}
 			}
+		}
+	}
+	/**
+	 * @param ProjectileHitEvent $event
+	 * @priority HIGH
+	 */
+	public function onProjectileHit(ProjectileHitEvent $event){
+		if($event->getEntity() instanceof Arrow){
+			$this->getMain()->getServer()->getScheduler()->scheduleDelayedTask(new CallbackPluginTask($this->getMain(), function (Arrow $arrow){
+				if($arrow->isAlive()){
+					$arrow->kill();
+				}
+			}, $event->getEntity()), 1);
 		}
 	}
 }
