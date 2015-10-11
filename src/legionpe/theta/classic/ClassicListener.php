@@ -19,18 +19,17 @@ use legionpe\theta\BaseListener;
 use legionpe\theta\utils\CallbackPluginTask;
 use pocketmine\entity\Arrow;
 use pocketmine\event\entity\ProjectileHitEvent;
-use pocketmine\event\server\DataPacketReceiveEvent;
+use pocketmine\event\server\DataPacketSendEvent;
 use pocketmine\network\protocol\DisconnectPacket;
 
 class ClassicListener extends BaseListener{
-	public function onPacketRecv(DataPacketReceiveEvent $event){
-		parent::onPacketRecv($event);
+	public function onPacketSend(DataPacketSendEvent $event){
 		$pk = $event->getPacket();
 		if($pk instanceof DisconnectPacket){
-			if($pk->message !== "client disconnect"){
+			if($pk->message === "client disconnect"){
 				$ses = $this->getMain()->getSession($event->getPlayer());
 				if($ses instanceof ClassicSession){
-					$ses->setCombatMode(false);
+					$ses->onClientDisconnect();
 				}
 			}
 		}

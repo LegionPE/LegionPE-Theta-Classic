@@ -329,11 +329,13 @@ class ClassicSession extends Session{
 				$match->onQuit($this);
 			}
 		}
+		parent::onQuit();
+	}
+	public function onClientDisconnect(){
 		if($this->isCombatMode()){
 			$this->setCoins($this->getCoins() - ($take = $this->getCombatLogPenalty()));
 			$this->getMain()->sendPrivateMessage($this->getUid(), "You logged out while in combat mode, so $take coins have been taken from you as penalty.");
 		}
-		parent::onQuit();
 	}
 	public function onRespawn(PlayerRespawnEvent $event){
 		parent::onRespawn($event);
