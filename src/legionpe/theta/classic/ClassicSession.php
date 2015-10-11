@@ -35,6 +35,7 @@ use pocketmine\event\entity\EntityDamageByEntityEvent;
 use pocketmine\event\entity\EntityDamageEvent;
 use pocketmine\event\entity\EntityRegainHealthEvent;
 use pocketmine\event\inventory\InventoryOpenEvent;
+use pocketmine\event\inventory\InventoryPickupArrowEvent;
 use pocketmine\event\player\PlayerDeathEvent;
 use pocketmine\event\player\PlayerItemConsumeEvent;
 use pocketmine\event\player\PlayerMoveEvent;
@@ -375,6 +376,10 @@ class ClassicSession extends Session{
 			return false;
 		}
 		return !($event->getInventory() instanceof ChestInventory);
+	}
+	public function onPickupArrow(InventoryPickupArrowEvent $event){
+		parent::onPickupArrow($event);
+		return false;
 	}
 
 	public function decrementHandItem(){
