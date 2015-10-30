@@ -16,12 +16,12 @@
 namespace legionpe\theta\classic;
 
 use legionpe\theta\BasePlugin;
+use legionpe\theta\classic\battle\ClassicBattle;
 use legionpe\theta\Friend;
 use legionpe\theta\lang\Phrases;
 use legionpe\theta\query\SetFriendQuery;
 use legionpe\theta\Session;
 use legionpe\theta\utils\MUtils;
-use legionpe\theta\classic\battle\ClassicBattle;
 use pocketmine\block\Block;
 use pocketmine\entity\Arrow;
 use pocketmine\entity\AttributeManager;
@@ -333,15 +333,6 @@ class ClassicSession extends Session{
 		$this->onRespawn(new PlayerRespawnEvent($this->getPlayer(), $this->getPlayer()->getPosition()));
 		$this->getMain()->getServer()->getLevelByName("world_pvp")->addParticle(new FloatingTextParticle(new Vector3(304, 49, -150), $this->translate(Phrases::PVP_LEAVE_SPAWN_HINT)), [$this->getPlayer()]);
 	}
-	public function onQuit(){
-		$match = $this->getMain()->currentMatch;
-		if($match !== null){
-			if($match->host === $this or $match->guest === $this){
-				$match->onQuit($this);
-			}
-		}
-		parent::onQuit();
-	}
 	public function onClientDisconnect(){
 		if($this->isCombatMode()){
 			$this->setCoins($this->getCoins() - ($take = $this->getCombatLogPenalty()));
@@ -452,12 +443,6 @@ class ClassicSession extends Session{
 		}
 		if(isset($bonus)){
 			$this->grantCoins($bonus, true);
-		}
-		$match = $this->getMain()->currentMatch;
-		if($match !== null){
-			if($match->host === $this or $match->guest === $this){
-				$match->onWin($this);
-			}
 		}
 	}
 	public function addDeath(){
