@@ -99,7 +99,8 @@ class ClassicConsts{
 	public static function getGhastLocations(Server $server){
 		$level = $server->getLevelByName("world_pvp");
 		return [
-			new Location(304, 57, -136, 0, 0, $level)
+			new Location(304, 54, -132, 0, 0, $level),
+
 		];
 	}
 }
