@@ -22,6 +22,7 @@ use legionpe\theta\lang\Phrases;
 use legionpe\theta\query\SetFriendQuery;
 use legionpe\theta\Session;
 use legionpe\theta\utils\MUtils;
+use legionpe\theta\utils\SpawnGhastParticle;
 use pocketmine\block\Block;
 use pocketmine\entity\Arrow;
 use pocketmine\entity\AttributeManager;
@@ -332,6 +333,14 @@ class ClassicSession extends Session{
 		parent::login($method);
 		$this->onRespawn(new PlayerRespawnEvent($this->getPlayer(), $this->getPlayer()->getPosition()));
 		$this->getMain()->getServer()->getLevelByName("world_pvp")->addParticle(new FloatingTextParticle(new Vector3(304, 49, -150), $this->translate(Phrases::PVP_LEAVE_SPAWN_HINT)), [$this->getPlayer()]);
+		if(IS_HALLOWEEN_MODE){
+			foreach(ClassicConsts::getGhastLocations($this->getMain()->getServer()) as $loc){
+				$particle = new SpawnGhastParticle($loc->x, $loc->y, $loc->z);
+				$particle->yaw = $loc->yaw;
+				$particle->pitch = $loc->pitch;
+				$loc->getLevel()->addParticle($particle, [$this->getPlayer()]);
+			}
+		}
 	}
 	public function onClientDisconnect(){
 		if($this->isCombatMode()){
