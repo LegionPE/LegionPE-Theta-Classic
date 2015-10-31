@@ -16,6 +16,7 @@
 namespace legionpe\theta\classic;
 
 use legionpe\theta\Session;
+use pocketmine\level\Location;
 use pocketmine\level\Position;
 use pocketmine\math\Vector3;
 use pocketmine\Player;
@@ -93,5 +94,12 @@ class ClassicConsts{
 	}
 	public static function get1v1GuestPos(Server $server){
 		return new Position(214, 16, 23, $server->getLevelByName("world_pvp"));
+	}
+
+	public static function getGhastLocations(Server $server){
+		$level = $server->getLevelByName("world_pvp");
+		return [
+			new Location(304, 57, -136, 0, 0, $level)
+		];
 	}
 }
