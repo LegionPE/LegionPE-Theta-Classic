@@ -107,7 +107,7 @@ class ClassicConsts{
 			new Location(197, 83, 2, 120, 16, $level),
 			new Location(145, 78, -112, 222, 27, $level),
 			new Location(213, 72, -104, 224, 27, $level),
-			new Location(136, 63, -70, 232, 37, $level),
+			new Location(136, 63, -70, 0, 37, $level),
 		];
 	}
 }
