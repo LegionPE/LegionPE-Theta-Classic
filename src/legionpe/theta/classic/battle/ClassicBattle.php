@@ -119,7 +119,6 @@ class ClassicBattle{
 	public function getMaxRounds(){
 		return $this->maxRounds;
 	}
-
 	/**
 	 * @param ClassicSession $session
 	 */
@@ -167,9 +166,6 @@ class ClassicBattle{
 	 */
 	public function setTime($time){
 		$this->time = $time;
-		if($time === 0){
-			$this->setStatus(self::STATUS_ENDING, "Ran out of time!");
-		}
 	}
 	/**
 	 * @return int
@@ -223,12 +219,6 @@ class ClassicBattle{
 				break;
 			case self::STATUS_ENDING:
 				foreach($this->getSessions() as $session){
-					foreach($this->plugin->getBattles() as $battle){
-						foreach($battle->getSessions() as $showSession){
-							$session->getPlayer()->showPlayer($showSession->getPlayer());
-							$showSession->getPlayer()->showPlayer($session->getPlayer());
-						}
-					}
 					$session->getPlayer()->setPositionAndRotation($this->old[$session->getPlayer()->getName()][0], $this->old[$session->getPlayer()->getName()][1], $this->old[$session->getPlayer()->getName()][2]);
 					$session->getPlayer()->removeAllEffects();
 					$session->getPlayer()->setMaxHealth($this->old[$session->getPlayer()->getName()][6]);
@@ -264,7 +254,7 @@ class ClassicBattle{
 	/**
 	 * @return ClassicSession[]
 	 */
-	public function getSessions(){
+	private function getSessions(){
 		$sssions = [];
 		foreach($this->teams as $team => $sessions){
 			foreach($sessions as $session){

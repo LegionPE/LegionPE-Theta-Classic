@@ -16,8 +16,8 @@
 namespace legionpe\theta\classic;
 
 use legionpe\theta\BasePlugin;
+use legionpe\theta\classic\battle\BattleTask;
 use legionpe\theta\classic\battle\ClassicBattle;
-use legionpe\theta\classic\commands\BattleCommand;
 use legionpe\theta\classic\commands\PvpStatsCommand;
 use legionpe\theta\classic\commands\PvpTopCommand;
 use legionpe\theta\classic\commands\TeleportHereCommand;
@@ -32,8 +32,6 @@ use pocketmine\Player;
 class ClassicPlugin extends BasePlugin{
 	/** @var ClassicBattle[] */
 	private $battles = [];
-	/** @var ClassicSession[][] */
-	public $newBattle = [];
 	/** @var TeleportManager */
 	private $tpMgr;
 	protected static function defaultLoginData($uid, Player $player){
@@ -58,6 +56,7 @@ class ClassicPlugin extends BasePlugin{
 			new BattleCommand($this)
 //			new OneVsOneCommand($this),
 		]);
+		$this->getServer()->getScheduler()->scheduleDelayedTask(new BattleTask($this), 20);
 	}
 	public function getLoginQueryImpl(){
 		return ClassicLoginDataQuery::class;
