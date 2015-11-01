@@ -24,7 +24,7 @@ use legionpe\theta\Session;
 
 class OneVsOneCommand extends SessionCommand{
 	public function __construct(BasePlugin $main){
-		parent::__construct($main, "1v1", "Send/accept a 1v1 request", "/1v1 <player>", ["11"]);
+		parent::__construct($main, "1v1", "Send/accept a 1v1 request", "/1v1 <player>", ["battle"]);
 	}
 	protected function run(array $args, Session $host){
 		if(!isset($args[0])){

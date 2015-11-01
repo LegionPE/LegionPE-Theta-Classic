@@ -45,7 +45,7 @@ class ClassicBattle{
 	/** @var int */
 	private $status;
 
-	private $old = []
+	private $old = [];
 	/** @var bool */
 	private $canHit = false;
 
@@ -58,11 +58,16 @@ class ClassicBattle{
 	 */
 	public function __construct(ClassicPlugin $plugin, $teams, $rounds, $duration, ClassicBattleKit $kit){
 		$this->plugin = $plugin;
-		$plugin->addBattle($this);
 		$this->id = self::$nextId++;
 		$this->teams = $teams;
 		foreach($teams as $team => $sessions){
 			foreach($sessions as $session){
+				foreach($plugin->getBattles() as $battle){
+					foreach($battle->getSessions() as $hideSession){
+						$session->getPlayer()->hidePlayer($hideSession->getPlayer());
+						$hideSession->getPlayer()->showPlayer($session->getPlayer());
+					}
+				}
 				$this->kills[$session->getPlayer()->getName()] = 0;
 				$this->old[$session->getPlayer()->getName()] = [
 					$session->getPlayer()->getPosition(),
@@ -75,6 +80,7 @@ class ClassicBattle{
 				];
 			}
 		}
+		$plugin->addBattle($this);
 		$this->maxRounds = $rounds;
 		$this->roundDuration = $duration;
 		$this->kit = $kit;
@@ -113,6 +119,7 @@ class ClassicBattle{
 	public function getMaxRounds(){
 		return $this->maxRounds;
 	}
+
 	/**
 	 * @param ClassicSession $session
 	 */
@@ -123,6 +130,7 @@ class ClassicBattle{
 	 * @return string
 	 */
 	public function getOverallWinner(){
+		if(count($this->roundWinners) === 0) return "no one";
 		$temp = [];
 		foreach($this->roundWinners as $roundWinner){
 			if(isset($temp[$roundWinner->getPlayer()->getName()])){
@@ -160,7 +168,7 @@ class ClassicBattle{
 	public function setTime($time){
 		$this->time = $time;
 		if($time === 0){
-			$this->setStatus(self::STATUS_ENDING, "Ran out of time!")
+			$this->setStatus(self::STATUS_ENDING, "Ran out of time!");
 		}
 	}
 	/**
@@ -182,6 +190,7 @@ class ClassicBattle{
 	public function setStatus($status, $message = "", $winner = "no one"){
 		switch($status){
 			case self::STATUS_STARTING:
+				++$this->currentRound;
 				foreach($this->teams as $team => $sessions){
 					foreach($sessions as $session){
 						if($team === 0){
@@ -203,16 +212,23 @@ class ClassicBattle{
 				$this->canHit = false;
 				break;
 			case self::STATUS_RUNNING:
-				if($message !== ""){
-					foreach($this->getSessions() as $session){
+				foreach($this->getSessions() as $session){
+					if($message !== ""){
 						$session->getPlayer()->sendMessage($message);
 					}
+					$session->getPlayer()->sendMessage("Round {$this->getRound()}/{$this->getMaxRounds()}");
 				}
 				$this->time = $this->roundDuration;
 				$this->canHit = true;
 				break;
-			case self::STATUS_ENDING
+			case self::STATUS_ENDING:
 				foreach($this->getSessions() as $session){
+					foreach($this->plugin->getBattles() as $battle){
+						foreach($battle->getSessions() as $showSession){
+							$session->getPlayer()->showPlayer($showSession->getPlayer());
+							$showSession->getPlayer()->showPlayer($session->getPlayer());
+						}
+					}
 					$session->getPlayer()->setPositionAndRotation($this->old[$session->getPlayer()->getName()][0], $this->old[$session->getPlayer()->getName()][1], $this->old[$session->getPlayer()->getName()][2]);
 					$session->getPlayer()->removeAllEffects();
 					$session->getPlayer()->setMaxHealth($this->old[$session->getPlayer()->getName()][6]);
@@ -227,6 +243,7 @@ class ClassicBattle{
 					}
 					$session->getPlayer()->sendMessage("Winner: " . $winner);
 				}
+				$this->canHit = false;
 				$this->plugin->removeBattle($this);
 				break;
 		}
@@ -247,7 +264,7 @@ class ClassicBattle{
 	/**
 	 * @return ClassicSession[]
 	 */
-	private function getSessions(){
+	public function getSessions(){
 		$sssions = [];
 		foreach($this->teams as $team => $sessions){
 			foreach($sessions as $session){

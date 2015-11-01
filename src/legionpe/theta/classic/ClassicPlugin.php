@@ -16,6 +16,8 @@
 namespace legionpe\theta\classic;
 
 use legionpe\theta\BasePlugin;
+use legionpe\theta\classic\battle\ClassicBattle;
+use legionpe\theta\classic\commands\BattleCommand;
 use legionpe\theta\classic\commands\PvpStatsCommand;
 use legionpe\theta\classic\commands\PvpTopCommand;
 use legionpe\theta\classic\commands\TeleportHereCommand;
@@ -28,8 +30,10 @@ use pocketmine\Player;
 //use legionpe\theta\classic\commands\OneVsOneCommand;
 
 class ClassicPlugin extends BasePlugin{
-	/** @var OneVsOneMatch|null */
-	public $currentMatch = null;
+	/** @var ClassicBattle[] */
+	private $battles = [];
+	/** @var ClassicSession[][] */
+	public $newBattle = [];
 	/** @var TeleportManager */
 	private $tpMgr;
 	protected static function defaultLoginData($uid, Player $player){
@@ -51,6 +55,7 @@ class ClassicPlugin extends BasePlugin{
 			new FriendlyFireActivationCommand($this),
 			new PvpStatsCommand($this),
 			new PvpTopCommand($this),
+			new BattleCommand($this)
 //			new OneVsOneCommand($this),
 		]);
 	}
@@ -71,6 +76,31 @@ class ClassicPlugin extends BasePlugin{
 	 */
 	public function getTeleportManager(){
 		return $this->tpMgr;
+	}
+	/**
+	 * @return ClassicBattle[]
+	 */
+	public function getBattles(){
+		return $this->battles;
+	}
+	/**
+	 * @param ClassicBattle $battle
+	 */
+	public function addBattle(ClassicBattle $battle){
+		$this->battles[$battle->getId()] = $battle;
+	}
+	/**
+	 * @param ClassicBattle $battle
+	 */
+	public function removeBattle(ClassicBattle $battle){
+		unset($this->battles[$battle->getId()]);
+	}
+	/**
+	 * @param $id
+	 * @return ClassicBattle|null
+	 */
+	public function getBattleById($id){
+		return isset($this->battles[$id]) ? $this->battles[$id] : null;
 	}
 	protected function createSession(Player $player, array $loginData){
 		return new ClassicSession($this, $player, $loginData);

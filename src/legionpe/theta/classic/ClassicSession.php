@@ -21,6 +21,7 @@ use legionpe\theta\lang\Phrases;
 use legionpe\theta\query\SetFriendQuery;
 use legionpe\theta\Session;
 use legionpe\theta\utils\MUtils;
+use legionpe\theta\classic\battle\ClassicBattle;
 use pocketmine\block\Block;
 use pocketmine\entity\Arrow;
 use pocketmine\entity\AttributeManager;
@@ -58,6 +59,10 @@ const ENABLE_HEALTHBAR = true;
 class ClassicSession extends Session{
 	/** @var BasePlugin */
 	private $main;
+	/** @var ClassicBattle|null */
+	private $battle = null;
+	/** @var ClassicSession|null */
+	public $battleRequest = null;
 	/** @var int */
 	private $globalRank = 0;
 	/** @var bool */
@@ -272,6 +277,13 @@ class ClassicSession extends Session{
 			$this->lastRespawnTime = microtime(true);
 			$this->getPlayer()->addEffect(Effect::getEffect(Effect::INVISIBILITY)->setDuration(ClassicConsts::RESPAWN_INVINCIBILITY * 20)->setVisible(false));
 		}
+		if($this->battle !== null){
+			if($this->battle->getStatus() === ClassicBattle::STATUS_STARTING){
+				if($event->getTo()->getX() !== $event->getFrom()->getX() or $event->getTo()->getZ() !== $event->getFrom()->getZ()){
+					return false;
+				}
+			}
+		}
 		return true;
 	}
 	public function onConsume(PlayerItemConsumeEvent $event){
@@ -382,6 +394,18 @@ class ClassicSession extends Session{
 		return false;
 	}
 
+	/**
+	 * @return ClassicBattle|null
+	 */
+	public function getBattle(){
+		return $this->battle;
+	}
+	/**
+	 * @param ClassicBattle|null
+	 */
+	public function setBattle($value){
+		$this->battle = $value;
+	}
 	public function decrementHandItem(){
 		$inv = $this->getPlayer()->getInventory();
 		$item = $inv->getItemInHand();
