@@ -20,7 +20,7 @@ use legionpe\theta\classic\ClassicSession;
 use pocketmine\math\Vector3;
 
 class ClassicBattle{
-	CONST STATUS_STARTING = 0, STATUS_RUNNING = 1, STATUS_ENDING = 3;
+	CONST STATUS_STARTING = 0, STATUS_RUNNING = 1, STATUS_ENDING = 2;
 	private static $nextId = 0;
 	/** @var ClassicPlugin */
 	private $plugin;

@@ -22,7 +22,6 @@ use legionpe\theta\lang\Phrases;
 use legionpe\theta\query\SetFriendQuery;
 use legionpe\theta\Session;
 use legionpe\theta\utils\MUtils;
-use legionpe\theta\classic\battle\ClassicBattle;
 use legionpe\theta\utils\SpawnGhastParticle;
 use pocketmine\block\Block;
 use pocketmine\entity\Arrow;
@@ -113,6 +112,23 @@ class ClassicSession extends Session{
 					return false;
 				}
 				if($ses instanceof ClassicSession){
+					if($ses->getBattle() instanceof ClassicBattle and $this->getBattle() instanceof ClassicBattle){
+						if($ses->getBattle()->getId() === $this->getBattle()->getId()){
+							if($event->getDamage() >= $this->getPlayer()->getHealth()){
+								$event->setDamage(0);
+								$this->getBattle()->addRoundWinner($ses);
+								$this->getPlayer()->setHealth(20);
+								if($this->getBattle()->getRound() === $this->getBattle()->getMaxRounds()){
+									$this->getBattle()->setStatus(ClassicBattle::STATUS_ENDING, "The Battle has ended.", $this->getBattle()->getOverallWinner());
+								}else{
+									$this->getBattle()->setStatus(ClassicBattle::STATUS_STARTING, "Round winner: {$ses->getPlayer()->getName()}");
+								}
+							}
+							return true;
+						}
+						return false;
+					}
+
 					$this->setCombatMode();
 					$ses->setCombatMode();
 					if($ses->isInvincible()){
@@ -279,7 +295,7 @@ class ClassicSession extends Session{
 			$this->lastRespawnTime = microtime(true);
 			$this->getPlayer()->addEffect(Effect::getEffect(Effect::INVISIBILITY)->setDuration(ClassicConsts::RESPAWN_INVINCIBILITY * 20)->setVisible(false));
 		}
-		if($this->battle !== null){
+		if($this->battle instanceof ClassicBattle){
 			if($this->battle->getStatus() === ClassicBattle::STATUS_STARTING){
 				if($event->getTo()->getX() !== $event->getFrom()->getX() or $event->getTo()->getZ() !== $event->getFrom()->getZ()){
 					return false;
@@ -349,6 +365,9 @@ class ClassicSession extends Session{
 		if($this->isCombatMode()){
 			$this->setCoins($this->getCoins() - ($take = $this->getCombatLogPenalty()));
 			$this->getMain()->sendPrivateMessage($this->getUid(), "You logged out while in combat mode, so $take coins have been taken from you as penalty.");
+		}
+		if($this->getBattle() instanceof ClassicBattle){
+			$this->getBattle()->setStatus(ClassicBattle::STATUS_ENDING, $this->getPlayer()->getName() . " left the Battle.", $this->getBattle()->getOverallWinner());
 		}
 	}
 	public function onRespawn(PlayerRespawnEvent $event){
