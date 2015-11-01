@@ -18,6 +18,7 @@ namespace legionpe\theta\classic;
 use legionpe\theta\BasePlugin;
 use legionpe\theta\classic\battle\BattleTask;
 use legionpe\theta\classic\battle\ClassicBattle;
+use legionpe\theta\classic\commands\BattleCommand;
 use legionpe\theta\classic\commands\PvpStatsCommand;
 use legionpe\theta\classic\commands\PvpTopCommand;
 use legionpe\theta\classic\commands\TeleportHereCommand;

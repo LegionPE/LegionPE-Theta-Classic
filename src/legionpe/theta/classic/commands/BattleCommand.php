@@ -18,11 +18,8 @@ namespace legionpe\theta\classic\commands;
 use legionpe\theta\BasePlugin;
 use legionpe\theta\classic\battle\ClassicBattle;
 use legionpe\theta\classic\battle\ClassicBattleKit;
-use legionpe\theta\classic\ClassicPlugin;
 use legionpe\theta\classic\ClassicSession;
-use legionpe\theta\classic\OneVsOneMatch;
 use legionpe\theta\command\SessionCommand;
-use legionpe\theta\lang\Phrases;
 use legionpe\theta\Session;
 use pocketmine\item\Item;
 
