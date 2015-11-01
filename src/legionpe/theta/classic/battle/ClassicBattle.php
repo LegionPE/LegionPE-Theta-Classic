@@ -182,6 +182,7 @@ class ClassicBattle{
 	/**
 	 * @param int $status
 	 * @param string $message
+	 * @param string $winner
 	 */
 	public function setStatus($status, $message = "", $winner = "no one"){
 		switch($status){
@@ -255,13 +256,13 @@ class ClassicBattle{
 	 * @return ClassicSession[]
 	 */
 	private function getSessions(){
-		$sssions = [];
+		$out = [];
 		foreach($this->teams as $team => $sessions){
 			foreach($sessions as $session){
-				$sssions[] = $session;
+				$out[] = $session;
 			}
 		}
-		return $sssions;
+		return $out;
 	}
 	/**
 	 * @param string $message

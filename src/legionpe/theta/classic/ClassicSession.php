@@ -22,7 +22,6 @@ use legionpe\theta\lang\Phrases;
 use legionpe\theta\query\SetFriendQuery;
 use legionpe\theta\Session;
 use legionpe\theta\utils\MUtils;
-use legionpe\theta\classic\battle\ClassicBattle;
 use legionpe\theta\utils\SpawnGhastParticle;
 use pocketmine\block\Block;
 use pocketmine\entity\Arrow;
