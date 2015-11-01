@@ -16,8 +16,8 @@
 namespace legionpe\theta\classic\battle;
 
 use legionpe\theta\classic\ClassicSession;
-use pocketmine\item\Item;
 use pocketmine\entity\Effect;
+use pocketmine\item\Item;
 
 class ClassicBattleKit{
 	/** @var string */
@@ -59,7 +59,7 @@ class ClassicBattleKit{
 		$inventory->clearAll();
 		$inventory->setContents($this->items);
 		$inventory->setArmorContents($this->armorItems);
-		for($i=0;$i<7;$i++){
+		for($i = 0; $i < 7; $i++){
 			$inventory->setHotbarSlotIndex($i, $i);
 		}
 		$inventory->sendContents($session->getPlayer());

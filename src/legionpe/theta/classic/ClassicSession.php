@@ -95,6 +95,9 @@ class ClassicSession extends Session{
 		if($this->invincible){
 			return false;
 		}
+		if($event->getCause() === EntityDamageEvent::CAUSE_FALL){
+			return false;
+		}
 		if($event->getCause() === EntityDamageEvent::CAUSE_SUICIDE){
 			return true;
 		}
