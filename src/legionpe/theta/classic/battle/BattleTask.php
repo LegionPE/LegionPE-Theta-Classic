@@ -21,6 +21,7 @@ use pocketmine\scheduler\PluginTask;
 class BattleTask extends PluginTask{
 	/** @var ClassicPlugin */
 	private $main;
+
 	public function __construct(ClassicPlugin $main){
 		parent::__construct($main);
 		$this->main = $main;

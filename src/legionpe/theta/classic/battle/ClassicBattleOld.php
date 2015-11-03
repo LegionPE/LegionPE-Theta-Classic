@@ -43,7 +43,6 @@ class ClassicBattleOld{
 		$this->health = $player->getHealth();
 		$this->maxHealth = $player->getMaxHealth();
 	}
-
 	public function restore(){
 		$player = $this->session->getPlayer();
 		$player->removeAllEffects();

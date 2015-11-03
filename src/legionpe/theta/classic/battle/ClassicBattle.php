@@ -123,7 +123,9 @@ class ClassicBattle{
 	 * @return string
 	 */
 	public function getOverallWinner(){
-		if(count($this->roundWinners) === 0) return "no one";
+		if(count($this->roundWinners) === 0){
+			return "no one";
+		}
 		$temp = [];
 		foreach($this->roundWinners as $roundWinner){
 			if(isset($temp[$roundWinner->getPlayer()->getName()])){
