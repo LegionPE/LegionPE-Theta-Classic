@@ -112,6 +112,21 @@ class ClassicSession extends Session{
 					return false;
 				}
 				if($ses instanceof ClassicSession){
+					if($ses->getBattle() instanceof ClassicBattle and $this->getBattle() instanceof ClassicBattle){
+						if($ses->getBattle() === $this->getBattle()){
+							if($event->getDamage() >= $this->getPlayer()->getHealth()){
+								$event->setDamage(0);
+								$this->getBattle()->addRoundWinner($ses);
+								if($this->getBattle()->getRound() === $this->getBattle()->getMaxRounds()){
+									$this->getBattle()->setStatus(ClassicBattle::STATUS_ENDING, "The Battle has ended.", $this->getBattle()->getOverallWinner());
+								}else{
+									$this->getBattle()->setStatus(ClassicBattle::STATUS_STARTING, "Round winner: {$ses->getPlayer()->getName()}");
+								}
+							}
+							return true;
+						}
+						return false;
+					}
 					$this->setCombatMode();
 					$ses->setCombatMode();
 					if($ses->isInvincible()){
@@ -280,7 +295,7 @@ class ClassicSession extends Session{
 		}
 		if($this->battle !== null){
 			if($this->battle->getStatus() === ClassicBattle::STATUS_STARTING){
-				if($event->getTo()->getX() !== $event->getFrom()->getX() or $event->getTo()->getZ() !== $event->getFrom()->getZ()){
+				if($event->getTo()->getX() != $event->getFrom()->getX() or $event->getTo()->getZ() != $event->getFrom()->getZ()){
 					return false;
 				}
 			}
@@ -348,6 +363,9 @@ class ClassicSession extends Session{
 		if($this->isCombatMode()){
 			$this->setCoins($this->getCoins() - ($take = $this->getCombatLogPenalty()));
 			$this->getMain()->sendPrivateMessage($this->getUid(), "You logged out while in combat mode, so $take coins have been taken from you as penalty.");
+		}
+		if($this->getBattle() instanceof ClassicBattle){
+			$this->getBattle()->setStatus(ClassicBattle::STATUS_ENDING, $this->getPlayer()->getName() . " left the Battle.", $this->getBattle()->getOverallWinner());
 		}
 	}
 	public function onRespawn(PlayerRespawnEvent $event){

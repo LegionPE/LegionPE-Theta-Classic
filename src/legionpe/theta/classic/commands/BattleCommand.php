@@ -34,35 +34,40 @@ class BattleCommand extends SessionCommand{
 		if(!($host instanceof ClassicSession)){
 			return false;
 		}
-		if($args[0] == $host->battleRequest->getPlayer()->getName()){
-			if($host->battleRequest->getPlayer()->isOnline()){
-				if(!($host->battleRequest->getBattle() instanceof ClassicBattle)){
-					$kit = new ClassicBattleKit('Default battle kit',
-						[Item::get(306), Item::get(307), Item::get(308), Item::get(309)],
-						[Item::get(310), Item::get(260)],
-						[]);
-					new ClassicBattle($host->getMain(), [[$host], [$host->battleRequest]], 3, 90, $kit);
+		if($host->getBattle() instanceof ClassicBattle){
+			return "You're already in a Battle.";
+		}
+		if($host->battleRequest instanceof ClassicSession){
+			if($this->getSession($args[0]) === $host->battleRequest){
+				if($host->battleRequest->getPlayer()->isOnline()){
+					if(!($host->battleRequest->getBattle() instanceof ClassicBattle)){
+						$kit = new ClassicBattleKit('Default battle kit',
+							[Item::get(306), Item::get(307), Item::get(308), Item::get(309)],
+							[Item::get(276), Item::get(260)],
+							[]);
+						new ClassicBattle($host->getMain(), [[$host], [$host->battleRequest]], 3, 90, $kit);
+						return true;
+					}else{
+						$name = $host->battleRequest->getPlayer()->getName();
+						$host->battleRequest = null;
+						return $name . "is already in a Battle :(";
+					}
 				}else{
 					$name = $host->battleRequest->getPlayer()->getName();
 					$host->battleRequest = null;
-					return $name . "is already in a Battle :(";
+					return $name . " is offline :(";
 				}
-			}else{
-				$name = $host->battleRequest->getPlayer()->getName();
-				$host->battleRequest = null;
-				return $name . " is offline :(";
 			}
 		}
 		if(!$host->isVIP()){
 			return "You have to be VIP to use this command.";
 		}
-		$battle = $host->getBattle();
-		if($battle instanceof ClassicBattle){
-			return "You're already in a Battle.";
-		}
 		$opponent = $host->getMain()->getSession($args[0]);
 		if(!($opponent instanceof ClassicSession)){
 			return $args[0] . ' is not online.';
+		}
+		if($opponent === $host){
+			return "You can't have a Battle with yourself. That would be pretty cool though.";
 		}
 		if($opponent->getBattle() instanceof ClassicBattle){
 			return $opponent->getPlayer()->getName() . ' is already in a Battle.';

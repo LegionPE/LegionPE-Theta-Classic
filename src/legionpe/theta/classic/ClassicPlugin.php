@@ -32,7 +32,7 @@ use pocketmine\Player;
 
 class ClassicPlugin extends BasePlugin{
 	/** @var ClassicBattle[] */
-	private $battles = [];
+	public $battles = [];
 	/** @var TeleportManager */
 	private $tpMgr;
 	protected static function defaultLoginData($uid, Player $player){
@@ -57,7 +57,7 @@ class ClassicPlugin extends BasePlugin{
 			new BattleCommand($this)
 //			new OneVsOneCommand($this),
 		]);
-		$this->getServer()->getScheduler()->scheduleDelayedTask(new BattleTask($this), 20);
+		$this->getServer()->getScheduler()->scheduleRepeatingTask(new BattleTask($this), 20);
 	}
 	public function getLoginQueryImpl(){
 		return ClassicLoginDataQuery::class;

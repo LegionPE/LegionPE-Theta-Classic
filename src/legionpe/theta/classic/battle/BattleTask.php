@@ -25,7 +25,7 @@ class BattleTask extends PluginTask{
 		parent::__construct($main);
 		$this->main = $main;
 	}
-	public function onRun($currentTick){
+	public function onRun($ticks){
 		foreach($this->main->getBattles() as $battle){
 			$time = $battle->getTime();
 			switch($battle->getStatus()){
@@ -33,7 +33,7 @@ class BattleTask extends PluginTask{
 					if($time === 0){
 						$battle->setStatus(ClassicBattle::STATUS_RUNNING, "Battle has started!");
 					}else{
-						$battle->broadcast("Starting in {$time}...");
+						$battle->broadcast("Starting in {$time}...", "tip");
 						$battle->setTime(--$time);
 					}
 					break;
@@ -41,7 +41,7 @@ class BattleTask extends PluginTask{
 					if($time === 0){
 						$battle->setStatus(ClassicBattle::STATUS_STARTING, "No one won this round. Starting next round...");
 					}else{
-						$battle->broadcast("Ending in {$time} seconds");
+						$battle->broadcast("Ending in {$time} seconds", "tip");
 						$battle->setTime(--$time);
 					}
 					break;

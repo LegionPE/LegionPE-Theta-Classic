@@ -44,7 +44,7 @@ class ClassicBattle{
 	private $kit;
 	/** @var int */
 	private $status;
-
+	/** @var \legionpe\theta\classic\battle\ClassicBattleOld[] */
 	private $old = [];
 	/** @var bool */
 	private $canHit = false;
@@ -68,19 +68,13 @@ class ClassicBattle{
 						$hideSession->getPlayer()->showPlayer($session->getPlayer());
 					}
 				}
+				$session->setBattle($this);
 				$this->kills[$session->getPlayer()->getName()] = 0;
-				$this->old[$session->getPlayer()->getName()] = [
-					$session->getPlayer()->getPosition(),
-					$session->getPlayer()->getYaw(),
-					$session->getPlayer()->getPitch(),
-					$session->getPlayer()->getInventory()->getContents(),
-					$session->getPlayer()->getInventory()->getArmorContents(),
-					$session->getPlayer()->getHealth(),
-					$session->getPlayer()->getMaxHealth()
-				];
+				$this->old[$session->getPlayer()->getName()] = new ClassicBattleOld($session);
 			}
 		}
-		$plugin->addBattle($this);
+		//$plugin->addBattle($this);
+		$plugin->battles[$this->id] = $this;
 		$this->maxRounds = $rounds;
 		$this->roundDuration = $duration;
 		$this->kit = $kit;
@@ -123,7 +117,7 @@ class ClassicBattle{
 	 * @param ClassicSession $session
 	 */
 	public function addRoundWinner(ClassicSession $session){
-		$this->roundWinners[] = $session;
+		$this->roundWinners[$session->get] = $session;
 	}
 	/**
 	 * @return string
@@ -138,7 +132,7 @@ class ClassicBattle{
 				$temp[$roundWinner->getPlayer()->getName()] = 0;
 			}
 		}
-		asort($temp);
+		arsort($temp);
 		return key($temp);
 	}
 	/**
@@ -220,22 +214,18 @@ class ClassicBattle{
 				break;
 			case self::STATUS_ENDING:
 				foreach($this->getSessions() as $session){
-					$session->getPlayer()->setPositionAndRotation($this->old[$session->getPlayer()->getName()][0], $this->old[$session->getPlayer()->getName()][1], $this->old[$session->getPlayer()->getName()][2]);
-					$session->getPlayer()->removeAllEffects();
-					$session->getPlayer()->setMaxHealth($this->old[$session->getPlayer()->getName()][6]);
-					$session->getPlayer()->setHealth($this->old[$session->getPlayer()->getName()][5]);
-					$inventory = $session->getPlayer()->getInventory();
-					$inventory->clearAll();
-					$inventory->setContents($this->old[$session->getPlayer()->getName()][3]);
-					$inventory->setArmorContents($this->old[$session->getPlayer()->getName()][4]);
-					$inventory->sendContents($session->getPlayer());
+					$this->old[$session->getPlayer()->getName()]->restore();
+					foreach($this->plugin->getServer()->getOnlinePlayers() as $player){
+						$player->showPlayer($session->getPlayer());
+						$session->getPlayer()->showPlayer($player);
+					}
 					if($message !== ""){
 						$session->getPlayer()->sendMessage($message);
 					}
 					$session->getPlayer()->sendMessage("Winner: " . $winner);
 				}
 				$this->canHit = false;
-				$this->plugin->removeBattle($this);
+				unset($this->plugin->battles[$this->id]);
 				break;
 		}
 		$this->status = $status;
@@ -263,6 +253,21 @@ class ClassicBattle{
 			}
 		}
 		return $out;
+	}
+	/**
+	 * @param ClassicSession $session
+	 * @return bool|int
+	 */
+	private function getSessionTeam(ClassicSession $session){
+		$returnTeam = false;
+		foreach($this->teams as $team => $sessions){
+			foreach($sessions as $newSession){
+				if($session === $newSession){
+					$returnTeam = $team;
+				}
+			}
+		}
+		return $returnTeam;
 	}
 	/**
 	 * @param string $message
