@@ -58,6 +58,7 @@ class ClassicPlugin extends BasePlugin{
 //			new OneVsOneCommand($this),
 		]);
 		$this->getServer()->getScheduler()->scheduleDelayedTask(new BattleTask($this), 20);
+		new FireballTask($this);
 	}
 	public function getLoginQueryImpl(){
 		return ClassicLoginDataQuery::class;
