@@ -311,7 +311,7 @@ class ClassicSession extends Session{
 		if(!parent::onConsume($event)){
 			return false;
 		}
-		$this->getPlayer()->heal(3, new EntityRegainHealthEvent($this->getPlayer(), 3, EntityRegainHealthEvent::CAUSE_EATING));
+		$this->getPlayer()->heal(6, new EntityRegainHealthEvent($this->getPlayer(), 6, EntityRegainHealthEvent::CAUSE_EATING));
 		return true;
 	}
 	public function login($method){
@@ -559,6 +559,7 @@ class ClassicSession extends Session{
 				$amount = ClassicConsts::getAutoHeal($this);
 				$this->getPlayer()->heal($amount, new EntityRegainHealthEvent($this->getPlayer(), $amount, EntityRegainHealthEvent::CAUSE_REGEN));
 			}
+			$this->getPlayer()->setFood(19);
 		}
 		if($this->isPlaying()){
 			$respawn = (int) (ClassicConsts::RESPAWN_INVINCIBILITY - microtime(true) + $this->lastRespawnTime);
