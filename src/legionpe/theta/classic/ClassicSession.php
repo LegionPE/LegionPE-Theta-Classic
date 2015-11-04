@@ -413,8 +413,7 @@ class ClassicSession extends Session{
 		return !($event->getInventory() instanceof ChestInventory);
 	}
 	public function onPickupArrow(InventoryPickupArrowEvent $event){
-		parent::onPickupArrow($event);
-		return false;
+		return parent::onPickupArrow($event);
 	}
 
 	/**

@@ -52,7 +52,10 @@ class FireballTask extends PluginTask{
 		foreach($unset as $eid){
 			unset($this->rmQueue[$eid]);
 		}
-		foreach($locs as $loc){
+		foreach($locs as $i => $loc){
+			if($i === 0){
+				continue;
+			}
 			if(mt_rand(0, 999) < 75){
 				$level = $loc->getLevel();
 				$minDistSq = self::MAX_DISTANCE_SQUARED;
