@@ -95,6 +95,9 @@ class ClassicSession extends Session{
 		if($this->invincible){
 			return false;
 		}
+		if($event->getCause() === EntityDamageEvent::CAUSE_FALL){
+			return false;
+		}
 		if($event->getCause() === EntityDamageEvent::CAUSE_SUICIDE){
 			return true;
 		}
@@ -306,44 +309,7 @@ class ClassicSession extends Session{
 		if(!parent::onConsume($event)){
 			return false;
 		}
-		$items = [ //TODO: move this to item classes
-			Item::APPLE => 4,
-			Item::MUSHROOM_STEW => 10,
-			Item::BEETROOT_SOUP => 10,
-			Item::BREAD => 5,
-			Item::RAW_PORKCHOP => 3,
-			Item::COOKED_PORKCHOP => 8,
-			Item::RAW_BEEF => 3,
-			Item::STEAK => 8,
-			Item::COOKED_CHICKEN => 6,
-			Item::RAW_CHICKEN => 2,
-			Item::MELON_SLICE => 2,
-			Item::GOLDEN_APPLE => 10,
-			Item::PUMPKIN_PIE => 8,
-			Item::CARROT => 4,
-			Item::POTATO => 1,
-			Item::BAKED_POTATO => 6,
-			Item::COOKIE => 2,
-			Item::COOKED_FISH => [
-				0 => 5,
-				1 => 6
-			],
-			Item::RAW_FISH => [
-				0 => 2,
-				1 => 2,
-				2 => 1,
-				3 => 1
-			],
-		];
-		if(isset($items[$id = $event->getItem()->getId()])){
-			$health = $items[$id];
-			if(is_array($health)){
-				$health = $health[$event->getItem()->getDamage()];
-			}
-			$health /= 3;
-			$this->getPlayer()->heal($health, new EntityRegainHealthEvent($this->getPlayer(), $health, EntityRegainHealthEvent::CAUSE_EATING));
-			return false;
-		}
+		$this->getPlayer()->heal(6, new EntityRegainHealthEvent($this->getPlayer(), 6, EntityRegainHealthEvent::CAUSE_EATING));
 		return true;
 	}
 	public function login($method){
@@ -408,8 +374,7 @@ class ClassicSession extends Session{
 		return !($event->getInventory() instanceof ChestInventory);
 	}
 	public function onPickupArrow(InventoryPickupArrowEvent $event){
-		parent::onPickupArrow($event);
-		return false;
+		return parent::onPickupArrow($event);
 	}
 
 	/**
@@ -592,6 +557,7 @@ class ClassicSession extends Session{
 				$amount = ClassicConsts::getAutoHeal($this);
 				$this->getPlayer()->heal($amount, new EntityRegainHealthEvent($this->getPlayer(), $amount, EntityRegainHealthEvent::CAUSE_REGEN));
 			}
+			$this->getPlayer()->setFood(19);
 		}
 		if($this->isPlaying()){
 			$respawn = (int) (ClassicConsts::RESPAWN_INVINCIBILITY - microtime(true) + $this->lastRespawnTime);
@@ -603,12 +569,8 @@ class ClassicSession extends Session{
 				$this->getPlayer()->sendPopup($this->translate(Phrases::PVP_INVINCIBILITY_OFF));
 				$this->setInvincible(false);
 				$this->equip();
-				$hunger = $this->getPlayer()->getAttribute()->getAttribute(AttributeManager::MAX_HUNGER);
-				$hunger->setValue(19.0);
-				$hunger->send();
-				$hunger = $this->getPlayer()->getAttribute()->addAttribute(AttributeManager::MAX_HUNGER, "player.health", 0.0, 20.0, 19.0, true);
-				$hunger->setValue(19.0);
-				$hunger->send();
+				$this->getPlayer()->setFood(19);
+				$this->getPlayer()->setFoodEnabled(false);
 			}
 		}
 		$nameTag = $this->calculateNameTag();

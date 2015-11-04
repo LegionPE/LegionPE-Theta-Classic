@@ -25,6 +25,6 @@ class PvpTopCommand extends SessionCommand{
 		parent::__construct($main, "top", "List the top 5 users", "/top [kd]");
 	}
 	protected function run(array $args, Session $sender){
-		new TopKillsQuery($sender->getMain(), isset($args[0]) and $args[0] === "kd", $sender);
+		new TopKillsQuery($sender->getMain(), isset($args[0]) and ($args[0] === "kdr" or $args[0] === "kd"), $sender);
 	}
 }
