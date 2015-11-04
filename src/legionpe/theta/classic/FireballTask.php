@@ -24,7 +24,7 @@ class FireballTask extends PluginTask{
 	const FIREBALL_NETWORK_ID = 85;
 
 	const MAX_DISTANCE_SQUARED = 42 ** 2;
-	const FIREBALL_SPEED = 3;
+	const FIREBALL_SPEED = 2;
 
 	/** @var int[] */
 	private $rmQueue = [];
