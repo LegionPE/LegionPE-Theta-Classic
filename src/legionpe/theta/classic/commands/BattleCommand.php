@@ -34,35 +34,42 @@ class BattleCommand extends SessionCommand{
 		if(!($host instanceof ClassicSession)){
 			return false;
 		}
-		if($args[0] == $host->battleRequest->getPlayer()->getName()){
-			if($host->battleRequest->getPlayer()->isOnline()){
-				if(!($host->battleRequest->getBattle() instanceof ClassicBattle)){
-					$kit = new ClassicBattleKit('Default battle kit',
-						[Item::get(306), Item::get(307), Item::get(308), Item::get(309)],
-						[Item::get(310), Item::get(260)],
-						[]);
-					new ClassicBattle($host->getMain(), [[$host], [$host->battleRequest]], 3, 90, $kit);
-				}else{
-					$name = $host->battleRequest->getPlayer()->getName();
-					$host->battleRequest = null;
-					return $name . "is already in a Battle :(";
-				}
-			}else{
-				$name = $host->battleRequest->getPlayer()->getName();
-				$host->battleRequest = null;
-				return $name . " is offline :(";
-			}
-		}
-		if(!$host->isVIP()){
-			return "You have to be VIP to use this command.";
-		}
-		$battle = $host->getBattle();
-		if($battle instanceof ClassicBattle){
+		if($host->getBattle() instanceof ClassicBattle){
 			return "You're already in a Battle.";
 		}
-		$opponent = $host->getMain()->getSession($args[0]);
+		if($host->battleRequest instanceof ClassicSession){
+			if($this->getSession($args[0]) instanceof ClassicSession){
+				if($this->getSession($args[0]) === $host->battleRequest){
+					if($host->battleRequest->getPlayer()->isOnline()){
+						if(!($host->battleRequest->getBattle() instanceof ClassicBattle)){
+							$kit = new ClassicBattleKit('Default battle kit',
+								[Item::get(306), Item::get(307), Item::get(308), Item::get(309)],
+								[Item::get(276), Item::get(260)],
+								[]);
+							new ClassicBattle($host->getMain(), [[$host], [$host->battleRequest]], 3, 90, $kit);
+							return true;
+						}else{
+							$name = $host->battleRequest->getPlayer()->getName();
+							$host->battleRequest = null;
+							return $name . "is already in a Battle :(";
+						}
+					}else{
+						$name = $host->battleRequest->getPlayer()->getName();
+						$host->battleRequest = null;
+						return $name . " is offline :(";
+					}
+				}
+			}
+		}
+		if(!$host->isDonator()){
+			return "You have to be Donator to use this command.";
+		}
+		$opponent = $this->getSession($args[0]);
 		if(!($opponent instanceof ClassicSession)){
 			return $args[0] . ' is not online.';
+		}
+		if($opponent === $host){
+			return "You can't have a Battle with yourself. That would be pretty cool though.";
 		}
 		if($opponent->getBattle() instanceof ClassicBattle){
 			return $opponent->getPlayer()->getName() . ' is already in a Battle.';
@@ -70,11 +77,6 @@ class BattleCommand extends SessionCommand{
 		$opponent->battleRequest = $host;
 		$opponent->sendMessage("You have received a request from {$host->getPlayer()->getName()} to Battle.\nTo accept this request, type /battle {$host->getPlayer()->getName()}");
 		$host->sendMessage("Request sent to {$opponent->getPlayer()->getName()}");
-		/*$kit = new ClassicBattleKit('Default battle kit',
-			[Item::get(306), Item::get(307), Item::get(308), Item::get(309)],
-			[Item::get(310), Item::get(260)],
-			[]);
-		new ClassicBattle($host->getMain(), [[$host], [$opponent]], 3, 90, $kit);*/
 		return true;
 	}
 }

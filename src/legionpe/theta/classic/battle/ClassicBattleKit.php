@@ -58,7 +58,9 @@ class ClassicBattleKit{
 		$inventory = $session->getPlayer()->getInventory();
 		$inventory->clearAll();
 		$inventory->setContents($this->items);
-		$inventory->setArmorContents($this->armorItems);
+		for($i=0;$i<4;$i++){
+			$inventory->setArmorItem($i, $this->armorItems[$i]);
+		}
 		for($i=0;$i<7;$i++){
 			$inventory->setHotbarSlotIndex($i, $i);
 		}

@@ -113,11 +113,10 @@ class ClassicSession extends Session{
 				}
 				if($ses instanceof ClassicSession){
 					if($ses->getBattle() instanceof ClassicBattle and $this->getBattle() instanceof ClassicBattle){
-						if($ses->getBattle()->getId() === $this->getBattle()->getId()){
+						if($ses->getBattle() === $this->getBattle()){
 							if($event->getDamage() >= $this->getPlayer()->getHealth()){
 								$event->setDamage(0);
 								$this->getBattle()->addRoundWinner($ses);
-								$this->getPlayer()->setHealth(20);
 								if($this->getBattle()->getRound() === $this->getBattle()->getMaxRounds()){
 									$this->getBattle()->setStatus(ClassicBattle::STATUS_ENDING, "The Battle has ended.", $this->getBattle()->getOverallWinner());
 								}else{
@@ -128,7 +127,6 @@ class ClassicSession extends Session{
 						}
 						return false;
 					}
-
 					$this->setCombatMode();
 					$ses->setCombatMode();
 					if($ses->isInvincible()){
@@ -297,7 +295,7 @@ class ClassicSession extends Session{
 		}
 		if($this->battle instanceof ClassicBattle){
 			if($this->battle->getStatus() === ClassicBattle::STATUS_STARTING){
-				if($event->getTo()->getX() !== $event->getFrom()->getX() or $event->getTo()->getZ() !== $event->getFrom()->getZ()){
+				if($event->getTo()->getX() != $event->getFrom()->getX() or $event->getTo()->getZ() != $event->getFrom()->getZ()){
 					return false;
 				}
 			}
