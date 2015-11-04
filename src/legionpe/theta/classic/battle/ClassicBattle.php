@@ -117,7 +117,7 @@ class ClassicBattle{
 	 * @param ClassicSession $session
 	 */
 	public function addRoundWinner(ClassicSession $session){
-		$this->roundWinners[$session->get] = $session;
+		$this->roundWinners[] = $session;
 	}
 	/**
 	 * @return string
