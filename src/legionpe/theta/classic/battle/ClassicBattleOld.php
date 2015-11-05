@@ -22,8 +22,6 @@ class ClassicBattleOld{
 	private $session;
 	/** @var int */
 	private $yaw, $pitch;
-	/** @var \pocketmine\item\Item[] */
-	private $invItems = [], $invArmorItems = [];
 	/** @var \pocketmine\level\Position */
 	private $position;
 	/** @var int */
@@ -37,8 +35,6 @@ class ClassicBattleOld{
 		$this->session = $session;
 		$this->yaw = $player->getYaw();
 		$this->pitch = $player->getPitch();
-		$this->invItems = $player->getInventory()->getContents();
-		$this->invArmorItems = $player->getInventory()->getArmorContents();
 		$this->position = $player->getPosition();
 		$this->health = $player->getHealth();
 		$this->maxHealth = $player->getMaxHealth();
@@ -47,13 +43,9 @@ class ClassicBattleOld{
 		$player = $this->session->getPlayer();
 		$player->removeAllEffects();
 		$player->setRotation($this->yaw, $this->pitch);
-		$inventory = $player->getInventory();
-		$inventory->clearAll();
-		$inventory->setContents($this->invItems);
-		$inventory->setArmorContents($this->invArmorItems);
-		$inventory->sendContents($player);
 		$player->teleport($this->position);
 		$player->setMaxHealth($this->maxHealth);
 		$player->setHealth($this->health);
+		$this->session->equip();
 	}
 }

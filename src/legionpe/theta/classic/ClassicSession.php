@@ -63,7 +63,9 @@ class ClassicSession extends Session{
 	/** @var ClassicBattle|null */
 	private $battle = null;
 	/** @var ClassicSession|null */
-	public $battleRequest = null;
+	public $battleRequest = null, $battleRequestSentTo = null;
+	/** @var int */
+	public $battleLastRequest = 0, $battleLastSentRequest = 0;
 	/** @var int */
 	private $globalRank = 0;
 	/** @var bool */
@@ -330,6 +332,8 @@ class ClassicSession extends Session{
 			$this->setCoins($this->getCoins() - ($take = $this->getCombatLogPenalty()));
 			$this->getMain()->sendPrivateMessage($this->getUid(), "You logged out while in combat mode, so $take coins have been taken from you as penalty.");
 		}
+	}
+	public function onQuit(){
 		if($this->getBattle() instanceof ClassicBattle){
 			$this->getBattle()->setStatus(ClassicBattle::STATUS_ENDING, $this->getPlayer()->getName() . " left the Battle.", $this->getBattle()->getOverallWinner());
 		}

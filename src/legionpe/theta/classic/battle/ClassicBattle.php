@@ -216,15 +216,18 @@ class ClassicBattle{
 				break;
 			case self::STATUS_ENDING:
 				foreach($this->getSessions() as $session){
-					$this->old[$session->getPlayer()->getName()]->restore();
+					if($session->getPlayer()->isOnline()){
+						$this->old[$session->getPlayer()->getName()]->restore();
+						$session->setBattle(null);
+						if($message !== ""){
+							$session->getPlayer()->sendMessage($message);
+						}
+						$session->getPlayer()->sendMessage("Winner: " . $winner);
+					}
 					foreach($this->plugin->getServer()->getOnlinePlayers() as $player){
 						$player->showPlayer($session->getPlayer());
 						$session->getPlayer()->showPlayer($player);
 					}
-					if($message !== ""){
-						$session->getPlayer()->sendMessage($message);
-					}
-					$session->getPlayer()->sendMessage("Winner: " . $winner);
 				}
 				$this->canHit = false;
 				unset($this->plugin->battles[$this->id]);
@@ -247,7 +250,7 @@ class ClassicBattle{
 	/**
 	 * @return ClassicSession[]
 	 */
-	private function getSessions(){
+	public function getSessions(){
 		$out = [];
 		foreach($this->teams as $team => $sessions){
 			foreach($sessions as $session){
