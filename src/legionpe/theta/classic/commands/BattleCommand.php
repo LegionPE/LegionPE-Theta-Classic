@@ -40,7 +40,7 @@ class BattleCommand extends SessionCommand{
 		if($host->battleRequest instanceof ClassicSession){
 			if($this->getSession($args[0]) instanceof ClassicSession){
 				if($this->getSession($args[0]) === $host->battleRequest){
-					if(($host->battleLastRequest - time()) >= 30){
+					if((time() - $host->battleLastRequest) >= 30){
 						if($host->battleRequest->getPlayer()->isOnline()){
 							if(!($host->battleRequest->getBattle() instanceof ClassicBattle)){
 								$kit = new ClassicBattleKit('Default battle kit',
@@ -86,11 +86,11 @@ class BattleCommand extends SessionCommand{
 		if($opponent->getBattle() instanceof ClassicBattle){
 			return $opponent->getPlayer()->getName() . ' is already in a Battle.';
 		}
-		if(($host->battleLastSentRequest - time()) <= 20){
+		if((time() - $host->battleLastSentRequest) <= 20){
 			return "You can't send a request again in such a short period of time.";
 		}
 		if($opponent === $host->battleRequestSentTo){
-			if(($opponent->battleLastRequest - time()) <= 30){
+			if((time() - $opponent->battleLastRequest) <= 30){
 				return "You can't send a request to {$opponent->getPlayer()->getName()} again in such a short period of time.";
 			}
 		}
