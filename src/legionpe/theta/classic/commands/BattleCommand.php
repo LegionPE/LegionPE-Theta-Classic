@@ -40,7 +40,7 @@ class BattleCommand extends SessionCommand{
 		if($host->battleRequest instanceof ClassicSession){
 			if($this->getSession($args[0]) instanceof ClassicSession){
 				if($this->getSession($args[0]) === $host->battleRequest){
-					if((time() - $host->battleLastRequest) >= 30){
+					if((time() - $host->battleLastRequest) <= 30){
 						if($host->battleRequest->getPlayer()->isOnline()){
 							if(!($host->battleRequest->getBattle() instanceof ClassicBattle)){
 								$kit = new ClassicBattleKit('Default battle kit',

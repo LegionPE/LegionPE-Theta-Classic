@@ -20,36 +20,42 @@ use legionpe\theta\classic\ClassicPlugin;
 class QueueManager{
 	/** @var \legionpe\theta\classic\ClassicPlugin */
 	private $main;
-	/** @var ClassicBattleQueue[] */
+	/** @var \legionpe\theta\classic\battle\queue\ClassicBattleQueue[] */
 	private $queues = [];
 
 	/**
-	 * @param ClassicPlugin $main
+	 * @param \legionpe\theta\classic\ClassicPlugin $main
 	 */
 	public function __construct(ClassicPlugin $main){
 		$this->main = $main;
 	}
 	/**
-	 * @return ClassicBattleQueue[]
+	 * @param ClassicBattleQueue $queue
+	 */
+	public function addQueue(ClassicBattleQueue $queue){
+		$this->queues[] = $queue;
+	}
+	/**
+	 * @return \legionpe\theta\classic\battle\queue\ClassicBattleQueue[]
 	 */
 	public function getQueues(){
 		return $this->queues;
 	}
-	public function getSortedQueueSessions(){
+	/**
+	 * @return \legionpe\theta\classic\battle\queue\ClassicBattleQueue[][]
+	 */
+	public function getShuffledQueues(){
 		$queues = [];
 		foreach($this->queues as $queue){
-			if(!isset($queues[$queue->getPlayersPerTeam()])){
-				$queues[$queue->getPlayersPerTeam()] = [];
-			}
-			if(!isset($queues[$queue->getPlayersPerTeam()][$queue->getKitType()])){
-				$queues[$queue->getPlayersPerTeam()][$queue->getKitType()] = [];
-			}
-			if($queue->getKitType() === ClassicBattleQueue::TYPE_FIXED){
-				if(!isset($queues[$queue->getPlayersPerTeam()][$queue->getKit()][$queue->getKit()->getName()])){
-					$queues[$queue->getPlayersPerTeam()][$queue->getKit()][$queue->getKit()->getName()] = [];
+			if($queue->getSession()->getPlayer()->isOnline()){
+				if(!isset($queues[$queue->getId()])){
+					$queues[$queue->getId()] = [];
 				}
-				$queues[$queue->getPlayersPerTeam()][$queue->getKit()][$queue->getKit()->getName()][] = $queue->getSession();
+				$queues[$queue->getId()][] = $queue;
+				shuffle($queues[$queue->getId()]);
 			}
 		}
+		$this->queues = [];
+		return $queues;
 	}
 }

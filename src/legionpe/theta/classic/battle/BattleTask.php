@@ -19,9 +19,12 @@ use legionpe\theta\classic\ClassicPlugin;
 use pocketmine\scheduler\PluginTask;
 
 class BattleTask extends PluginTask{
-	/** @var ClassicPlugin */
+	/** @var \legionpe\theta\classic\ClassicPlugin */
 	private $main;
 
+	/**
+	 * @param \legionpe\theta\classic\ClassicPlugin $main
+	 */
 	public function __construct(ClassicPlugin $main){
 		parent::__construct($main);
 		$this->main = $main;
