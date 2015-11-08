@@ -575,6 +575,7 @@ class ClassicSession extends Session{
 				$this->equip();
 				$this->getPlayer()->setFood(19);
 				$this->getPlayer()->setFoodEnabled(false);
+				$this->getPlayer()->addEffect(Effect::getEffect(Effect::NIGHT_VISION)->setVisible(false)->setAmplifier(0x7FFFFF));
 			}
 		}
 		$nameTag = $this->calculateNameTag();
