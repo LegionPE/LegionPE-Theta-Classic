@@ -33,6 +33,7 @@ class QueueTask extends PluginTask{
 		$this->main = $main;
 	}
 	public function onRun($ticks){
+		/** @var ClassicBattleQueue[] $queues */
 		foreach($this->main->getQueueManager()->getShuffledQueues() as $queues){
 			$q = count($queues);
 			if($q & 1) array_pop($queues);
