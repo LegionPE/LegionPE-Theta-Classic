@@ -358,7 +358,7 @@ class ClassicSession extends Session{
 	public function onRespawn(PlayerRespawnEvent $event){
 		parent::onRespawn($event);
 //		$health = $this->getPlayer()->getAttribute()->getAttribute(AttributeManager::MAX_HEALTH);
-		$health = $this->getPlayer()->getAttribute()->addAttribute(AttributeManager::MAX_HEALTH, "generic.health", 0.0, 60.0, 60.0, true);
+		$health = $this->getPlayer()->getAttribute()->addAttribute(AttributeManager::MAX_HEALTH, "generic.health", 0.0, 40.0, 40.0, true);
 		$health->send();
 		$hunger = $this->getPlayer()->getAttribute()->getAttribute(AttributeManager::MAX_HUNGER);
 		$hunger->setValue(19.0);
@@ -366,8 +366,8 @@ class ClassicSession extends Session{
 		$hunger = $this->getPlayer()->getAttribute()->addAttribute(AttributeManager::MAX_HUNGER, "player.health", 0.0, 20.0, 19.0, true);
 		$hunger->setValue(19.0);
 		$hunger->send();
-		$this->getPlayer()->setMaxHealth(60);
-		$this->getPlayer()->setHealth(60); // float(20)
+		$this->getPlayer()->setMaxHealth(40);
+		$this->getPlayer()->setHealth(40); // float(20)
 		$event->setRespawnPosition($spawn = ClassicConsts::getSpawnPosition($this->getMain()->getServer()));
 		$this->getPlayer()->teleport($spawn);
 //		$this->getPlayer()->setNameTag($this->calculateNameTag(TextFormat::WHITE, $this->getPlayer()->getMaxHealth()));
