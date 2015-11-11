@@ -59,7 +59,6 @@ class ClassicBattleQueue{
 		}else{
 			$this->id = self::$qId++;
 		}
-		$manager->addQueue($this);
 	}
 	/**
 	 * @return ClassicSession

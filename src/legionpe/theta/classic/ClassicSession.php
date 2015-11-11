@@ -17,6 +17,8 @@ namespace legionpe\theta\classic;
 
 use legionpe\theta\BasePlugin;
 use legionpe\theta\classic\battle\ClassicBattle;
+use legionpe\theta\classic\battle\ClassicBattleKit;
+use legionpe\theta\classic\battle\queue\ClassicBattleQueue;
 use legionpe\theta\Friend;
 use legionpe\theta\lang\Phrases;
 use legionpe\theta\query\SetFriendQuery;
@@ -36,9 +38,11 @@ use pocketmine\event\entity\EntityDamageByChildEntityEvent;
 use pocketmine\event\entity\EntityDamageByEntityEvent;
 use pocketmine\event\entity\EntityDamageEvent;
 use pocketmine\event\entity\EntityRegainHealthEvent;
+use pocketmine\event\entity\EntityTeleportEvent;
 use pocketmine\event\inventory\InventoryOpenEvent;
 use pocketmine\event\inventory\InventoryPickupArrowEvent;
 use pocketmine\event\player\PlayerDeathEvent;
+use pocketmine\event\player\PlayerInteractEvent;
 use pocketmine\event\player\PlayerItemConsumeEvent;
 use pocketmine\event\player\PlayerMoveEvent;
 use pocketmine\event\player\PlayerRespawnEvent;
@@ -66,6 +70,8 @@ class ClassicSession extends Session{
 	public $battleRequest = null, $battleRequestSentTo = null;
 	/** @var int */
 	public $battleLastRequest = 0, $battleLastSentRequest = 0;
+	/** @var bool */
+	public $isQueueing = false;
 	/** @var int */
 	private $globalRank = 0;
 	/** @var bool */
@@ -87,6 +93,11 @@ class ClassicSession extends Session{
 		parent::__construct($player, $loginData);
 		if(!$this->getLoginDatum("pvp_init")){
 			$this->setLoginDatum("pvp_init", time());
+		}
+	}
+	public function onTeleport(EntityTeleportEvent $event){
+		if($this->battle instanceof ClassicBattle){
+			return false;
 		}
 	}
 
@@ -318,6 +329,9 @@ class ClassicSession extends Session{
 		parent::login($method);
 		$this->onRespawn(new PlayerRespawnEvent($this->getPlayer(), $this->getPlayer()->getPosition()));
 		$this->getMain()->getServer()->getLevelByName("world_pvp")->addParticle(new FloatingTextParticle(new Vector3(304, 49, -150), $this->translate(Phrases::PVP_LEAVE_SPAWN_HINT)), [$this->getPlayer()]);
+		foreach($this->getMain()->getQueueBlocks() as $queueBlock){
+			$queueBlock->addSession($this);
+		}
 		if(IS_HALLOWEEN_MODE){
 			foreach(ClassicConsts::getGhastLocations($this->getMain()->getServer()) as $loc){
 				$particle = new SpawnGhastParticle($loc->x, $loc->y, $loc->z);
@@ -336,6 +350,9 @@ class ClassicSession extends Session{
 	public function onQuit(){
 		if($this->getBattle() instanceof ClassicBattle){
 			$this->getBattle()->setStatus(ClassicBattle::STATUS_ENDING, $this->getPlayer()->getName() . " left the Battle.", $this->getBattle()->getOverallWinner());
+		}
+		foreach($this->getMain()->getQueueBlocks() as $queueBlock){
+			$queueBlock->removeSession($this);
 		}
 	}
 	public function onRespawn(PlayerRespawnEvent $event){
@@ -361,8 +378,27 @@ class ClassicSession extends Session{
 		if(!parent::onPlace($event)){
 			return false;
 		}
-//		return $this->isBuilder();
-		return false;
+	}
+	public function onInteract(PlayerInteractEvent $event){
+		if(!parent::onInteract($event)){
+			return false;
+		}
+		foreach($this->getMain()->getQueueBlocks() as $queueBlock){
+			if($event->getBlock()->getX() === $queueBlock->getBlock()->getX() and $event->getBlock()->getY() === $queueBlock->getBlock()->getY() and $event->getBlock()->getZ() === $event->getBlock()->getZ()){
+				if(!$this->isQueueing){
+					$kit = new ClassicBattleKit('Default battle kit',
+						[Item::get(306), Item::get(307), Item::get(308), Item::get(309)],
+						[Item::get(276), Item::get(260)],
+						[]);
+					$queue = new ClassicBattleQueue($this->getMain()->getQueueManager(), $this, $kit, $queueBlock->getType());
+					$this->getPlayer()->sendMessage(TextFormat::GOLD . "You are queueing for a " . TextFormat::RED . "Battle" . TextFormat::GOLD . " with type " . TextFormat::RED . "{$queueBlock->getType()}v{$queueBlock->getType()}" . TextFormat::GOLD . " and kit " . TextFormat::RED . "{$kit->getName()}");
+					$this->isQueueing = true;
+					$this->getMain()->getQueueManager()->addQueue($queue);
+				}else{
+					$this->getPlayer()->sendMessage(TextFormat::GOLD . "You are already queueing.");
+				}
+			}
+		}
 	}
 	public function onBreak(BlockBreakEvent $event){
 		if(!parent::onBreak($event)){
@@ -575,7 +611,8 @@ class ClassicSession extends Session{
 				$this->equip();
 				$this->getPlayer()->setFood(19);
 				$this->getPlayer()->setFoodEnabled(false);
-				$this->getPlayer()->addEffect(Effect::getEffect(Effect::NIGHT_VISION)->setVisible(false)->setAmplifier(0x7FFFFF));
+				// night vision not found
+				// $this->getPlayer()->addEffect(Effect::getEffect(Effect::NIGHT_VISION)->setVisible(false)->setAmplifier(0x7FFFFF));
 			}
 		}
 		$nameTag = $this->calculateNameTag();

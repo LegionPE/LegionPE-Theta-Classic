@@ -35,7 +35,9 @@ class QueueTask extends PluginTask{
 	public function onRun($ticks){
 		foreach($this->main->getQueueManager()->getShuffledQueues() as $queues){
 			$q = count($queues);
-			if($q & 1) array_pop($queues);
+			if($q & 1){
+				array_pop($queues)->getSession()->getPlayer()->sendMessage("Sorry, we couldn't find anyone. Please queue again.");
+			}
 			if($q){
 				$kit = new ClassicBattleKit('Default battle kit',
 					[Item::get(306), Item::get(307), Item::get(308), Item::get(309)],
@@ -43,7 +45,9 @@ class QueueTask extends PluginTask{
 					[]);
 				$index = 0;
 				foreach($queues as $queue){
-					if(!isset($queues[$index])) break;
+					if(!isset($queues[$index])){
+						break;
+					}
 					new ClassicBattle($this->main, [[$queue->getSession()], [$queues[++$index]->getSession()]], 3, 60, $kit);
 					$index++;
 				}

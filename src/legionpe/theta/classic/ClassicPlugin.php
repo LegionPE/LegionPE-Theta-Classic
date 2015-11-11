@@ -18,6 +18,7 @@ namespace legionpe\theta\classic;
 use legionpe\theta\BasePlugin;
 use legionpe\theta\classic\battle\BattleTask;
 use legionpe\theta\classic\battle\ClassicBattle;
+use legionpe\theta\classic\battle\queue\ClassicBattleQueueBlock;
 use legionpe\theta\classic\battle\queue\QueueManager;
 use legionpe\theta\classic\battle\queue\QueueTask;
 use legionpe\theta\classic\commands\BattleCommand;
@@ -29,6 +30,7 @@ use legionpe\theta\classic\query\ClassicLoginDataQuery;
 use legionpe\theta\classic\query\ClassicSaveSinglePlayerQuery;
 use legionpe\theta\command\session\friend\FriendlyFireActivationCommand;
 use legionpe\theta\queue\Queue;
+use pocketmine\math\Vector3;
 use pocketmine\Player;
 
 //use legionpe\theta\classic\commands\OneVsOneCommand;
@@ -38,6 +40,8 @@ class ClassicPlugin extends BasePlugin{
 	public $battles = [];
 	/** @var QueueManager */
 	private $queueManager;
+	/** @var ClassicBattleQueueBlock[] */
+	private $queueBlocks = [];
 	/** @var TeleportManager */
 	private $tpMgr;
 	protected static function defaultLoginData($uid, Player $player){
@@ -53,6 +57,13 @@ class ClassicPlugin extends BasePlugin{
 	public function onEnable(){
 		parent::onEnable();
 		$this->queueManager = new QueueManager($this);
+		// 297 39 -137
+		// 299 39 -137
+
+		// 303 39 -137
+		// 305 40 -137
+		$this->queueBlocks[] = new ClassicBattleQueueBlock($this, $this->getServer()->getLevelByName('world_pvp')->getBlock(new Vector3(297, 38, -137)), '0 queueing', 1);
+		$this->queueBlocks[] = new ClassicBattleQueueBlock($this, $this->getServer()->getLevelByName('world_pvp')->getBlock(new Vector3(299, 38, -137)), '0 queueing', 1);
 		$this->tpMgr = new TeleportManager($this);
 		$this->getServer()->getCommandMap()->registerAll("c", [
 			new TeleportHereCommand($this),
@@ -115,6 +126,12 @@ class ClassicPlugin extends BasePlugin{
 	 */
 	public function getBattleById($id){
 		return isset($this->battles[$id]) ? $this->battles[$id] : null;
+	}
+	/**
+	 * @return battle\queue\ClassicBattleQueueBlock[]
+	 */
+	public function getQueueBlocks(){
+		return $this->queueBlocks;
 	}
 	protected function createSession(Player $player, array $loginData){
 		return new ClassicSession($this, $player, $loginData);

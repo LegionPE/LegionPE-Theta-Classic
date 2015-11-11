@@ -18,6 +18,7 @@ namespace legionpe\theta\classic\battle;
 use legionpe\theta\classic\ClassicPlugin;
 use legionpe\theta\classic\ClassicSession;
 use pocketmine\math\Vector3;
+use pocketmine\utils\TextFormat;
 
 class ClassicBattle{
 	CONST STATUS_STARTING = 0, STATUS_RUNNING = 1, STATUS_ENDING = 2;
@@ -131,11 +132,38 @@ class ClassicBattle{
 			if(isset($temp[$roundWinner->getPlayer()->getName()])){
 				++$temp[$roundWinner->getPlayer()->getName()];
 			}else{
-				$temp[$roundWinner->getPlayer()->getName()] = 0;
+				$temp[$roundWinner->getPlayer()->getName()] = 1;
 			}
 		}
 		arsort($temp);
 		return key($temp);
+	}
+	/**
+	 * int
+	 */
+	public function getTeamWinner(){
+		if(count($this->roundWinners) === 0){
+			return 2;
+		}
+		$temp = [];
+		foreach($this->roundWinners as $roundWinner){
+			if(isset($temp[$this->getSessionTeam($roundWinner)])){
+				++$temp[$this->getSessionTeam($roundWinner)];
+			}else{
+				$temp[$this->getSessionTeam($roundWinner)] = 1;
+			}
+		}
+		arsort($temp);
+		return key($temp);
+	}
+	public function getRoundsWon(ClassicSession $session){
+		$wins = 0;
+		foreach($this->roundWinners as $roundWinner){
+			if($roundWinner === $session){
+				$wins++;
+			}
+		}
+		return $wins;
 	}
 	/**
 	 * @param ClassicSession $session
@@ -209,7 +237,7 @@ class ClassicBattle{
 					if($message !== ""){
 						$session->getPlayer()->sendMessage($message);
 					}
-					$session->getPlayer()->sendMessage("Round {$this->getRound()}/{$this->getMaxRounds()}");
+					$session->getPlayer()->sendMessage(TextFormat::GOLD . "Round " . TextFormat::RED . $this->getRound()."/".$this->getMaxRounds());
 				}
 				$this->time = $this->roundDuration;
 				$this->canHit = true;
@@ -222,7 +250,10 @@ class ClassicBattle{
 						if($message !== ""){
 							$session->getPlayer()->sendMessage($message);
 						}
-						$session->getPlayer()->sendMessage("Winner: " . $winner);
+						$coins = ($winner === $session->getPlayer()->getName() ? 48 : $this->getRoundsWon($session) * 6);
+						$session->getPlayer()->sendMessage(TextFormat::GOLD . "You won " . TextFormat::RED . $this->getRoundsWon($session) . TextFormat::GOLD . " rounds and received " . TextFormat::RED . $coins . TextFormat::GOLD . " coins.");
+						$session->grantCoins($coins, false, false);
+						$session->getPlayer()->sendMessage(TextFormat::GOLD . "Winner: " . TextFormat::RED . $winner);
 					}
 					foreach($this->plugin->getServer()->getOnlinePlayers() as $player){
 						$player->showPlayer($session->getPlayer());
@@ -263,7 +294,7 @@ class ClassicBattle{
 	 * @param ClassicSession $session
 	 * @return bool|int
 	 */
-	private function getSessionTeam(ClassicSession $session){
+	public function getSessionTeam(ClassicSession $session){
 		$returnTeam = false;
 		foreach($this->teams as $team => $sessions){
 			foreach($sessions as $newSession){

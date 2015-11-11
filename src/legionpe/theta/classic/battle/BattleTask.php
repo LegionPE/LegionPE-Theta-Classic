@@ -43,7 +43,11 @@ class BattleTask extends PluginTask{
 					break;
 				case ClassicBattle::STATUS_RUNNING:
 					if($time === 0){
-						$battle->setStatus(ClassicBattle::STATUS_STARTING, "No one won this round. Starting next round...");
+						if($battle->getMaxRounds() === $battle->getRound()){
+							$battle->setStatus(ClassicBattle::STATUS_ENDING, "You ran out of time. No one won this round.", $battle->getOverallWinner());
+						}else{
+							$battle->setStatus(ClassicBattle::STATUS_STARTING, "No one won this round. Starting next round...");
+						}
 					}else{
 						$battle->broadcast("Ending in {$time} seconds", "tip");
 						$battle->setTime(--$time);

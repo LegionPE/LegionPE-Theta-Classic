@@ -16,11 +16,13 @@
 namespace legionpe\theta\classic\commands;
 
 use legionpe\theta\BasePlugin;
+use legionpe\theta\classic\battle\ClassicBattle;
 use legionpe\theta\classic\ClassicPlugin;
 use legionpe\theta\classic\ClassicSession;
 use legionpe\theta\lang\Phrases;
 use legionpe\theta\Session;
 use pocketmine\scheduler\PluginTask;
+use pocketmine\utils\TextFormat;
 
 class TeleportTask extends PluginTask{
 	private $fromUid, $toUid;
@@ -45,6 +47,14 @@ class TeleportTask extends PluginTask{
 		}
 		if(!($to instanceof ClassicSession)){
 			$from->send(Phrases::CMD_TPR_PROCEED_FAIL_OFFLINE, ["name" => $this->toName]);
+			return;
+		}
+		if($from->getBattle() instanceof ClassicBattle){
+			$from->send(TextFormat::GOLD . "You can't teleport while in a Battle.");
+			return;
+		}
+		if($to->getBattle() instanceof ClassicBattle){
+			$to->send(TextFormat::GOLD . "You can't teleport while in a Battle.");
 			return;
 		}
 		$from->getPlayer()->teleport($to->getPlayer());

@@ -34,6 +34,17 @@ class QueueManager{
 	 */
 	public function addQueue(ClassicBattleQueue $queue){
 		$this->queues[] = $queue;
+		foreach($this->main->getQueueBlocks() as $queueBlock){
+			if($queueBlock->getType() == $queue->getPlayersPerTeam()){
+				$c = 0;
+				foreach($this->queues as $queue){
+					if($queue->getPlayersPerTeam() == $queueBlock->getType()){
+						$c++;
+					}
+				}
+				$queueBlock->setText($c . " players queueing");
+			}
+		}
 	}
 	/**
 	 * @return \legionpe\theta\classic\battle\queue\ClassicBattleQueue[]
@@ -53,7 +64,11 @@ class QueueManager{
 				}
 				$queues[$queue->getId()][] = $queue;
 				shuffle($queues[$queue->getId()]);
+				$queue->getSession()->isQueueing = false;
 			}
+		}
+		foreach($this->main->getQueueBlocks() as $queueBlock){
+			$queueBlock->setText('0 queueing');
 		}
 		$this->queues = [];
 		return $queues;
