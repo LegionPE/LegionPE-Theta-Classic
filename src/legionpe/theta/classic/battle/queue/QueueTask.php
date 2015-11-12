@@ -18,7 +18,6 @@ namespace legionpe\theta\classic\battle\queue;
 use legionpe\theta\classic\battle\ClassicBattle;
 use legionpe\theta\classic\battle\ClassicBattleKit;
 use legionpe\theta\classic\ClassicPlugin;
-use pocketmine\item\Item;
 use pocketmine\scheduler\PluginTask;
 
 class QueueTask extends PluginTask{
@@ -33,6 +32,7 @@ class QueueTask extends PluginTask{
 		$this->main = $main;
 	}
 	public function onRun($ticks){
+		// todo: implement 2v2 support
 		/** @var ClassicBattleQueue[] $queues */
 		foreach($this->main->getQueueManager()->getShuffledQueues() as $queues){
 			$q = count($queues);
@@ -40,16 +40,28 @@ class QueueTask extends PluginTask{
 				array_pop($queues)->getSession()->getPlayer()->sendMessage("Sorry, we couldn't find anyone. Please queue again.");
 			}
 			if($q){
-				$kit = new ClassicBattleKit('Default battle kit',
-					[Item::get(306), Item::get(307), Item::get(308), Item::get(309)],
-					[Item::get(276), Item::get(260)],
-					[]);
 				$index = 0;
 				foreach($queues as $queue){
 					if(!isset($queues[$index])){
 						break;
 					}
-					new ClassicBattle($this->main, [[$queue->getSession()], [$queues[++$index]->getSession()]], 3, 60, $kit);
+					$kit = null;
+					if($queue->getKitType() === ClassicBattleQueue::TYPE_FIXED){
+						$kit = $queue->getKit();
+					}else{
+						$kits = $this->main->getKits();
+						shuffle($kits);
+						$kit = $kits[0];
+					}
+					$arena = null;
+					if($queue->getArenaType() === ClassicBattleQueue::TYPE_FIXED){
+						$arena = $queue->getArena();
+					}else{
+						$arenas = $this->main->getArenas();
+						shuffle($arenas);
+						$arena = $arenas[0];
+					}
+					new ClassicBattle($this->main, [[$queue->getSession()], [$queues[++$index]->getSession()]], 3, 60, $kit, $arena);
 					$index++;
 				}
 			}

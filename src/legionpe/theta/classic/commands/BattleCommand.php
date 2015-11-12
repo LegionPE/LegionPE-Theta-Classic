@@ -37,6 +37,9 @@ class BattleCommand extends SessionCommand{
 		if($host->getBattle() instanceof ClassicBattle){
 			return "You're already in a Battle.";
 		}
+		if($host->isQueueing){
+			return "You're queueing for a Battle.";
+		}
 		if($host->battleRequest instanceof ClassicSession){
 			if($this->getSession($args[0]) instanceof ClassicSession){
 				if($this->getSession($args[0]) === $host->battleRequest){

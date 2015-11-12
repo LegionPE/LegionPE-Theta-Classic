@@ -22,11 +22,14 @@ use pocketmine\utils\TextFormat;
 
 class ClassicBattle{
 	CONST STATUS_STARTING = 0, STATUS_RUNNING = 1, STATUS_ENDING = 2;
+	CONST PLAYER_STATUS_SPECTATING = 0, PLAYER_STATUS_PLAYING = 1;
 	private static $nextId = 0;
 	/** @var ClassicPlugin */
 	private $plugin;
 	/** @var int */
 	private $id;
+	/** @var ClassicBattleArena */
+	private $arena;
 	/** @var ClassicSession[][] */
 	private $teams = [];
 	/** @var int */
@@ -56,25 +59,21 @@ class ClassicBattle{
 	 * @param int $rounds
 	 * @param int $duration
 	 * @param ClassicBattleKit $kit
+	 * @param ClassicBattleArena $arena
 	 */
-	public function __construct(ClassicPlugin $plugin, $teams, $rounds, $duration, ClassicBattleKit $kit){
+	public function __construct(ClassicPlugin $plugin, $teams, $rounds, $duration, ClassicBattleKit $kit, ClassicBattleArena $arena){
 		$this->plugin = $plugin;
 		$this->id = self::$nextId++;
 		$this->teams = $teams;
 		foreach($teams as $team => $sessions){
 			foreach($sessions as $session){
-				foreach($plugin->getBattles() as $battle){
-					foreach($battle->getSessions() as $hideSession){
-						$session->getPlayer()->hidePlayer($hideSession->getPlayer());
-						$hideSession->getPlayer()->showPlayer($session->getPlayer());
-					}
-				}
+				$this->hideOnlinePlayers($session);
 				$session->setBattle($this);
 				$this->kills[$session->getPlayer()->getName()] = 0;
 				$this->old[$session->getPlayer()->getName()] = new ClassicBattleOld($session);
 			}
 		}
-		//$plugin->addBattle($this);
+		$this->arena = $arena;
 		$plugin->battles[$this->id] = $this;
 		$this->maxRounds = $rounds;
 		$this->roundDuration = $duration;
@@ -213,16 +212,8 @@ class ClassicBattle{
 			case self::STATUS_STARTING:
 				++$this->currentRound;
 				foreach($this->teams as $team => $sessions){
-					foreach($sessions as $session){
-						if($team === 0){
-							$session->getPlayer()->teleport(new Vector3(212, 16, 22));
-							$session->getPlayer()->setRotation(150, $session->getPlayer()->getPitch());
-						}else{
-							if($team === 1){
-								$session->getPlayer()->teleport(new Vector3(200, 16, 3));
-								$session->getPlayer()->setRotation(-30, $session->getPlayer()->getPitch());
-							}
-						}
+					foreach($sessions as $index => $session){
+						$this->arena->teleportToSpawnpoint($team, $index, $session);
 						if($message !== ""){
 							$session->getPlayer()->sendMessage($message);
 						}
@@ -304,6 +295,23 @@ class ClassicBattle{
 			}
 		}
 		return $returnTeam;
+	}
+	/**
+	 * @param ClassicSession $session
+	 */
+	private function hideOnlinePlayers(ClassicSession $session){
+		foreach($this->plugin->getServer()->getOnlinePlayers() as $onlinePlayer){
+			$continue = true;
+			foreach($this->getSessions() as $battleSession){
+				if($onlinePlayer === $battleSession->getPlayer()){
+					$continue = false;
+				}
+			}
+			if($continue){
+				$session->getPlayer()->hidePlayer($onlinePlayer);
+				$onlinePlayer->hidePlayer($session->getPlayer());
+			}
+		}
 	}
 	/**
 	 * @param string $message

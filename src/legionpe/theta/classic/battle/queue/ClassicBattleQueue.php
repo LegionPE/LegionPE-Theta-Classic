@@ -15,6 +15,7 @@
 
 namespace legionpe\theta\classic\battle\queue;
 
+use legionpe\theta\classic\battle\ClassicBattleKit;
 use legionpe\theta\classic\ClassicSession;
 
 class ClassicBattleQueue{
@@ -26,6 +27,10 @@ class ClassicBattleQueue{
 	private $kit;
 	/** @var int */
 	private $kitType;
+	/** @var bool|\legionpe\theta\classic\battle\ClassicBattleArena */
+	private $arena;
+	/** @var int */
+	private $arenaType;
 	/** @var int */
 	private $playersPerTeam = 1;
 	/** @var \legionpe\theta\classic\ClassicSession */
@@ -35,25 +40,24 @@ class ClassicBattleQueue{
 	 * @param \legionpe\theta\classic\battle\queue\QueueManager;
 	 * @param \legionpe\theta\classic\ClassicSession $session
 	 * @param bool|\legionpe\theta\classic\battle\ClassicBattleKit $kit
+	 * @param bool|\legionpe\theta\classic\battle\ClassicBattleArena $arena
 	 * @param int $playersPerTeam
 	 */
-	public function __construct(QueueManager $manager, ClassicSession $session, $kit, $playersPerTeam){
+	public function __construct(QueueManager $manager, ClassicSession $session, $kit, $arena, $playersPerTeam){
 		$this->session = $session;
 		$this->kit = $kit;
 		$this->kitType = $kit === false ? self::TYPE_RANDOM : self::TYPE_FIXED;
+		$this->arena = $arena;
+		$this->arenaType = $arena === false ? self::TYPE_RANDOM : self::TYPE_FIXED;
 		$this->playersPerTeam = $playersPerTeam;
+		// set id
 		if(count($manager->getQueues()) !== 0){
 			foreach($manager->getQueues() as $queue){
-				if($queue->getPlayersPerTeam() === $playersPerTeam and $queue->getKitType() === $this->kitType){
-					if($queue->getKitType() === self::TYPE_RANDOM){
-						$this->id = $queue->getId();
-					}else{
-						if($queue->getKit()->getName() === $this->kit->getName()){
-							$this->id = $queue->getId();
-						}else{
-							$this->id = self::$qId++;
-						}
-					}
+				if($queue->getArenaType() === $this->arenaType and $queue->getKitType() === $this->kitType and $queue->getPlayersPerTeam() === $this->playersPerTeam){
+					$this->id = $queue->getId();
+					break;
+				}else{
+					$this->id = self::$qId++;
 				}
 			}
 		}else{
@@ -84,6 +88,18 @@ class ClassicBattleQueue{
 	 */
 	public function getKit(){
 		return $this->kit;
+	}
+	/**
+	 * @return int
+	 */
+	public function getArenaType(){
+		return $this->arenaType;
+	}
+	/**
+	 * @return bool|\legionpe\theta\classic\battle\ClassicBattleArena
+	 */
+	public function getArena(){
+		return $this->arena;
 	}
 	/**
 	 * @return int

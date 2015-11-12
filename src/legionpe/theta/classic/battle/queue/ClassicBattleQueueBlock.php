@@ -31,6 +31,10 @@ class ClassicBattleQueueBlock{
 	private $text;
 	/** @var int */
 	private $type;
+	/** @var bool|\legionpe\theta\classic\battle\ClassicBattleArena */
+	private $arena;
+	/** @var bool|\legionpe\theta\classic\battle\ClassicBattleKit */
+	private $kit;
 	/** @var \pocketmine\level\particle\FloatingTextParticle[]  */
 	private $floatingTextParticles = [];
 
@@ -39,12 +43,16 @@ class ClassicBattleQueueBlock{
 	 * @param Block $block
 	 * @param string $text
 	 * @param int $type
+	 * @param bool|\legionpe\theta\classic\battle\ClassicBattleArena
+	 * @param bool|\legionpe\theta\classic\battle\ClassicBattleKit
 	 */
-	public function __construct(ClassicPlugin $main, Block $block, $text, $type){
+	public function __construct(ClassicPlugin $main, Block $block, $text, $type, $arena, $kit){
 		$this->main = $main;
 		$this->block = $block;
-		$this->text = $text;
+		$this->setText($text);
 		$this->type = $type;
+		$this->arena = $arena;
+		$this->kit = $kit;
 	}
 	/**
 	 * @return Block
@@ -64,7 +72,7 @@ class ClassicBattleQueueBlock{
 	public function setText($text){
 		if(count($this->floatingTextParticles) !== 0){
 			foreach($this->floatingTextParticles as $user=>$particle){
-				$particle->setText($text);
+				$particle->setText($text . TextFormat::GOLD . "\nKit: " . TextFormat::RED . ($this->kit === false ? "RANDOM" : $this->kit->getName()) . TextFormat::GOLD . "\nArena: " . TextFormat::RED . ($this->arena === false ? "RANDOM" : $this->arena->getName()));
 				$player = $this->main->getServer()->getPlayerExact($user);
 				$encode = $particle->encode();
 				if(is_array($encode)){
@@ -83,6 +91,18 @@ class ClassicBattleQueueBlock{
 	 */
 	public function getText(){
 		return $this->text;
+	}
+	/**
+	 * @return bool|\legionpe\theta\classic\battle\ClassicBattleArena
+	 */
+	public function getArena(){
+		return $this->arena;
+	}
+	/**
+	 * @return bool|\legionpe\theta\classic\battle\ClassicBattleKit
+	 */
+	public function getKit(){
+		return $this->kit;
 	}
 	/**
 	 * @param ClassicSession $session

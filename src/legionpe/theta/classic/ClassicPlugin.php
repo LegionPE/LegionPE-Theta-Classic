@@ -18,6 +18,8 @@ namespace legionpe\theta\classic;
 use legionpe\theta\BasePlugin;
 use legionpe\theta\classic\battle\BattleTask;
 use legionpe\theta\classic\battle\ClassicBattle;
+use legionpe\theta\classic\battle\ClassicBattleArena;
+use legionpe\theta\classic\battle\ClassicBattleKit;
 use legionpe\theta\classic\battle\queue\ClassicBattleQueueBlock;
 use legionpe\theta\classic\battle\queue\QueueManager;
 use legionpe\theta\classic\battle\queue\QueueTask;
@@ -30,6 +32,7 @@ use legionpe\theta\classic\query\ClassicLoginDataQuery;
 use legionpe\theta\classic\query\ClassicSaveSinglePlayerQuery;
 use legionpe\theta\command\session\friend\FriendlyFireActivationCommand;
 use legionpe\theta\queue\Queue;
+use pocketmine\item\Item;
 use pocketmine\math\Vector3;
 use pocketmine\Player;
 
@@ -38,6 +41,10 @@ use pocketmine\Player;
 class ClassicPlugin extends BasePlugin{
 	/** @var ClassicBattle[] */
 	public $battles = [];
+	/** @var \legionpe\theta\classic\battle\ClassicBattleArena[] */
+	private $arenas = [];
+	/** @var \legionpe\theta\classic\battle\ClassicBattleKit[] */
+	private $kits = [];
 	/** @var QueueManager */
 	private $queueManager;
 	/** @var ClassicBattleQueueBlock[] */
@@ -56,14 +63,17 @@ class ClassicPlugin extends BasePlugin{
 	}
 	public function onEnable(){
 		parent::onEnable();
+		$level = $this->getServer()->getLevelByName('world_pvp');
+		$this->arenas['cave'] = new ClassicBattleArena('Cave', $level, [[new Vector3(212, 16, 23), new Vector3(215, 16, 23)], [new Vector3(200, 16, 2), new Vector3(195, 16, 4)]], [[140, 140], [-35, -35]]);
+		$apple = Item::get(260);
+		$apple->setCount(6)
+		$this->kits['default kit'] = new ClassicBattleKit('Default kit',
+			[Item::get(306), Item::get(307), Item::get(308), Item::get(309)],
+			[Item::get(276), $apple],
+			[]);
 		$this->queueManager = new QueueManager($this);
-		// 297 39 -137
-		// 299 39 -137
-
-		// 303 39 -137
-		// 305 40 -137
-		$this->queueBlocks[] = new ClassicBattleQueueBlock($this, $this->getServer()->getLevelByName('world_pvp')->getBlock(new Vector3(297, 38, -137)), '0 queueing', 1);
-		$this->queueBlocks[] = new ClassicBattleQueueBlock($this, $this->getServer()->getLevelByName('world_pvp')->getBlock(new Vector3(299, 38, -137)), '0 queueing', 1);
+		$this->queueBlocks[] = new ClassicBattleQueueBlock($this, $level->getBlock(new Vector3(297, 38, -137)), '0 queueing', 1, false, false);
+		$this->queueBlocks[] = new ClassicBattleQueueBlock($this, $level->getBlock(new Vector3(299, 38, -137)), '0 queueing', 1, false, false);
 		$this->tpMgr = new TeleportManager($this);
 		$this->getServer()->getCommandMap()->registerAll("c", [
 			new TeleportHereCommand($this),
@@ -89,6 +99,32 @@ class ClassicPlugin extends BasePlugin{
 	}
 	public function query_world(){
 		return "pvp-1";
+	}
+	/**
+	 * @return battle\ClassicBattleArena[]
+	 */
+	public function getArenas(){
+		return $this->arenas;
+	}
+	/**
+	 * @param string $name
+	 * @return battle\ClassicBattleArena
+	 */
+	public function getArenaByName($name){
+		return $this->arenas[strtolower($name)];
+	}
+	/**
+	 * @return battle\ClassicBattleKit[]
+	 */
+	public function getKits(){
+		return $this->kits;
+	}
+	/**
+	 * @param string $name
+	 * @return battle\ClassicBattleKit
+	 */
+	public function getKit($name){
+		return $this->kits[strtolower($name)];
 	}
 	/**
 	 * @return QueueManager

@@ -17,6 +17,9 @@ namespace legionpe\theta\classic\battle;
 
 use legionpe\theta\classic\ClassicSession;
 use pocketmine\entity\Effect;
+use pocketmine\entity\Entity;
+use pocketmine\event\entity\EntityRegainHealthEvent;
+use pocketmine\inventory\PlayerInventory;
 use pocketmine\item\Item;
 
 class ClassicBattleKit{
@@ -56,6 +59,9 @@ class ClassicBattleKit{
 	 */
 	public function apply(ClassicSession $session){
 		$inventory = $session->getPlayer()->getInventory();
+		if(!($inventory instanceof PlayerInventory)){
+			return;
+		}
 		$inventory->clearAll();
 		$inventory->setContents($this->items);
 		for($i=0;$i<4;$i++){
@@ -74,7 +80,8 @@ class ClassicBattleKit{
 			}
 		}
 		$session->getPlayer()->setMaxHealth($this->maxHealth);
-		$session->getPlayer()->setHealth($this->health);
+		$ev = new EntityRegainHealthEvent($session->getPlayer(), 20, EntityRegainHealthEvent::CAUSE_MAGIC);
+		$session->getPlayer()->heal(20, $ev);
 	}
 
 }

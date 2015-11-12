@@ -94,10 +94,22 @@ class ClassicSession extends Session{
 		if(!$this->getLoginDatum("pvp_init")){
 			$this->setLoginDatum("pvp_init", time());
 		}
+		if($main instanceof ClassicPlugin){
+			$battles = $main->getBattles();
+			if(count($battles) !== 0){
+				foreach($battles as $battle){
+					foreach($battle->getSessions() as $session){
+						$session->getPlayer()->hidePlayer($this->getPlayer());
+					}
+				}
+			}
+		}
 	}
 	public function onTeleport(EntityTeleportEvent $event){
 		if($this->battle instanceof ClassicBattle){
-			return false;
+			if($this->battle->getRound() !== 1 and $this->battle->getStatus() === ClassicBattle::STATUS_STARTING){
+				return false;
+			}
 		}
 	}
 
@@ -386,12 +398,8 @@ class ClassicSession extends Session{
 		foreach($this->getMain()->getQueueBlocks() as $queueBlock){
 			if($event->getBlock()->getX() === $queueBlock->getBlock()->getX() and $event->getBlock()->getY() === $queueBlock->getBlock()->getY() and $event->getBlock()->getZ() === $event->getBlock()->getZ()){
 				if(!$this->isQueueing){
-					$kit = new ClassicBattleKit('Default battle kit',
-						[Item::get(306), Item::get(307), Item::get(308), Item::get(309)],
-						[Item::get(276), Item::get(260)],
-						[]);
-					$queue = new ClassicBattleQueue($this->getMain()->getQueueManager(), $this, $kit, $queueBlock->getType());
-					$this->getPlayer()->sendMessage(TextFormat::GOLD . "You are queueing for a " . TextFormat::RED . "Battle" . TextFormat::GOLD . " with type " . TextFormat::RED . "{$queueBlock->getType()}v{$queueBlock->getType()}" . TextFormat::GOLD . " and kit " . TextFormat::RED . "{$kit->getName()}");
+					$queue = new ClassicBattleQueue($this->getMain()->getQueueManager(), $this, false, false, $queueBlock->getType());
+					$this->getPlayer()->sendMessage(TextFormat::GOLD . "You are queueing for a " . TextFormat::RED . "Battle" . TextFormat::GOLD . " with type " . TextFormat::RED . "{$queueBlock->getType()}v{$queueBlock->getType()}");
 					$this->isQueueing = true;
 					$this->getMain()->getQueueManager()->addQueue($queue);
 				}else{
