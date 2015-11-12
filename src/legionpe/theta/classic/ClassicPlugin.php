@@ -66,7 +66,7 @@ class ClassicPlugin extends BasePlugin{
 		$level = $this->getServer()->getLevelByName('world_pvp');
 		$this->arenas['cave'] = new ClassicBattleArena('Cave', $level, [[new Vector3(212, 16, 23), new Vector3(215, 16, 23)], [new Vector3(200, 16, 2), new Vector3(195, 16, 4)]], [[140, 140], [-35, -35]]);
 		$apple = Item::get(260);
-		$apple->setCount(6)
+		$apple->setCount(6);
 		$this->kits['default kit'] = new ClassicBattleKit('Default kit',
 			[Item::get(306), Item::get(307), Item::get(308), Item::get(309)],
 			[Item::get(276), $apple],
