@@ -15,6 +15,7 @@
 
 namespace legionpe\theta\classic\battle\queue;
 
+use legionpe\theta\classic\battle\ClassicBattle;
 use legionpe\theta\classic\ClassicPlugin;
 
 class QueueManager{
@@ -59,12 +60,14 @@ class QueueManager{
 		$queues = [];
 		foreach($this->queues as $queue){
 			if($queue->getSession()->getPlayer()->isOnline()){
-				if(!isset($queues[$queue->getId()])){
-					$queues[$queue->getId()] = [];
+				if(!($queue->getSession()->getBattle() instanceof ClassicBattle)){
+					if(!isset($queues[$queue->getId()])){
+						$queues[$queue->getId()] = [];
+					}
+					$queues[$queue->getId()][] = $queue;
+					shuffle($queues[$queue->getId()]);
+					$queue->getSession()->isQueueing = false;
 				}
-				$queues[$queue->getId()][] = $queue;
-				shuffle($queues[$queue->getId()]);
-				$queue->getSession()->isQueueing = false;
 			}
 		}
 		foreach($this->main->getQueueBlocks() as $queueBlock){

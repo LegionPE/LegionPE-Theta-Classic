@@ -34,7 +34,6 @@ class BattleCommand extends SessionCommand{
 		if(!($host instanceof ClassicSession)){
 			return false;
 		}
-		
 		if($host->getBattle() instanceof ClassicBattle){
 			return "You're already in a Battle.";
 		}
