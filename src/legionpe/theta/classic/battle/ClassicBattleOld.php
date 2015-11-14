@@ -52,6 +52,7 @@ class ClassicBattleOld{
 		$player = $this->session->getPlayer();
 		$player->setGamemode($this->gamemode);
 		$inventory = $player->getInventory();
+		$inventory->clearAll();
 		$inventory->setContents($this->inventory->getContents());
 		$inventory->setArmorContents($this->inventory->getArmorContents());
 		$inventory->sendContents($player);

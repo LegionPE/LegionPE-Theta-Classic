@@ -38,14 +38,14 @@ class QueueTask extends PluginTask{
 			$playersPerTeam = $queues[0]->getPlayersPerTeam();
 			$queueCount = count($queues);
 			$playersRemoved = 0;
-			for($i = ($queueCount - ($queueCount % ($playersPerTeam * 2))); $i < $q; $i++){
+			for($i = ($queueCount - ($queueCount % ($playersPerTeam * 2))); $i < $queueCount; $i++){
 				$queues[$i]->getSession()->sendMessage(TextFormat::GOLD . "Sorry, we can't find any player for you to Battle with. Please queue again.");
 				$playersRemoved++;
 				unset($queues[$i]);
 			}
 			$queueCount -= $playersRemoved;
 			$pIndex = 0;
-			for($battle = 0; $battle < $q / ($playersPerTeam * 2); $battle++){
+			for($battle = 0; $battle < $queueCount / ($playersPerTeam * 2); $battle++){
 				$queue = $queues[0];
 				$kit = null;
 				if($queue->getKitType() === ClassicBattleQueue::TYPE_FIXED){

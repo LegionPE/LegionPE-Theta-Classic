@@ -269,7 +269,7 @@ class ClassicBattle{
 						$session->setBattle(null);
 						$coins = ($this->getWinningTeam() === $this->getSessionTeam($session) ? 34 : $this->getRoundsWon($session) * 6);
 						$session->grantCoins($coins, false, false);
-						$session->sendMessage(TextFormat::GOLD . "You won " . TextFormat::RED . $this->getRoundsWon($session) . TextFormat::GOLD . " rounds and received " . TextFormat::RED . $coins . TextFormat::GOLD . " coins." . TextFormat::GOLD . "\nWinner: " . TextFormat::RED . $winner);
+						$session->sendMessage(TextFormat::GOLD . "You won " . TextFormat::RED . $this->getRoundsWon($session) . TextFormat::GOLD . " rounds and received " . TextFormat::RED . $coins . TextFormat::GOLD . " coins.\n" . TextFormat::GOLD . "Winner: " . TextFormat::RED . $winner);
 						if($message !== ""){
 							$session->sendMessage($message);
 						}

@@ -152,9 +152,9 @@ class ClassicSession extends Session{
 										if($sessionCount === 2){ // if the battle is a 1v1
 											$this->getBattle()->addRoundWinner($ses);
 											if($this->getBattle()->getRound() === $this->getBattle()->getMaxRounds()){
-												$this->getBattle()->setStatus(ClassicBattle::STATUS_ENDING, "The Battle has ended.", $this->getBattle()->getOverallWinner());
+												$this->getBattle()->setStatus(ClassicBattle::STATUS_ENDING, TextFormat::GOLD . "The Battle has ended.", $this->getBattle()->getOverallWinner());
 											}else{
-												$this->getBattle()->setStatus(ClassicBattle::STATUS_STARTING, "Round winner: {$ses->getPlayer()->getName()}");
+												$this->getBattle()->setStatus(ClassicBattle::STATUS_STARTING, TextFormat::GOLD . "Round winner: " . TextFormat::RED . $ses->getPlayer()->getName());
 											}
 										}else{
 											$this->getBattle()->setSessionType($this, ClassicBattle::PLAYER_STATUS_SPECTATING); // set the killed player to spectator mode
@@ -181,7 +181,7 @@ class ClassicSession extends Session{
 												if($this->getBattle()->getRound() === $this->getBattle()->getMaxRounds()){ // battle ends
 													$this->getBattle()->setStatus(ClassicBattle::STATUS_ENDING, "The Battle has ended.", $this->getBattle()->getOverallWinner());
 												}else{
-													$this->getBattle()->setStatus(ClassicBattle::STATUS_STARTING, "Round winner: " . implode(", ", $winners));
+													$this->getBattle()->setStatus(ClassicBattle::STATUS_STARTING, TextFormat::GOLD . "Round winner: " . TextFormat::RED . implode(", ", $winners));
 												}
 											}
 										}
