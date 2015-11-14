@@ -33,8 +33,6 @@ class ClassicBattleKit{
 	private $effects = [];
 	/** @var int */
 	private $maxHealth = 20;
-	/** @var int */
-	private $health = 20;
 
 	/**
 	 * @param string $name
@@ -58,17 +56,18 @@ class ClassicBattleKit{
 	 * @param ClassicSession $session
 	 */
 	public function apply(ClassicSession $session){
+		$session->getPlayer()->setGamemode(0);
 		$inventory = $session->getPlayer()->getInventory();
 		if(!($inventory instanceof PlayerInventory)){
 			return;
 		}
 		$inventory->clearAll();
 		$inventory->setContents($this->items);
-		for($i=0;$i<4;$i++){
+		for($i = 0; $i < 4; $i++){
 			$inventory->setArmorItem($i, $this->armorItems[$i]);
 		}
 		$inventory->setArmorContents($this->armorItems);
-		for($i=0;$i<7;$i++){
+		for($i = 0; $i < 7; $i++){
 			$inventory->setHotbarSlotIndex($i, $i);
 		}
 		$inventory->sendContents($session->getPlayer());
@@ -80,8 +79,9 @@ class ClassicBattleKit{
 			}
 		}
 		$session->getPlayer()->setMaxHealth($this->maxHealth);
-		$ev = new EntityRegainHealthEvent($session->getPlayer(), 20, EntityRegainHealthEvent::CAUSE_MAGIC);
-		$session->getPlayer()->heal(20, $ev);
+		$session->getPlayer()->setHealth($this->maxHealth);
+		//$ev = new EntityRegainHealthEvent($session->getPlayer(), 20, EntityRegainHealthEvent::CAUSE_MAGIC);
+		//$session->getPlayer()->heal(20, $ev);
 	}
 
 }

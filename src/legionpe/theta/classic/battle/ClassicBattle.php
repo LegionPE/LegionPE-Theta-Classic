@@ -18,6 +18,7 @@ namespace legionpe\theta\classic\battle;
 use legionpe\theta\classic\ClassicPlugin;
 use legionpe\theta\classic\ClassicSession;
 use pocketmine\math\Vector3;
+use pocketmine\Player;
 use pocketmine\utils\TextFormat;
 
 class ClassicBattle{
@@ -36,10 +37,8 @@ class ClassicBattle{
 	private $currentRound = 0;
 	/** @var int */
 	private $maxRounds = 3;
-	/** @var ClassicSession[] */
-	private $roundWinners = [];
 	/** @var int[] */
-	private $kills = [];
+	private $roundWinners = [];
 	/** @var int */
 	private $roundDuration = 90;
 	/** @var int */
@@ -50,6 +49,8 @@ class ClassicBattle{
 	private $status;
 	/** @var \legionpe\theta\classic\battle\ClassicBattleOld[] */
 	private $old = [];
+	/** @var int */
+	private $sessionTypes = [];
 	/** @var bool */
 	private $canHit = false;
 
@@ -63,22 +64,20 @@ class ClassicBattle{
 	 */
 	public function __construct(ClassicPlugin $plugin, $teams, $rounds, $duration, ClassicBattleKit $kit, ClassicBattleArena $arena){
 		$this->plugin = $plugin;
-		$this->id = self::$nextId++;
 		$this->teams = $teams;
 		foreach($teams as $team => $sessions){
 			foreach($sessions as $session){
-				$this->hideOnlinePlayers($session);
 				$session->setBattle($this);
-				$this->kills[$session->getPlayer()->getName()] = 0;
 				$this->old[$session->getPlayer()->getName()] = new ClassicBattleOld($session);
 			}
 		}
-		$this->arena = $arena;
-		$plugin->battles[$this->id] = $this;
 		$this->maxRounds = $rounds;
 		$this->roundDuration = $duration;
 		$this->kit = $kit;
-		$this->setStatus(self::STATUS_STARTING, "Battle starting..");
+		$this->arena = $arena;
+		$this->id = self::$nextId++;
+		$plugin->battles[$this->id] = $this;
+		$this->setStatus(self::STATUS_STARTING, TextFormat::GOLD . "Battle starting..");
 
 		// spawn 1: 212 16 22 yaw 150
 		// spawn 2: 200 16 3 yaw -30
@@ -117,49 +116,48 @@ class ClassicBattle{
 	 * @param ClassicSession $session
 	 */
 	public function addRoundWinner(ClassicSession $session){
-		$this->roundWinners[] = $session;
+		$this->roundWinners[] = $this->getSessionTeam($session);
+	}
+	/**
+	 * @return int
+	 */
+	public function getWinningTeam(){
+		$temp = [];
+		foreach($this->roundWinners as $winningTeam){
+			if(isset($temp[$winningTeam])){
+				++$temp[$winningTeam];
+			}else{
+				$temp[$winningTeam] = 1;
+			}
+		}
+		arsort($temp);
+		return key($temp);
 	}
 	/**
 	 * @return string
 	 */
 	public function getOverallWinner(){
-		if(count($this->roundWinners) === 0){
-			return "no one";
-		}
-		$temp = [];
-		foreach($this->roundWinners as $roundWinner){
-			if(isset($temp[$roundWinner->getPlayer()->getName()])){
-				++$temp[$roundWinner->getPlayer()->getName()];
-			}else{
-				$temp[$roundWinner->getPlayer()->getName()] = 1;
+		$winningTeam = $this->getWinningTeam();
+		$winners = [];
+		foreach($this->teams as $team => $sessions){
+			if($team === $winningTeam){ // if the team is the winning team
+				foreach($sessions as $session){
+					$winners[] = $session->getPlayer()->getName(); // add all the players from that team to $winners
+				}
 			}
 		}
-		arsort($temp);
-		return key($temp);
+		return implode(", ", $winners);
 	}
 	/**
-	 * int
+	 * @param ClassicSession $session
+	 * @return int
 	 */
-	public function getTeamWinner(){
-		if(count($this->roundWinners) === 0){
-			return 2;
-		}
-		$temp = [];
-		foreach($this->roundWinners as $roundWinner){
-			if(isset($temp[$this->getSessionTeam($roundWinner)])){
-				++$temp[$this->getSessionTeam($roundWinner)];
-			}else{
-				$temp[$this->getSessionTeam($roundWinner)] = 1;
-			}
-		}
-		arsort($temp);
-		return key($temp);
-	}
 	public function getRoundsWon(ClassicSession $session){
 		$wins = 0;
-		foreach($this->roundWinners as $roundWinner){
-			if($roundWinner === $session){
-				$wins++;
+		$sessionTeam = $this->getSessionTeam($session);
+		foreach($this->roundWinners as $winningTeam){
+			if($sessionTeam === $winningTeam){ // if the team from that round was the session's team, add one to $wins
+				++$wins;
 			}
 		}
 		return $wins;
@@ -197,6 +195,27 @@ class ClassicBattle{
 		return $this->roundDuration;
 	}
 	/**
+	 * @param ClassicSession $session
+	 * @return int
+	 */
+	public function getSessionType(ClassicSession $session){
+		return $this->sessionTypes[$session->getPlayer()->getName()];
+	}
+	/**
+	 * @param ClassicSession $session
+	 * @param int $type
+	 * @return mixed
+	 */
+	public function setSessionType(ClassicSession $session, $type){
+		if($type === self::PLAYER_STATUS_SPECTATING){
+			$session->getPlayer()->setGamemode(1);
+			foreach($this->getSessions() as $newSession){
+				$newSession->getPlayer()->getPlayer()->hidePlayer($session->getPlayer());
+			}
+		}
+		$this->sessionTypes[$session->getPlayer()->getName()] = $type;
+	}
+	/**
 	 * @return int
 	 */
 	public function getStatus(){
@@ -213,11 +232,21 @@ class ClassicBattle{
 				++$this->currentRound;
 				foreach($this->teams as $team => $sessions){
 					foreach($sessions as $index => $session){
-						$this->arena->teleportToSpawnpoint($team, $index, $session);
-						if($message !== ""){
-							$session->getPlayer()->sendMessage($message);
+						if(!$session->getPlayer()->isOnline()){ // battle might of been constructed just before BattleTask and there might be a case when the player leaves the battle in that time. if so, stop the battle
+							$this->setStatus(self::STATUS_ENDING, "Error: player left before Battle could start");
+							break;
 						}
+						$this->arena->teleportToSpawnpoint($team, $index, $session);
 						$this->kit->apply($session);
+						$this->hideOnlinePlayers($session);
+						$this->setSessionType($session, self::PLAYER_STATUS_PLAYING);
+						foreach($this->getSessions() as $newSession){ // send custom nametags
+							$nameTag = $this->getSessionTeam($newSession) === $team ? TextFormat::GREEN . $session->getPlayer()->getName() : TextFormat::RED . $session->getPlayer()->getName();
+							$session->getPlayer()->sendData($newSession->getPlayer(), [Player::DATA_NAMETAG => [Player::DATA_TYPE_STRING, $nameTag]]);
+						}
+						if($message !== ""){
+							$session->sendMessage($message);
+						}
 					}
 					$this->time = 5;
 				}
@@ -226,27 +255,26 @@ class ClassicBattle{
 			case self::STATUS_RUNNING:
 				foreach($this->getSessions() as $session){
 					if($message !== ""){
-						$session->getPlayer()->sendMessage($message);
+						$session->sendMessage($message);
 					}
-					$session->getPlayer()->sendMessage(TextFormat::GOLD . "Round " . TextFormat::RED . $this->getRound()."/".$this->getMaxRounds());
+					$session->sendMessage(TextFormat::GOLD . "Round " . TextFormat::RED . $this->getRound() . "/" . $this->getMaxRounds());
 				}
 				$this->time = $this->roundDuration;
 				$this->canHit = true;
 				break;
 			case self::STATUS_ENDING:
 				foreach($this->getSessions() as $session){
-					if($session->getPlayer()->isOnline()){
+					if($session->getPlayer()->isOnline()){ // check if player online, because maybe the battle stopped because a player left
 						$this->old[$session->getPlayer()->getName()]->restore();
 						$session->setBattle(null);
-						if($message !== ""){
-							$session->getPlayer()->sendMessage($message);
-						}
-						$coins = ($winner === $session->getPlayer()->getName() ? 48 : $this->getRoundsWon($session) * 6);
-						$session->getPlayer()->sendMessage(TextFormat::GOLD . "You won " . TextFormat::RED . $this->getRoundsWon($session) . TextFormat::GOLD . " rounds and received " . TextFormat::RED . $coins . TextFormat::GOLD . " coins.");
+						$coins = ($this->getWinningTeam() === $this->getSessionTeam($session) ? 34 : $this->getRoundsWon($session) * 6);
 						$session->grantCoins($coins, false, false);
-						$session->getPlayer()->sendMessage(TextFormat::GOLD . "Winner: " . TextFormat::RED . $winner);
+						$session->sendMessage(TextFormat::GOLD . "You won " . TextFormat::RED . $this->getRoundsWon($session) . TextFormat::GOLD . " rounds and received " . TextFormat::RED . $coins . TextFormat::GOLD . " coins." . TextFormat::GOLD . "\nWinner: " . TextFormat::RED . $winner);
+						if($message !== ""){
+							$session->sendMessage($message);
+						}
 					}
-					foreach($this->plugin->getServer()->getOnlinePlayers() as $player){
+					foreach($this->plugin->getServer()->getOnlinePlayers() as $player){ // force show all players, normally wouldn't do this but too many bugs
 						$player->showPlayer($session->getPlayer());
 						$session->getPlayer()->showPlayer($player);
 					}
@@ -262,6 +290,12 @@ class ClassicBattle{
 	 */
 	public function getKit(){
 		return $this->kit;
+	}
+	/**
+	 * @return \legionpe\theta\classic\ClassicSession[][]
+	 */
+	public function getTeams(){
+		return $this->teams;
 	}
 	/**
 	 * @return bool
@@ -301,15 +335,13 @@ class ClassicBattle{
 	 */
 	private function hideOnlinePlayers(ClassicSession $session){
 		foreach($this->plugin->getServer()->getOnlinePlayers() as $onlinePlayer){
-			$continue = true;
-			foreach($this->getSessions() as $battleSession){
-				if($onlinePlayer === $battleSession->getPlayer()){
-					$continue = false;
-				}
-			}
-			if($continue){
-				$session->getPlayer()->hidePlayer($onlinePlayer);
-				$onlinePlayer->hidePlayer($session->getPlayer());
+			$onlinePlayer->hidePlayer($session->getPlayer());
+			$session->getPlayer()->hidePlayer($onlinePlayer);
+		}
+		foreach($this->getSessions() as $battleSession){
+			foreach($this->getSessions() as $newBattleSession){
+				$battleSession->getPlayer()->showPlayer($newBattleSession->getPlayer());
+				$newBattleSession->getPlayer()->showPlayer($battleSession->getPlayer());
 			}
 		}
 	}

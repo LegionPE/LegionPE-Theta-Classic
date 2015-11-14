@@ -74,6 +74,9 @@ class ClassicPlugin extends BasePlugin{
 		$this->queueManager = new QueueManager($this);
 		$this->queueBlocks[] = new ClassicBattleQueueBlock($this, $level->getBlock(new Vector3(297, 38, -137)), '0 queueing', 1, false, false);
 		$this->queueBlocks[] = new ClassicBattleQueueBlock($this, $level->getBlock(new Vector3(299, 38, -137)), '0 queueing', 1, false, false);
+		$this->queueBlocks[] = new ClassicBattleQueueBlock($this, $level->getBlock(new Vector3(303, 38, -137)), '0 queueing', 2, false, false);
+		$this->queueBlocks[] = new ClassicBattleQueueBlock($this, $level->getBlock(new Vector3(305, 38, -137)), '0 queueing', 2, false, false);
+
 		$this->tpMgr = new TeleportManager($this);
 		$this->getServer()->getCommandMap()->registerAll("c", [
 			new TeleportHereCommand($this),

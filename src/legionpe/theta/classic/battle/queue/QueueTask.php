@@ -19,6 +19,7 @@ use legionpe\theta\classic\battle\ClassicBattle;
 use legionpe\theta\classic\battle\ClassicBattleKit;
 use legionpe\theta\classic\ClassicPlugin;
 use pocketmine\scheduler\PluginTask;
+use pocketmine\utils\TextFormat;
 
 class QueueTask extends PluginTask{
 	/** @var \legionpe\theta\classic\ClassicPlugin */
@@ -32,38 +33,43 @@ class QueueTask extends PluginTask{
 		$this->main = $main;
 	}
 	public function onRun($ticks){
-		// todo: implement 2v2 support
 		/** @var ClassicBattleQueue[] $queues */
 		foreach($this->main->getQueueManager()->getShuffledQueues() as $queues){
-			$q = count($queues);
-			if($q & 1){
-				array_pop($queues)->getSession()->getPlayer()->sendMessage("Sorry, we couldn't find anyone. Please queue again.");
+			$playersPerTeam = $queues[0]->getPlayersPerTeam();
+			$queueCount = count($queues);
+			$playersRemoved = 0;
+			for($i = ($queueCount - ($queueCount % ($playersPerTeam * 2))); $i < $q; $i++){
+				$queues[$i]->getSession()->sendMessage(TextFormat::GOLD . "Sorry, we can't find any player for you to Battle with. Please queue again.");
+				$playersRemoved++;
+				unset($queues[$i]);
 			}
-			if($q){
-				$index = 0;
-				foreach($queues as $queue){
-					if(!isset($queues[$index])){
-						break;
-					}
-					$kit = null;
-					if($queue->getKitType() === ClassicBattleQueue::TYPE_FIXED){
-						$kit = $queue->getKit();
-					}else{
-						$kits = $this->main->getKits();
-						shuffle($kits);
-						$kit = $kits[0];
-					}
-					$arena = null;
-					if($queue->getArenaType() === ClassicBattleQueue::TYPE_FIXED){
-						$arena = $queue->getArena();
-					}else{
-						$arenas = $this->main->getArenas();
-						shuffle($arenas);
-						$arena = $arenas[0];
-					}
-					new ClassicBattle($this->main, [[$queue->getSession()], [$queues[++$index]->getSession()]], 3, 60, $kit, $arena);
-					$index++;
+			$queueCount -= $playersRemoved;
+			$pIndex = 0;
+			for($battle = 0; $battle < $q / ($playersPerTeam * 2); $battle++){
+				$queue = $queues[0];
+				$kit = null;
+				if($queue->getKitType() === ClassicBattleQueue::TYPE_FIXED){
+					$kit = $queue->getKit();
+				}else{
+					$kits = $this->main->getKits();
+					shuffle($kits);
+					$kit = $kits[0];
 				}
+				$arena = null;
+				if($queue->getArenaType() === ClassicBattleQueue::TYPE_FIXED){
+					$arena = $queue->getArena();
+				}else{
+					$arenas = $this->main->getArenas();
+					shuffle($arenas);
+					$arena = $arenas[0];
+				}
+				$teams = [[], []];
+				for($team = 0; $team < 2; $team++){
+					for($i = 0; $i < $playersPerTeam; $i++){
+						$teams[$team][] = $queues[$pIndex++]->getSession();
+					}
+				}
+				new ClassicBattle($this->main, $teams, 3, 60, $kit, $arena);
 			}
 		}
 	}

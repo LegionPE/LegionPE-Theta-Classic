@@ -72,6 +72,8 @@ class ClassicSession extends Session{
 	public $battleLastRequest = 0, $battleLastSentRequest = 0;
 	/** @var bool */
 	public $isQueueing = false;
+	/** @var bool */
+	public $hasEquipped = false;
 	/** @var int */
 	private $globalRank = 0;
 	/** @var bool */
@@ -142,18 +144,53 @@ class ClassicSession extends Session{
 				if($ses instanceof ClassicSession){
 					if($ses->getBattle() instanceof ClassicBattle and $this->getBattle() instanceof ClassicBattle){
 						if($ses->getBattle() === $this->getBattle()){
-							if($event->getDamage() >= $this->getPlayer()->getHealth()){
-								$event->setDamage(0);
-								$this->getBattle()->addRoundWinner($ses);
-								if($this->getBattle()->getRound() === $this->getBattle()->getMaxRounds()){
-									$this->getBattle()->setStatus(ClassicBattle::STATUS_ENDING, "The Battle has ended.", $this->getBattle()->getOverallWinner());
-								}else{
-									$this->getBattle()->setStatus(ClassicBattle::STATUS_STARTING, "Round winner: {$ses->getPlayer()->getName()}");
+							if($this->getBattle()->getSessionType($ses) !== ClassicBattle::PLAYER_STATUS_SPECTATING){
+								if($this->getBattle()->getSessionTeam($this) != $ses->getBattle()->getSessionTeam($ses)){
+									if($event->getDamage() >= $this->getPlayer()->getHealth()){
+										$sessionCount = count($this->getBattle()->getSessions());
+										$event->setDamage(0);
+										if($sessionCount === 2){ // if the battle is a 1v1
+											$this->getBattle()->addRoundWinner($ses);
+											if($this->getBattle()->getRound() === $this->getBattle()->getMaxRounds()){
+												$this->getBattle()->setStatus(ClassicBattle::STATUS_ENDING, "The Battle has ended.", $this->getBattle()->getOverallWinner());
+											}else{
+												$this->getBattle()->setStatus(ClassicBattle::STATUS_STARTING, "Round winner: {$ses->getPlayer()->getName()}");
+											}
+										}else{
+											$this->getBattle()->setSessionType($this, ClassicBattle::PLAYER_STATUS_SPECTATING); // set the killed player to spectator mode
+											$spectatingPlayersCount = 0;
+											$winners = [];
+											$team = $this->getBattle()->getSessionTeam($this);
+											foreach($this->getBattle()->getTeams() as $killedTeam => $newSessions){
+												foreach($newSessions as $newSession){ // newSession = a session from the battle
+													if($team === $killedTeam){
+														if($this->getBattle()->getSessionType($newSession) === ClassicBattle::PLAYER_STATUS_SPECTATING){
+															$spectatingPlayersCount++;
+															/*
+                                                              if the newSession team was equal to the team that the killed player was in and the newSession was in spectator mode, add one to the spectatingPlayersCount
+                                                            */
+														}
+													}else{
+														$winners[] = $newSession->getPlayer()->getName();
+														// or add the player to the winners, so if this is the last round then we know who the winners are
+													}
+												}
+											}
+											if($spectatingPlayersCount === $sessionCount/2){ // if the amount of spectating players (from the killed player team) is equal to the amount of players in one team
+												$this->getBattle()->addRoundWinner($ses);
+												if($this->getBattle()->getRound() === $this->getBattle()->getMaxRounds()){ // battle ends
+													$this->getBattle()->setStatus(ClassicBattle::STATUS_ENDING, "The Battle has ended.", $this->getBattle()->getOverallWinner());
+												}else{
+													$this->getBattle()->setStatus(ClassicBattle::STATUS_STARTING, "Round winner: " . implode(", ", $winners));
+												}
+											}
+										}
+									}
+									return true;
 								}
 							}
-							return true;
+							return false;
 						}
-						return false;
 					}
 					$this->setCombatMode();
 					$ses->setCombatMode();
@@ -210,6 +247,7 @@ class ClassicSession extends Session{
 		if(!parent::onDeath($event)){
 			return false;
 		}
+		$this->hasEquipped = false;
 		$this->setCombatMode(false);
 		$event->setDeathMessage("");
 		$event->setDrops([]);
@@ -387,9 +425,7 @@ class ClassicSession extends Session{
 		$this->getPlayer()->getInventory()->sendArmorContents($this->getPlayer()->getInventory()->getViewers());
 	}
 	public function onPlace(BlockPlaceEvent $event){
-		if(!parent::onPlace($event)){
-			return false;
-		}
+		return false;
 	}
 	public function onInteract(PlayerInteractEvent $event){
 		if(!parent::onInteract($event)){
@@ -616,6 +652,7 @@ class ClassicSession extends Session{
 				$this->setMaintainedPopup();
 				$this->getPlayer()->sendPopup($this->translate(Phrases::PVP_INVINCIBILITY_OFF));
 				$this->setInvincible(false);
+				$this->hasEquipped = true;
 				$this->equip();
 				$this->getPlayer()->setFood(19);
 				$this->getPlayer()->setFoodEnabled(false);
@@ -625,7 +662,9 @@ class ClassicSession extends Session{
 		}
 		$nameTag = $this->calculateNameTag();
 		if($nameTag !== $this->getPlayer()->getNameTag()){
-			$this->getPlayer()->setNameTag($nameTag);
+			if(!($this->getBattle() instanceof ClassicBattle)){
+				$this->getPlayer()->setNameTag($nameTag);
+			}
 		}
 	}
 	protected function chatPrefix(){

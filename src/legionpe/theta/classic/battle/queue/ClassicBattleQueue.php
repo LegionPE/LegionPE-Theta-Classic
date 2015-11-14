@@ -50,8 +50,7 @@ class ClassicBattleQueue{
 		$this->arena = $arena;
 		$this->arenaType = $arena === false ? self::TYPE_RANDOM : self::TYPE_FIXED;
 		$this->playersPerTeam = $playersPerTeam;
-		// set id
-		if(count($manager->getQueues()) !== 0){
+		if(count($manager->getQueues()) !== 0){ // set id, will tidy this up later
 			foreach($manager->getQueues() as $queue){
 				if($queue->getArenaType() === $this->arenaType and $queue->getKitType() === $this->kitType and $queue->getPlayersPerTeam() === $this->playersPerTeam){
 					$this->id = $queue->getId();
