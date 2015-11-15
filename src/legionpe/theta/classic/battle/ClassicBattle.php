@@ -275,8 +275,13 @@ class ClassicBattle{
 						}
 					}
 					foreach($this->plugin->getServer()->getOnlinePlayers() as $player){ // force show all players, normally wouldn't do this but too many bugs
-						$player->showPlayer($session->getPlayer());
-						$session->getPlayer()->showPlayer($player);
+						$newSession = $this->plugin->getSession($player->getName());
+						if($newSession instanceof ClassicSession){
+							if(!($newSession->getBattle() instanceof ClassicBattle)){
+								$player->showPlayer($session->getPlayer());
+								$session->getPlayer()->showPlayer($player);
+							}
+						}
 					}
 				}
 				$this->canHit = false;

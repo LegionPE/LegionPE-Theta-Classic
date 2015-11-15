@@ -148,6 +148,7 @@ class ClassicSession extends Session{
 								if($this->getBattle()->getSessionTeam($this) != $ses->getBattle()->getSessionTeam($ses)){
 									if($event->getDamage() >= $this->getPlayer()->getHealth()){
 										$sessionCount = count($this->getBattle()->getSessions());
+										$ses->sendMessage(TextFormat::RED . $this->getPlayer()->getName() . TextFormat::GOLD . " killed you with " . TextFormat::RED . ($this->getPlayer()->getHealth() / 2) . " hearts");
 										$event->setDamage(0);
 										if($sessionCount === 2){ // if the battle is a 1v1
 											$this->getBattle()->addRoundWinner($ses);
@@ -345,6 +346,9 @@ class ClassicSession extends Session{
 	}
 	public function onHeal(EntityRegainHealthEvent $event){
 		if(!parent::onHeal($event)){
+			return false;
+		}
+		if($this->battle instanceof ClassicBattle){
 			return false;
 		}
 //		$this->getPlayer()->setNameTag($this->calculateNameTag(TextFormat::WHITE, $event->getAmount() + $this->getPlayer()->getHealth()));
