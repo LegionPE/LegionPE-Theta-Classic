@@ -17,9 +17,13 @@ namespace legionpe\theta\classic;
 
 use legionpe\theta\BaseListener;
 use legionpe\theta\utils\CallbackPluginTask;
+use pocketmine\block\Block;
 use pocketmine\entity\Arrow;
+use pocketmine\event\block\BlockSpreadEvent;
+use pocketmine\event\entity\ExplosionPrimeEvent;
 use pocketmine\event\entity\ProjectileHitEvent;
 use pocketmine\event\server\DataPacketSendEvent;
+use pocketmine\math\Vector3;
 use pocketmine\network\protocol\DisconnectPacket;
 
 class ClassicListener extends BaseListener{
@@ -46,5 +50,14 @@ class ClassicListener extends BaseListener{
 				}
 			}, $event->getEntity()), 1);
 		}
+	}
+	public function onBlockSpread(BlockSpreadEvent $event){
+		// people placing lava in battles
+		$block = $event->getSource();
+		$event->getBlock()->getLevel()->setBlock(new Vector3($block->getX(), $block->getY(), $block->getZ()), Block::get(0));
+		$event->setCancelled();
+	}
+	public function onExplosionPrime(ExplosionPrimeEvent $event){
+		$event->setCancelled();
 	}
 }
