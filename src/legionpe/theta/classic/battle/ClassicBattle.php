@@ -69,6 +69,7 @@ class ClassicBattle{
 			foreach($sessions as $session){
 				$session->setBattle($this);
 				$this->old[$session->getPlayer()->getName()] = new ClassicBattleOld($session);
+				$this->updateNameTags($session);
 			}
 		}
 		$this->maxRounds = $rounds;
@@ -163,20 +164,6 @@ class ClassicBattle{
 		return $wins;
 	}
 	/**
-	 * @param ClassicSession $session
-	 * @return int
-	 */
-	public function getKills(ClassicSession $session){
-		return $this->kills[$session->getPlayer()->getName()];
-	}
-	/**
-	 * @param ClassicSession $session
-	 * @param int $kills
-	 */
-	public function setKills(ClassicSession $session, $kills){
-		$this->kills[$session->getPlayer()->getName()] = $kills;
-	}
-	/**
 	 * @return int
 	 */
 	public function getTime(){
@@ -221,6 +208,15 @@ class ClassicBattle{
 		$this->sessionTypes[$session->getPlayer()->getName()] = $type;
 	}
 	/**
+	 * @param ClassicSession $session
+	 */
+	public function updateNameTags(ClassicSession $session){
+		foreach($this->getSessions() as $newSession){ // send custom nametags
+			$nameTag = $this->getSessionTeam($newSession) === $team ? TextFormat::GREEN . $session->getPlayer()->getName() : TextFormat::RED . $session->getPlayer()->getName();
+			$session->getPlayer()->sendData($newSession->getPlayer(), [Player::DATA_NAMETAG => [Player::DATA_TYPE_STRING, $nameTag]]);
+		}
+	}
+	/**
 	 * @return int
 	 */
 	public function getStatus(){
@@ -245,10 +241,7 @@ class ClassicBattle{
 						$this->kit->apply($session);
 						$this->hideOnlinePlayers($session);
 						$this->setSessionType($session, self::PLAYER_STATUS_PLAYING);
-						foreach($this->getSessions() as $newSession){ // send custom nametags
-							$nameTag = $this->getSessionTeam($newSession) === $team ? TextFormat::GREEN . $session->getPlayer()->getName() : TextFormat::RED . $session->getPlayer()->getName();
-							$session->getPlayer()->sendData($newSession->getPlayer(), [Player::DATA_NAMETAG => [Player::DATA_TYPE_STRING, $nameTag]]);
-						}
+					//	$this->updateNameTags($session);
 						if($message !== ""){
 							$session->sendMessage($message);
 						}

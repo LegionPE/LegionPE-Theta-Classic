@@ -30,6 +30,7 @@ use legionpe\theta\classic\commands\TeleportHereCommand;
 use legionpe\theta\classic\commands\TeleportToCommand;
 use legionpe\theta\classic\query\ClassicLoginDataQuery;
 use legionpe\theta\classic\query\ClassicSaveSinglePlayerQuery;
+use legionpe\theta\classic\utils\ClassicResendPlayersTask;
 use legionpe\theta\command\session\friend\FriendlyFireActivationCommand;
 use legionpe\theta\queue\Queue;
 use pocketmine\item\Item;
@@ -76,7 +77,6 @@ class ClassicPlugin extends BasePlugin{
 		$this->queueBlocks[] = new ClassicBattleQueueBlock($this, $level->getBlock(new Vector3(299, 38, -137)), '0 queueing', 1, false, false);
 		$this->queueBlocks[] = new ClassicBattleQueueBlock($this, $level->getBlock(new Vector3(303, 38, -137)), '0 queueing', 2, false, false);
 		$this->queueBlocks[] = new ClassicBattleQueueBlock($this, $level->getBlock(new Vector3(305, 38, -137)), '0 queueing', 2, false, false);
-
 		$this->tpMgr = new TeleportManager($this);
 		$this->getServer()->getCommandMap()->registerAll("c", [
 			new TeleportHereCommand($this),
@@ -87,8 +87,12 @@ class ClassicPlugin extends BasePlugin{
 			new BattleCommand($this)
 //			new OneVsOneCommand($this),
 		]);
+		$RESEND_ADD_PLAYER = $this->getResendAddPlayerFreq();
 		$this->getServer()->getScheduler()->scheduleRepeatingTask(new BattleTask($this), 20);
 		$this->getServer()->getScheduler()->scheduleRepeatingTask(new QueueTask($this), 400);
+		if($RESEND_ADD_PLAYER > 0){
+			$this->getServer()->getScheduler()->scheduleDelayedRepeatingTask(new ClassicResendPlayersTask($this), $RESEND_ADD_PLAYER, $RESEND_ADD_PLAYER);
+		}
 		new FireballTask($this);
 	}
 	public function getLoginQueryImpl(){

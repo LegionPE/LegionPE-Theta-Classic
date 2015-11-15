@@ -51,7 +51,7 @@ class BattleCommand extends SessionCommand{
 								$kit = $kit[0];
 								$arena = $host->getMain()->getArenas();
 								shuffle($arena);
-								$arena[0];
+								$arena = $arena[0];
 								$battle = new ClassicBattle($host->getMain(), [[$host], [$host->battleRequest]], 3, 60, $kit, $arena);
 								foreach($battle->getSessions() as $session){
 									$session->battleRequestSentTo = null;
