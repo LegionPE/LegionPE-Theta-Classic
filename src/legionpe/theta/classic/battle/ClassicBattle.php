@@ -211,6 +211,7 @@ class ClassicBattle{
 	 * @param ClassicSession $session
 	 */
 	public function updateNameTags(ClassicSession $session){
+		$team = $this->getSessionTeam($session);
 		foreach($this->getSessions() as $newSession){ // send custom nametags
 			$nameTag = $this->getSessionTeam($newSession) === $team ? TextFormat::GREEN . $session->getPlayer()->getName() : TextFormat::RED . $session->getPlayer()->getName();
 			$session->getPlayer()->sendData($newSession->getPlayer(), [Player::DATA_NAMETAG => [Player::DATA_TYPE_STRING, $nameTag]]);
