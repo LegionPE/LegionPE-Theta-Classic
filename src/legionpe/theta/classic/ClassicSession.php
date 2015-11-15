@@ -149,13 +149,13 @@ class ClassicSession extends Session{
 									if($this->getBattle()->getSessionTeam($this) !== $ses->getBattle()->getSessionTeam($ses)){
 										if($event->getDamage() >= $this->getPlayer()->getHealth()){
 											$sessionCount = count($this->getBattle()->getSessions());
-											$ses->sendMessage(TextFormat::GOLD . "You killed " . TextFormat::RED . $ses->getPlayer()->getName());
+											$ses->sendMessage(TextFormat::GOLD . "You killed " . TextFormat::RED . $this->getPlayer()->getName());
 											$this->sendMessage(TextFormat::RED . $ses->getPlayer()->getName() . TextFormat::GOLD . " killed you with " . TextFormat::RED . ($this->getPlayer()->getHealth() / 2) . " hearts");
 											$event->setDamage(0);
 											if($sessionCount === 2){ // if the battle is a 1v1
 												$this->getBattle()->addRoundWinner($ses);
 												if($this->getBattle()->getRound() === $this->getBattle()->getMaxRounds()){
-													$this->getBattle()->setStatus(ClassicBattle::STATUS_ENDING, TextFormat::GOLD . "The Battle has ended.", $this->getBattle()->getOverallWinner());
+													$this->getBattle()->setStatus(ClassicBattle::STATUS_ENDING, TextFormat::GOLD . TextFormat::GOLD . TextFormat::GOLD . "The Battle has ended.", $this->getBattle()->getOverallWinner());
 												}else{
 													$this->getBattle()->setStatus(ClassicBattle::STATUS_STARTING, TextFormat::GOLD . "Round winner: " . TextFormat::RED . $ses->getPlayer()->getName());
 												}
@@ -169,12 +169,14 @@ class ClassicSession extends Session{
 														if($team === $killedTeam){
 															if($this->getBattle()->getSessionType($newSession) === ClassicBattle::PLAYER_STATUS_SPECTATING){
 																$spectatingPlayersCount++;
+																if($newSession !== $this) $newSession->sendMessage(TextFormat::GREEN . $this->getPlayer()->getName() . TextFormat::GOLD . " was killed by " . TextFormat::RED . $ses->getPlayer()->getName());
 																/*
 	                                                              if the newSession team was equal to the team that the killed player was in and the newSession was in spectator mode, add one to the spectatingPlayersCount
 	                                                            */
 															}
 														}else{
 															$winners[] = $newSession->getPlayer()->getName();
+															$newSession->sendMessage(TextFormat::GREEN . $ses->getPlayer()->getName() . TextFormat::GOLD . " killed " . TextFormat::GREEN . $this->getPlayer()->getName());
 															// or add the player to the winners, so if this is the last round then we know who the winners are
 														}
 													}
@@ -182,7 +184,7 @@ class ClassicSession extends Session{
 												if($spectatingPlayersCount === $sessionCount / 2){ // if the amount of spectating players (from the killed player team) is equal to the amount of players in one team
 													$this->getBattle()->addRoundWinner($ses);
 													if($this->getBattle()->getRound() === $this->getBattle()->getMaxRounds()){ // battle ends
-														$this->getBattle()->setStatus(ClassicBattle::STATUS_ENDING, "The Battle has ended.", $this->getBattle()->getOverallWinner());
+														$this->getBattle()->setStatus(ClassicBattle::STATUS_ENDING, TextFormat::GOLD . TextFormat::GOLD . "The Battle has ended.", $this->getBattle()->getOverallWinner());
 													}else{
 														$this->getBattle()->setStatus(ClassicBattle::STATUS_STARTING, TextFormat::GOLD . "Round winner: " . TextFormat::RED . implode(", ", $winners));
 													}

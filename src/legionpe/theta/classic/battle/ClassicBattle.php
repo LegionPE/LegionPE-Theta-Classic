@@ -242,7 +242,7 @@ class ClassicBattle{
 						$this->kit->apply($session);
 						$this->hideOnlinePlayers($session);
 						$this->setSessionType($session, self::PLAYER_STATUS_PLAYING);
-					//	$this->updateNameTags($session);
+						$this->updateNameTags($session);
 						if($message !== ""){
 							$session->sendMessage($message);
 						}
