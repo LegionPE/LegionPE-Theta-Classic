@@ -56,6 +56,9 @@ class ClassicBattleOld{
 		$inventory->clearAll();
 		$inventory->setContents($this->inventory->getContents());
 		$inventory->setArmorContents($this->inventory->getArmorContents());
+		for($i = 0; $i < 7; $i++){
+			$inventory->setHotbarSlotIndex($i, $i);
+		}
 		$inventory->sendContents($player);
 		$inventory->sendArmorContents($player);
 		$player->removeAllEffects();

@@ -210,6 +210,10 @@ class ClassicBattle{
 		if($type === self::PLAYER_STATUS_SPECTATING){
 			$session->getPlayer()->setGamemode(2);
 			$session->getPlayer()->setAllowFlight(true);
+			$inventory = $session->getPlayer()->getInventory();
+			$inventory->clearAll();
+			$inventory->sendContents($session->getPlayer());
+			$inventory->sendArmorContents($session->getPlayer());
 			foreach($this->getSessions() as $newSession){
 				$newSession->getPlayer()->getPlayer()->hidePlayer($session->getPlayer());
 			}
