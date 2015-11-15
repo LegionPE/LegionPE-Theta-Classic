@@ -57,6 +57,7 @@ class ClassicBattleKit{
 	 */
 	public function apply(ClassicSession $session){
 		$session->getPlayer()->setGamemode(0);
+		$session->getPlayer()->setAllowFlight(false);
 		$inventory = $session->getPlayer()->getInventory();
 		if(!($inventory instanceof PlayerInventory)){
 			return;

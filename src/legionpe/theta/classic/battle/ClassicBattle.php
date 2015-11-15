@@ -208,7 +208,8 @@ class ClassicBattle{
 	 */
 	public function setSessionType(ClassicSession $session, $type){
 		if($type === self::PLAYER_STATUS_SPECTATING){
-			$session->getPlayer()->setGamemode(1);
+			$session->getPlayer()->setGamemode(2);
+			$session->getPlayer()->setAllowFlight(true);
 			foreach($this->getSessions() as $newSession){
 				$newSession->getPlayer()->getPlayer()->hidePlayer($session->getPlayer());
 			}

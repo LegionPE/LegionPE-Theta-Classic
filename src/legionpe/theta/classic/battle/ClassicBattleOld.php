@@ -51,6 +51,7 @@ class ClassicBattleOld{
 	public function restore(){
 		$player = $this->session->getPlayer();
 		$player->setGamemode($this->gamemode);
+		$player->setAllowFlight(false);
 		$inventory = $player->getInventory();
 		$inventory->clearAll();
 		$inventory->setContents($this->inventory->getContents());
