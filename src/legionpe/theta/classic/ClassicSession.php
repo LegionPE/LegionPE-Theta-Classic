@@ -148,7 +148,7 @@ class ClassicSession extends Session{
 								if($this->getBattle()->getSessionTeam($this) != $ses->getBattle()->getSessionTeam($ses)){
 									if($event->getDamage() >= $this->getPlayer()->getHealth()){
 										$sessionCount = count($this->getBattle()->getSessions());
-										$ses->sendMessage(TextFormat::RED . $this->getPlayer()->getName() . TextFormat::GOLD . " killed you with " . TextFormat::RED . ($this->getPlayer()->getHealth() / 2) . " hearts");
+										$this->sendMessage(TextFormat::RED . $ses->getPlayer()->getName() . TextFormat::GOLD . " killed you with " . TextFormat::RED . ($this->getPlayer()->getHealth() / 2) . " hearts");
 										$event->setDamage(0);
 										if($sessionCount === 2){ // if the battle is a 1v1
 											$this->getBattle()->addRoundWinner($ses);
