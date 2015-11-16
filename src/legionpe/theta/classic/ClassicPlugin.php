@@ -91,7 +91,8 @@ class ClassicPlugin extends BasePlugin{
 		$this->getServer()->getScheduler()->scheduleRepeatingTask(new BattleTask($this), 20);
 		$this->getServer()->getScheduler()->scheduleRepeatingTask(new QueueTask($this), 400);
 		if($RESEND_ADD_PLAYER > 0){
-			$this->getServer()->getScheduler()->scheduleDelayedRepeatingTask(new ClassicResendPlayersTask($this), $RESEND_ADD_PLAYER, $RESEND_ADD_PLAYER);
+			// $this->getServer()->getScheduler()->scheduleDelayedRepeatingTask(new ClassicResendPlayersTask($this), $RESEND_ADD_PLAYER, $RESEND_ADD_PLAYER);
+			// have temporary replacement
 		}
 		new FireballTask($this);
 	}

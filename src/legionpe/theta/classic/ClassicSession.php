@@ -70,6 +70,8 @@ class ClassicSession extends Session{
 	public $battleRequest = null, $battleRequestSentTo = null;
 	/** @var int */
 	public $battleLastRequest = 0, $battleLastSentRequest = 0;
+	/** @var int */
+	public $timesHitWithoutResponse = 0;
 	/** @var bool */
 	public $isQueueing = false;
 	/** @var bool */
@@ -231,6 +233,12 @@ class ClassicSession extends Session{
 					if($event instanceof EntityDamageByChildEntityEvent and $event->getChild() instanceof Arrow){
 						$fromEnt->getInventory()->addItem(Item::get(Item::ARROW, 0, 2));
 						$fromEnt->getInventory()->sendContents([$fromEnt]);
+					}
+					// experimental
+					$this->timesHitWithoutResponse = 0;
+					++$ses->timesHitWithoutResponse;
+					if($ses->timesHitWithoutResponse === 5){
+						$ses->getPlayer()->respawnToAll();
 					}
 				}
 			}
