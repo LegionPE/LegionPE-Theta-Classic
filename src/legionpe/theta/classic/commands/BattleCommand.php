@@ -46,10 +46,10 @@ class BattleCommand extends SessionCommand{
 					if((time() - $host->battleLastRequest) <= 30){
 						if($host->battleRequest->getPlayer()->isOnline()){
 							if(!($host->battleRequest->getBattle() instanceof ClassicBattle)){
-								$kit = $host->getMain()->getKits();
+								$kit = $host->getMain()->getBattleKits();
 								shuffle($kit);
 								$kit = $kit[0];
-								$arena = $host->getMain()->getArenas();
+								$arena = $host->getMain()->getBattleArenas();
 								shuffle($arena);
 								$arena = $arena[0];
 								$battle = new ClassicBattle($host->getMain(), [[$host], [$host->battleRequest]], 3, 60, $kit, $arena);

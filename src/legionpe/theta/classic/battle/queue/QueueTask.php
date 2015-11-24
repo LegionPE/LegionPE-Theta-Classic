@@ -51,7 +51,7 @@ class QueueTask extends PluginTask{
 				if($queue->getKitType() === ClassicBattleQueue::TYPE_FIXED){
 					$kit = $queue->getKit();
 				}else{
-					$kits = $this->main->getKits();
+					$kits = $this->main->getBattleKits();
 					shuffle($kits);
 					$kit = $kits[0];
 				}
@@ -59,7 +59,7 @@ class QueueTask extends PluginTask{
 				if($queue->getArenaType() === ClassicBattleQueue::TYPE_FIXED){
 					$arena = $queue->getArena();
 				}else{
-					$arenas = $this->main->getArenas();
+					$arenas = $this->main->getBattleArenas();
 					shuffle($arenas);
 					$arena = $arenas[0];
 				}

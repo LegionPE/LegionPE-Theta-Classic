@@ -178,7 +178,7 @@ class ClassicSession extends Session{
 															}
 														}else{
 															$winners[] = $newSession->getPlayer()->getName();
-															$newSession->sendMessage(TextFormat::GREEN . $ses->getPlayer()->getName() . TextFormat::GOLD . " killed " . TextFormat::GREEN . $this->getPlayer()->getName());
+															$newSession->sendMessage(TextFormat::GREEN . $ses->getPlayer()->getName() . TextFormat::GOLD . " killed " . TextFormat::RED . $this->getPlayer()->getName());
 															// or add the player to the winners, so if this is the last round then we know who the winners are
 														}
 													}
@@ -425,14 +425,14 @@ class ClassicSession extends Session{
 	public function onRespawn(PlayerRespawnEvent $event){
 		parent::onRespawn($event);
 //		$health = $this->getPlayer()->getAttribute()->getAttribute(AttributeManager::MAX_HEALTH);
-		$health = $this->getPlayer()->getAttribute()->addAttribute(AttributeManager::MAX_HEALTH, "generic.health", 0.0, 40.0, 40.0, true);
+		/*$health = $this->getPlayer()->getAttribute()->addAttribute(AttributeManager::MAX_HEALTH, "generic.health", 0.0, 40.0, 40.0, true);
 		$health->send();
 		$hunger = $this->getPlayer()->getAttribute()->getAttribute(AttributeManager::MAX_HUNGER);
 		$hunger->setValue(19.0);
 		$hunger->send();
 		$hunger = $this->getPlayer()->getAttribute()->addAttribute(AttributeManager::MAX_HUNGER, "player.health", 0.0, 20.0, 19.0, true);
 		$hunger->setValue(19.0);
-		$hunger->send();
+		$hunger->send();*/
 		$this->getPlayer()->setMaxHealth(40);
 		$this->getPlayer()->setHealth(40); // float(20)
 		$event->setRespawnPosition($spawn = ClassicConsts::getSpawnPosition($this->getMain()->getServer()));

@@ -43,9 +43,9 @@ class ClassicPlugin extends BasePlugin{
 	/** @var ClassicBattle[] */
 	public $battles = [];
 	/** @var \legionpe\theta\classic\battle\ClassicBattleArena[] */
-	private $arenas = [];
+	private $battleArenas = [];
 	/** @var \legionpe\theta\classic\battle\ClassicBattleKit[] */
-	private $kits = [];
+	private $battleKits = [];
 	/** @var QueueManager */
 	private $queueManager;
 	/** @var ClassicBattleQueueBlock[] */
@@ -65,10 +65,10 @@ class ClassicPlugin extends BasePlugin{
 	public function onEnable(){
 		parent::onEnable();
 		$level = $this->getServer()->getLevelByName('world_pvp');
-		$this->arenas['cave'] = new ClassicBattleArena('Cave', $level, [[new Vector3(212, 16, 23), new Vector3(215, 16, 23)], [new Vector3(200, 16, 2), new Vector3(195, 16, 4)]], [[140, 140], [-35, -35]]);
+		$this->battleArenas['cave'] = new ClassicBattleArena('Cave', $level, [[new Vector3(212, 16, 23), new Vector3(215, 16, 23)], [new Vector3(200, 16, 2), new Vector3(195, 16, 4)]], [[140, 140], [-35, -35]]);
 		$apple = Item::get(260);
 		$apple->setCount(6);
-		$this->kits['default kit'] = new ClassicBattleKit('Default kit',
+		$this->battleKits['default kit'] = new ClassicBattleKit('Default kit',
 			[Item::get(306), Item::get(307), Item::get(308), Item::get(309)],
 			[Item::get(276), $apple],
 			[]);
@@ -111,28 +111,28 @@ class ClassicPlugin extends BasePlugin{
 	/**
 	 * @return battle\ClassicBattleArena[]
 	 */
-	public function getArenas(){
-		return $this->arenas;
+	public function getBattleArenas(){
+		return $this->battleArenas;
 	}
 	/**
 	 * @param string $name
 	 * @return battle\ClassicBattleArena
 	 */
-	public function getArenaByName($name){
-		return $this->arenas[strtolower($name)];
+	public function getBattleArenaByName($name){
+		return $this->battleArenas[strtolower($name)];
 	}
 	/**
 	 * @return battle\ClassicBattleKit[]
 	 */
-	public function getKits(){
-		return $this->kits;
+	public function getBattleKits(){
+		return $this->battleKits;
 	}
 	/**
 	 * @param string $name
 	 * @return battle\ClassicBattleKit
 	 */
-	public function getKit($name){
-		return $this->kits[strtolower($name)];
+	public function getBattleKit($name){
+		return $this->battleKits[strtolower($name)];
 	}
 	/**
 	 * @return QueueManager
