@@ -16,48 +16,30 @@
 namespace legionpe\theta\classic\kit\power;
 
 use legionpe\theta\classic\ClassicSession;
-use pocketmine\item\Item;
+use pocketmine\event\entity\EntityDamageEvent;
 
-class FirePower extends ClassicKitPower{
-	/** @var \pocketmine\item\Item */
-	public $item;
-	public function __construct($name, $description, $level, Item $item){
+class NoLavaDamagePower extends ClassicKitPower{
+	public function __construct($name, $description, $level){
 		$this->setName($name);
 		$this->setDescription($description);
 		$this->setLevel($level);
-		$this->item = $item;
-		switch($level){
-			case 1:
-				$this->delay = 120;
-				$this->duration = 20;
-				break;
-			case 2:
-				$this->delay = 90;
-				$this->duration = 20;
-				break;
-			case 3:
-				$this->delay = 90;
-				$this->duration = 30;
-				break;
-			case 4:
-				$this->delay = 90;
-				$this->duration = 30;
-				break;
-		}
+		$this->isPermanent = true;
 	}
 	public function onGeneral(ClassicSession $session){
 
 	}
-	public function onDamageByEntity(ClassicSession $damager, ClassicSession $damaged, &$damage){
+	public function onDamageByEntity(ClassicSession $damaged, ClassicSession $damager, &$damage){
 
 	}
 	public function onDamage(ClassicSession $session, &$damage, $event){
-
+		if($event instanceof EntityDamageEvent){
+			if($event->getCause() === EntityDamageEvent::CAUSE_LAVA){
+				$damage = 0;
+			}
+		}
 	}
 	public function onAttack(ClassicSession $attacker, ClassicSession $victim, &$damage){
-		if($this->isActive()){
-			$victim->getPlayer()->setOnFire($this->getLevel());
-		}
+
 	}
 	public function onHeal(ClassicSession $owner, &$health){
 

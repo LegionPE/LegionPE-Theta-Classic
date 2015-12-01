@@ -20,12 +20,18 @@ use legionpe\theta\classic\ClassicSession;
 abstract class ClassicKit{
 	/** @var string */
 	protected $name;
+	public $level;
+	/** @var int */
+	private $price;
 	/** @var string */
 	protected $description;
 	/** @var power\ClassicKitPower[] */
 	protected $powers = [];
 	/** @var \pocketmine\item\Item[] */
 	protected $items = [];
+	/** @var \pocketmine\item\Item[] */
+	protected $armorItems = [];
+	public abstract function setLevel($level);
 	public abstract function equip(ClassicSession $session);
 
 	/**
@@ -41,6 +47,18 @@ abstract class ClassicKit{
 		return $this->name;
 	}
 	/**
+	 * @return int
+	 */
+	public function getPrice(){
+		return $this->price;
+	}
+	/**
+	 * @param int $price
+	 */
+	protected function setPrice($price){
+		$this->price = $price;
+	}
+	/**
 	 * @param string $description
 	 */
 	protected function setDescription($description){
@@ -54,15 +72,23 @@ abstract class ClassicKit{
 	}
 	/**
 	 * @param \pocketmine\item\Item[] $items
+	 * @param \pocketmine\item\Item[] $armorItems
 	 */
-	protected function setItems($items){
+	protected function setItems($items, $armorItems){
 		$this->items = $items;
+		$this->armorItems = $armorItems;
 	}
 	/**
 	 * @return \pocketmine\item\Item[]
 	 */
 	protected function getItems(){
 		return $this->items;
+	}
+	/**
+	 * @return \pocketmine\item\Item[]
+	 */
+	protected function getArmorItems(){
+		return $this->armorItems;
 	}
 	/**
 	 * @param power\ClassicKitPower[] $powers

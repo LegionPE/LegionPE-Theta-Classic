@@ -19,6 +19,7 @@ use legionpe\theta\BasePlugin;
 use legionpe\theta\classic\battle\ClassicBattle;
 use legionpe\theta\classic\battle\ClassicBattleKit;
 use legionpe\theta\classic\battle\queue\ClassicBattleQueue;
+use legionpe\theta\classic\kit\ClassicKit;
 use legionpe\theta\Friend;
 use legionpe\theta\lang\Phrases;
 use legionpe\theta\query\SetFriendQuery;
@@ -44,6 +45,7 @@ use pocketmine\event\inventory\InventoryPickupArrowEvent;
 use pocketmine\event\player\PlayerDeathEvent;
 use pocketmine\event\player\PlayerInteractEvent;
 use pocketmine\event\player\PlayerItemConsumeEvent;
+use pocketmine\event\player\PlayerItemHeldEvent;
 use pocketmine\event\player\PlayerMoveEvent;
 use pocketmine\event\player\PlayerRespawnEvent;
 use pocketmine\inventory\ChestInventory;
@@ -70,6 +72,8 @@ class ClassicSession extends Session{
 	public $battleRequest = null, $battleRequestSentTo = null;
 	/** @var int */
 	public $battleLastRequest = 0, $battleLastSentRequest = 0;
+	/** @var kit\ClassicKit|null */
+	public $currentKit = null;
 	/** @var int */
 	public $timesHitWithoutResponse = 0;
 	/** @var bool */
@@ -132,6 +136,12 @@ class ClassicSession extends Session{
 		}
 		if(ClassicConsts::isSpawn($this->getPlayer())){
 			return false;
+		}
+		$damage = $event->getDamage();
+		if($this->currentKit instanceof ClassicKit){
+			foreach($this->currentKit->getPowers() as $power){
+				$power->onDamage($this, $damage, $event);
+			}
 		}
 		if($event instanceof EntityDamageByEntityEvent){
 			$fromEnt = $event->getDamager();
@@ -206,6 +216,16 @@ class ClassicSession extends Session{
 						$fromEnt->sendTip($ses->translate(Phrases::PVP_ATTACK_SPAWN));
 						return false;
 					}
+					if($this->currentKit instanceof ClassicKit){
+						foreach($this->currentKit->getPowers() as $power){
+							$power->onDamage($this, $ses, $damage);
+						}
+					}
+					if($ses->currentKit instanceof ClassicKit){
+						foreach($ses->currentKit->getPowers() as $power){
+							$power->onAttack($ses, $this, $damage);
+						}
+					}
 //					$type = $this->getFriendType($ses->getUid());
 //					if($type >= self::FRIEND_LEVEL_GOOD_FRIEND and !$this->isFriendlyFire() and !$ses->isFriendlyFire()){
 //						$fromEnt->sendTip($this->translate(Phrases::PVP_ATTACK_FRIENDS, [
@@ -237,7 +257,7 @@ class ClassicSession extends Session{
 					// experimental
 					$this->timesHitWithoutResponse = 0;
 					++$ses->timesHitWithoutResponse;
-					if($ses->timesHitWithoutResponse === 5){
+					if($ses->timesHitWithoutResponse === 4){
 						$ses->getPlayer()->respawnToAll();
 					}
 				}
@@ -251,6 +271,7 @@ class ClassicSession extends Session{
 			}
 		}
 //		$this->getPlayer()->setNameTag($this->calculateNameTag(TextFormat::WHITE, $this->getPlayer()->getHealth() - $event->getFinalDamage()));
+		$event->setDamage($damage);
 		$deficit = $event->getFinalDamage() - $this->getPlayer()->getHealth();
 		if($deficit > 0){
 			$event->setDamage($event->getDamage() - $deficit);
@@ -477,6 +498,38 @@ class ClassicSession extends Session{
 	public function onPickupArrow(InventoryPickupArrowEvent $event){
 		return parent::onPickupArrow($event);
 	}
+	public function onItemHold(PlayerItemHeldEvent $event){
+		if(!parent::onHoldItem($event)){
+			return false;
+		}
+		if($this->currentKit instanceof ClassicKit){
+			foreach($this->currentKit->getPowers() as $power){
+				if(isset($power->item)){
+					if($event->getItem()->equals($power->item)){
+						if($power->isActive()){
+							$this->getPlayer()->sendTip(TextFormat::RED . "This power is already active.");
+						}else{
+							foreach($this->currentKit->getPowers() as $powerTwo){
+								if($powerTwo->isActive() and !$powerTwo->isPermanent){
+									$this->getPlayer()->sendTip(TextFormat::RED . "You currently have another power active.");
+									return false;
+									break;
+								}
+							}
+							$time = $power->getTimeTillNextActivate();
+							if($time <= 0){
+								$power->setActive(true);
+							}else{
+								$this->getPlayer()->sendTip(TextFormat::RED . $time . " seconds left before you can use this power.");
+							}
+						}
+						return false;
+						break;
+					}
+				}
+			}
+		}
+	}
 
 	/**
 	 * @return ClassicBattle|null
@@ -659,6 +712,15 @@ class ClassicSession extends Session{
 				$this->getPlayer()->heal($amount, new EntityRegainHealthEvent($this->getPlayer(), $amount, EntityRegainHealthEvent::CAUSE_REGEN));
 			}
 			$this->getPlayer()->setFood(19);
+			if($this->currentKit instanceof ClassicKit){
+				foreach($this->currentKit->getPowers() as $power){
+					if(!$power->isPermanent){
+						if($power->isActive()){ // updates
+							$this->getPlayer()->sendTip(TextFormat::RED . $power->getName() . TextFormat::GREEN . " power time left: " . ($power->getDuration() - $power->getTimeActive()));
+						}
+					}
+				}
+			}
 		}
 		if($this->isPlaying()){
 			$respawn = (int) (ClassicConsts::RESPAWN_INVINCIBILITY - microtime(true) + $this->lastRespawnTime);

@@ -16,16 +16,48 @@
 namespace legionpe\theta\classic\kit\power;
 
 use legionpe\theta\classic\ClassicSession;
+use pocketmine\item\Item;
 
 class StrengthPower extends ClassicKitPower{
-	public function __construct($name){
+	/** @var \pocketmine\item\Item */
+	public $item;
+	public function __construct($name, $description, $level, Item $item){
 		$this->setName($name);
+		$this->setDescription($description);
+		$this->setLevel($level);
+		$this->item = $item;
+		switch($level){
+			case 1:
+				$this->delay = 120;
+				$this->duration = 10;
+				break;
+			case 2:
+				$this->delay = 120;
+				$this->duration = 15;
+				break;
+			case 3:
+				$this->delay = 90;
+				$this->duration = 15;
+				break;
+			case 4:
+				$this->delay = 90;
+				$this->duration = 15;
+				break;
+		}
 	}
-	public function onDamage(ClassicSession $damager, ClassicSession $damaged, &$damage){
+	public function onGeneral(ClassicSession $session){
+
+	}
+	public function onDamageByEntity(ClassicSession $damager, ClassicSession $damaged, &$damage){
+
+	}
+	public function onDamage(ClassicSession $session, &$damage, $event){
 
 	}
 	public function onAttack(ClassicSession $attacker, ClassicSession $victim, &$damage){
-		$damage += $this->getLevel() / 2;
+		if($this->isActive()){
+			$damage += $this->getLevel() / 2;
+		}
 	}
 	public function onHeal(ClassicSession $owner, &$health){
 
