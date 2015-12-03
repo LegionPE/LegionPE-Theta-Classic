@@ -17,15 +17,14 @@ namespace legionpe\theta\classic\kit;
 
 use legionpe\theta\classic\ClassicSession;
 use legionpe\theta\classic\kit\ClassicKit;
-use legionpe\theta\classic\kit\power\FirePower;
-use legionpe\theta\classic\kit\power\NoFireDamagePower;
-use legionpe\theta\classic\kit\power\NoLavaDamagePower;
+use legionpe\theta\classic\kit\power\ShieldPower;
+use legionpe\theta\classic\kit\power\StrengthPower;
 use pocketmine\item\Item;
 
 class PyroKit extends ClassicKit{
 	public function __construct($level){
-		$this->setName("Pyro");
-		$this->setDescription("I like to play with fire.");
+		$this->setName("Knight");
+		$this->setDescription("I have shiny silver armour!");
 		$this->setLevel($level);
 	}
 	/**
@@ -56,23 +55,25 @@ class PyroKit extends ClassicKit{
 		}
 	}
 	public function setLevel($level){
+		$blueDye = Item::get(Item::DYE);
+		$blueDye->setDamage(12);
 		$orangeDye = Item::get(Item::DYE);
 		$orangeDye->setDamage(14);
 		switch($level){
 			case 1:
 				$items = [
 					Item::get(Item::WOODEN_SWORD),
-					Item::get(Item::MELON_SLICE)
+					Item::get(Item::APPLE)
 				];
 				$armorItems = [
-					Item::get(Item::CHAIN_HELMET),
-					Item::get(Item::LEATHER_TUNIC),
-					Item::get(Item::LEATHER_PANTS),
+					Item::get(Item::LEATHER_CAP),
+					Item::get(Item::CHAIN_CHESTPLATE),
+					Item::get(Item::CHAIN_LEGGINGS),
 					Item::get(Item::LEATHER_BOOTS)
 				];
 				$this->setItems($items, $armorItems);
 				$powers = [
-					new FirePower("Fire", "Set players on fire when you hit them", $level, $orangeDye)
+					new ShieldPower("Shield", "Prevent damage when being hit", $level, $blueDye)
 				];
 				$this->setPowers($powers);
 				$this->setPrice(3500);
@@ -90,8 +91,7 @@ class PyroKit extends ClassicKit{
 				];
 				$this->setItems($items, $armorItems);
 				$powers = [
-					new FirePower("Fire", "Set players on fire when you hit them", $level, $orangeDye),
-					new NoLavaDamagePower("No lava damage", "You will not receive any damage when you're in lava", $level)
+					new ShieldPower("Shield", "Prevent damage when being hit", $level, $blueDye)
 				];
 				$this->setPowers($powers);
 				$this->setPrice(3500);
@@ -99,22 +99,21 @@ class PyroKit extends ClassicKit{
 			case 3:
 				$items = [
 					Item::get(Item::STONE_SWORD),
-					Item::get(Item::COOKED_CHICKEN)
+					Item::get(Item::APPLE)
 				];
 				$armorItems = [
-					Item::get(Item::GOLD_HELMET),
+					Item::get(Item::CHAIN_HELMET),
 					Item::get(Item::CHAIN_CHESTPLATE),
 					Item::get(Item::CHAIN_LEGGINGS),
-					Item::get(Item::GOLD_BOOTS)
+					Item::get(Item::LEATHER_BOOTS)
 				];
 				$this->setItems($items, $armorItems);
 				$powers = [
-					new FirePower("Fire", "Set players on fire when you hit them", $level, $orangeDye),
-					new NoLavaDamagePower("No lava", "You will not receive any damage when you're in lava", $level),
-					new NoFireDamagePower("No fire", "You will not receive any damage when on fire", $level)
+					new ShieldPower("Shield", "Prevent damage when being hit", $level, $blueDye),
+					new StrengthPower("Strength", "Extra damage while hitting a player", $level, $orangeDye)
 				];
 				$this->setPowers($powers);
-				$this->setPrice(5000);
+				$this->setPrice(3500);
 				break;
 			case 4:
 				$items = [
@@ -124,14 +123,13 @@ class PyroKit extends ClassicKit{
 				$armorItems = [
 					Item::get(Item::GOLD_HELMET),
 					Item::get(Item::GOLD_CHESTPLATE),
-					Item::get(Item::CHAIN_LEGGINGS),
+					Item::get(Item::GOLD_LEGGINGS),
 					Item::get(Item::GOLD_BOOTS)
 				];
 				$this->setItems($items, $armorItems);
 				$powers = [
-					new FirePower("Fire", "Set players on fire when you hit them", $level, $orangeDye),
-					new NoLavaDamagePower("No lava", "You will not receive any damage when you're in lava", $level),
-					new NoFireDamagePower("No fire", "You will not receive any damage when on fire", $level)
+					new ShieldPower("Shield", "Prevent damage when being hit", $level, $blueDye),
+					new StrengthPower("Strength", "Extra damage while hitting a player", $level, $orangeDye)
 				];
 				$this->setPowers($powers);
 				$this->setPrice(7000);

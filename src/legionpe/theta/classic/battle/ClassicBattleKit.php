@@ -17,8 +17,7 @@ namespace legionpe\theta\classic\battle;
 
 use legionpe\theta\classic\ClassicSession;
 use pocketmine\entity\Effect;
-use pocketmine\entity\Entity;
-use pocketmine\event\entity\EntityRegainHealthEvent;
+use pocketmine\network\protocol\UpdateAttributesPacket;
 use pocketmine\inventory\PlayerInventory;
 use pocketmine\item\Item;
 
@@ -68,7 +67,7 @@ class ClassicBattleKit{
 			$inventory->setArmorItem($i, $this->armorItems[$i]);
 		}
 		$inventory->setArmorContents($this->armorItems);
-		for($i = 0; $i < 7; $i++){
+		for($i = 0; $i < 9; $i++){
 			$inventory->setHotbarSlotIndex($i, $i);
 		}
 		$inventory->sendContents($session->getPlayer());
@@ -81,6 +80,13 @@ class ClassicBattleKit{
 		}
 		$session->getPlayer()->setMaxHealth($this->maxHealth);
 		$session->getPlayer()->setHealth($this->maxHealth);
+		// steadfast2
+		$pk = new UpdateAttributesPacket();
+		$pk->minValue = 0;
+		$pk->maxValue = $this->maxHealth;
+		$pk->value = $this->maxHealth;
+		$pk->name = UpdateAttributesPacket::HEALTH;
+		$session->getPlayer()->dataPacket($pk);
 		//$ev = new EntityRegainHealthEvent($session->getPlayer(), 20, EntityRegainHealthEvent::CAUSE_MAGIC);
 		//$session->getPlayer()->heal(20, $ev);
 	}
