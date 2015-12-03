@@ -28,7 +28,7 @@ use legionpe\theta\utils\MUtils;
 use legionpe\theta\utils\SpawnGhastParticle;
 use pocketmine\block\Block;
 use pocketmine\entity\Arrow;
-use pocketmine\entity\AttributeManager;
+use pocketmine\network\protocol\UpdateAttributesPacket;
 use pocketmine\entity\Effect;
 use pocketmine\entity\Egg;
 use pocketmine\entity\Projectile;

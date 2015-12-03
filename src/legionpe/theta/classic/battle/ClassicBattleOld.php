@@ -31,8 +31,10 @@ class ClassicBattleOld{
 	private $health, $maxHealth;
 	/** @var int */
 	private $gamemode;
-	/** @var \pocketmine\inventory\PlayerInventory */
-	private $inventory;
+	/** @var \pocketmine\item\Item[] */
+	private $items = [];
+	/** @var \pocketmine\item\Item[] */
+	private $armorItems = [];
 
 	/**
 	 * @param ClassicSession $session
@@ -47,7 +49,8 @@ class ClassicBattleOld{
 		$this->health = $player->getHealth();
 		$this->maxHealth = $player->getMaxHealth();
 		$this->gamemode = $session->getPlayer()->getGamemode();
-		$this->inventory = $player->getInventory();
+		$this->items = $player->getInventory()->getContents();
+		$this->armorItems = $player->getInventory()->getArmorContents()
 	}
 	public function restore(){
 		$player = $this->session->getPlayer();
@@ -55,8 +58,8 @@ class ClassicBattleOld{
 		$player->setAllowFlight(false);
 		$inventory = $player->getInventory();
 		$inventory->clearAll();
-		$inventory->setContents($this->inventory->getContents());
-		$inventory->setArmorContents($this->inventory->getArmorContents());
+		$inventory->setContents($this->items);
+		$inventory->setArmorContents($this->armorItems);
 		for($i = 0; $i < 7; $i++){
 			$inventory->setHotbarSlotIndex($i, $i);
 		}
@@ -71,9 +74,9 @@ class ClassicBattleOld{
 		$pk = new UpdateAttributesPacket();
 		$pk->minValue = 0;
 		$pk->maxValue = $this->maxHealth;
-		$pk->value = $this->maxHealth;
-		$pk->name = UpdateAttributesPacket::HEALTH;
-		$session->getPlayer()->dataPacket($pk);
+		$pk->value = $this->health;
+		$pk->name = "generic.health";
+		$this->session->getPlayer()->dataPacket($pk);
 		$player->setNameTag($this->nameTag);
 	}
 }
