@@ -85,7 +85,7 @@ class ClassicBattleKit{
 		$pk->minValue = 0;
 		$pk->maxValue = $this->maxHealth;
 		$pk->value = $this->maxHealth;
-		$pk->name = UpdateAttributesPacket::HEALTH;
+		$pk->name = "generic.health";
 		$session->getPlayer()->dataPacket($pk);
 		//$ev = new EntityRegainHealthEvent($session->getPlayer(), 20, EntityRegainHealthEvent::CAUSE_MAGIC);
 		//$session->getPlayer()->heal(20, $ev);
