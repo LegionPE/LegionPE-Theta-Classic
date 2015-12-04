@@ -17,7 +17,7 @@ namespace legionpe\theta\classic\battle;
 
 use legionpe\theta\classic\ClassicSession;
 use pocketmine\entity\Effect;
-use pocketmine\network\protocol\UpdateAttributesPacket;
+use pocketmine\entity\AttributeManager;
 use pocketmine\inventory\PlayerInventory;
 use pocketmine\item\Item;
 
