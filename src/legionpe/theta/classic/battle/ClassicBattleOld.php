@@ -50,7 +50,7 @@ class ClassicBattleOld{
 		$this->maxHealth = $player->getMaxHealth();
 		$this->gamemode = $session->getPlayer()->getGamemode();
 		$this->items = $player->getInventory()->getContents();
-		$this->armorItems = $player->getInventory()->getArmorContents()
+		$this->armorItems = $player->getInventory()->getArmorContents();
 	}
 	public function restore(){
 		$player = $this->session->getPlayer();
