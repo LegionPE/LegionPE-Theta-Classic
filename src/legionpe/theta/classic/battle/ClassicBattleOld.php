@@ -15,7 +15,7 @@
 
 namespace legionpe\theta\classic\battle;
 
-use pocketmine\network\protocol\UpdateAttributesPacket;
+use pocketmine\entity\AttributeManager;
 use legionpe\theta\classic\ClassicSession;
 
 class ClassicBattleOld{
@@ -70,13 +70,7 @@ class ClassicBattleOld{
 		$player->teleport($this->position);
 		$player->setMaxHealth($this->maxHealth);
 		$player->setHealth($this->health);
-		// steadfast 2
-		$pk = new UpdateAttributesPacket();
-		$pk->minValue = 0;
-		$pk->maxValue = $this->maxHealth;
-		$pk->value = $this->health;
-		$pk->name = "generic.health";
-		$this->session->getPlayer()->dataPacket($pk);
+		$player->getAttribute()->addAttribute(AttributeManager::MAX_HEALTH, "generic.health", 0, $this->maxHealth, $this->health, $this->health, true);
 		$player->setNameTag($this->nameTag);
 	}
 }
