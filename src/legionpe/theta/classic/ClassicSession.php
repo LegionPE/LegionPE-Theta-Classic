@@ -397,6 +397,13 @@ class ClassicSession extends Session{
 			$this->lastRespawnTime = microtime(true);
 			$this->getPlayer()->addEffect(Effect::getEffect(Effect::INVISIBILITY)->setDuration(ClassicConsts::RESPAWN_INVINCIBILITY * 20)->setVisible(false));
 		}
+		if(!ClassicConsts::isSpawn($this->getPlayer()->getPosition())){
+			if($this->currentKit instanceof ClassicKit){
+				foreach($this->currentKit->getPowers() as $power){
+					$power->onMove($this);
+				}
+			}
+		}
 		if($this->battle instanceof ClassicBattle){
 			if($this->battle->getStatus() === ClassicBattle::STATUS_STARTING){
 				if($event->getTo()->getX() != $event->getFrom()->getX() or $event->getTo()->getZ() != $event->getFrom()->getZ()){

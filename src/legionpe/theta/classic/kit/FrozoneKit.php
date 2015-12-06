@@ -17,16 +17,20 @@ namespace legionpe\theta\classic\kit;
 
 use legionpe\theta\classic\ClassicSession;
 use legionpe\theta\classic\kit\ClassicKit;
-use legionpe\theta\classic\kit\power\FirePower;
-use legionpe\theta\classic\kit\power\NoFireDamagePower;
-use legionpe\theta\classic\kit\power\NoLavaDamagePower;
+use legionpe\theta\classic\kit\power\IceWaterPower;
+use legionpe\theta\classic\kit\power\ShieldPower;
+use legionpe\theta\classic\kit\power\StrengthPower;
+use legionpe\theta\classic\utils\ResetBlocksTask;
 use pocketmine\item\Item;
 
 class PyroKit extends ClassicKit{
-	public function __construct($level){
-		$this->setName("Pyro");
-		$this->setDescription("I like to play with fire.");
+	/** @var \legionpe\theta\classic\utils\ResetBlocksTask */
+	private $task;
+	public function __construct($level, ResetBlocksTask $task){
+		$this->setName("Frozone");
+		$this->setDescription("Yeah, ice.");
 		$this->setLevel($level);
+		$this->task = $task;
 	}
 	/**
 	 * @param ClassicSession $session
@@ -56,50 +60,70 @@ class PyroKit extends ClassicKit{
 		}
 	}
 	public function setLevel($level){
-		$orangeDye = Item::get(Item::DYE);
-		$orangeDye->setDamage(14);
+		$blueDye = Item::get(Item::DYE);
+		$blueDye->setDamage(12);
+		$cyanDye = Item::get(Item::DYE);
+		$cyanDye->setDamage(6);
 		switch($level){
 			case 1:
 				$items = [
 					Item::get(Item::WOODEN_SWORD),
-					Item::get(Item::MELON_SLICE)
+					Item::get(Item::APPLE)
 				];
 				$armorItems = [
-					Item::get(Item::CHAIN_HELMET),
-					Item::get(Item::LEATHER_TUNIC),
+					Item::get(Item::GOLD_HELMET),
+					Item::get(Item::CHAIN_CHESTPLATE),
 					Item::get(Item::LEATHER_PANTS),
 					Item::get(Item::LEATHER_BOOTS)
 				];
 				$this->setItems($items, $armorItems);
 				$powers = [
-					new FirePower("Fire", "Set players on fire when you hit them", $level, $orangeDye)
+					new IceWaterPower("Water to ice", "Change water to ice so you can walk over it.", $level, $blueDye, $this->task)
 				];
 				$this->setPowers($powers);
 				$this->setPrice(3500);
 				break;
 			case 2:
 				$items = [
-					Item::get(Item::STONE_SWORD),
+					Item::get(Item::WOODEN_SWORD),
 					Item::get(Item::APPLE)
 				];
 				$armorItems = [
-					Item::get(Item::CHAIN_HELMET),
+					Item::get(Item::GOLD_HELMET),
 					Item::get(Item::CHAIN_CHESTPLATE),
-					Item::get(Item::CHAIN_LEGGINGS),
-					Item::get(Item::LEATHER_BOOTS)
+					Item::get(Item::LEATHER_PANTS),
+					Item::get(Item::GOLD_BOOTS)
 				];
 				$this->setItems($items, $armorItems);
 				$powers = [
-					new FirePower("Fire", "Set players on fire when you hit them", $level, $orangeDye),
-					new NoLavaDamagePower("No lava damage", "You will not receive any damage when you're in lava", $level)
+					new IceWaterPower("Water to ice", "Change water to ice so you can walk over it.", $level, $blueDye, $this->task)
 				];
 				$this->setPowers($powers);
-				$this->setPrice(5000);
+				$this->setPrice(6500);
 				break;
 			case 3:
 				$items = [
 					Item::get(Item::STONE_SWORD),
-					Item::get(Item::COOKED_CHICKEN)
+					Item::get(Item::STEAK)
+				];
+				$armorItems = [
+					Item::get(Item::GOLD_HELMET),
+					Item::get(Item::CHAIN_CHESTPLATE),
+					Item::get(Item::LEATHER_PANTS),
+					Item::get(Item::GOLD_BOOTS)
+				];
+				$this->setItems($items, $armorItems);
+				$powers = [
+					new IceWaterPower("Water to ice", "Change water to ice so you can walk over it.", $level, $blueDye, $this->task),
+					new IceWaterPower("Ground to ice", "Change the ground to ice so you can walk over it faster.", $level, $cyanDye, $this->task)
+				];
+				$this->setPowers($powers);
+				$this->setPrice(6500);
+				break;
+			case 4:
+				$items = [
+					Item::get(Item::STONE_SWORD),
+					Item::get(Item::STEAK)
 				];
 				$armorItems = [
 					Item::get(Item::GOLD_HELMET),
@@ -109,32 +133,11 @@ class PyroKit extends ClassicKit{
 				];
 				$this->setItems($items, $armorItems);
 				$powers = [
-					new FirePower("Fire", "Set players on fire when you hit them", $level, $orangeDye),
-					new NoLavaDamagePower("No lava", "You will not receive any damage when you're in lava", $level),
-					new NoFireDamagePower("No fire", "You will not receive any damage when on fire", $level)
+					new IceWaterPower("Water to ice", "Change water to ice so you can walk over it.", $level, $blueDye, $this->task),
+					new IceWaterPower("Ground to ice", "Change the ground to ice so you can walk over it faster.", $level, $cyanDye, $this->task)
 				];
 				$this->setPowers($powers);
-				$this->setPrice(5500);
-				break;
-			case 4:
-				$items = [
-					Item::get(Item::STONE_SWORD),
-					Item::get(Item::COOKED_CHICKEN)
-				];
-				$armorItems = [
-					Item::get(Item::GOLD_HELMET),
-					Item::get(Item::GOLD_CHESTPLATE),
-					Item::get(Item::CHAIN_LEGGINGS),
-					Item::get(Item::GOLD_BOOTS)
-				];
-				$this->setItems($items, $armorItems);
-				$powers = [
-					new FirePower("Fire", "Set players on fire when you hit them", $level, $orangeDye),
-					new NoLavaDamagePower("No lava", "You will not receive any damage when you're in lava", $level),
-					new NoFireDamagePower("No fire", "You will not receive any damage when on fire", $level)
-				];
-				$this->setPowers($powers);
-				$this->setPrice(7000);
+				$this->setPrice(10000);
 				break;
 		}
 	}

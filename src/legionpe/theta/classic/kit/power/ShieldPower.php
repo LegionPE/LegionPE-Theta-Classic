@@ -62,4 +62,7 @@ class ShieldPower extends ClassicKitPower{
 	public function onHeal(ClassicSession $owner, &$health){
 
 	}
+	public function onMove(ClassicSession $session){
+
+	}
 }

@@ -135,4 +135,5 @@ abstract class ClassicKitPower{
 	public abstract function onDamage(ClassicSession $session, &$damage, $event);
 	public abstract function onAttack(ClassicSession $attacker, ClassicSession $victim, &$damage);
 	public abstract function onHeal(ClassicSession $owner, &$health);
+	public abstract function onMove(ClassicSession $session);
 }

@@ -76,7 +76,7 @@ class PyroKit extends ClassicKit{
 					new ShieldPower("Shield", "Prevent damage when being hit", $level, $blueDye)
 				];
 				$this->setPowers($powers);
-				$this->setPrice(3500);
+				$this->setPrice(5000);
 				break;
 			case 2:
 				$items = [
@@ -94,7 +94,7 @@ class PyroKit extends ClassicKit{
 					new ShieldPower("Shield", "Prevent damage when being hit", $level, $blueDye)
 				];
 				$this->setPowers($powers);
-				$this->setPrice(3500);
+				$this->setPrice(7000);
 				break;
 			case 3:
 				$items = [
@@ -113,7 +113,7 @@ class PyroKit extends ClassicKit{
 					new StrengthPower("Strength", "Extra damage while hitting a player", $level, $orangeDye)
 				];
 				$this->setPowers($powers);
-				$this->setPrice(3500);
+				$this->setPrice(8000);
 				break;
 			case 4:
 				$items = [
@@ -132,7 +132,7 @@ class PyroKit extends ClassicKit{
 					new StrengthPower("Strength", "Extra damage while hitting a player", $level, $orangeDye)
 				];
 				$this->setPowers($powers);
-				$this->setPrice(7000);
+				$this->setPrice(12000);
 				break;
 		}
 	}

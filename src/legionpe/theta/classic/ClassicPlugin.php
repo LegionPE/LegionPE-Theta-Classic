@@ -31,6 +31,7 @@ use legionpe\theta\classic\commands\TeleportToCommand;
 use legionpe\theta\classic\query\ClassicLoginDataQuery;
 use legionpe\theta\classic\query\ClassicSaveSinglePlayerQuery;
 use legionpe\theta\classic\utils\ClassicResendPlayersTask;
+use legionpe\theta\classic\utils\ResetBlocksTask;
 use legionpe\theta\command\session\friend\FriendlyFireActivationCommand;
 use legionpe\theta\queue\Queue;
 use pocketmine\item\Item;
@@ -48,6 +49,8 @@ class ClassicPlugin extends BasePlugin{
 	private $battleKits = [];
 	/** @var QueueManager */
 	private $queueManager;
+	/** @var utils\ResetBlocksTask */
+	public $resetBlocksTask;
 	/** @var ClassicBattleQueueBlock[] */
 	private $queueBlocks = [];
 	/** @var TeleportManager */
@@ -77,6 +80,8 @@ class ClassicPlugin extends BasePlugin{
 		$this->queueBlocks[] = new ClassicBattleQueueBlock($this, $level->getBlock(new Vector3(299, 38, -137)), '0 queueing', 1, false, false);
 		$this->queueBlocks[] = new ClassicBattleQueueBlock($this, $level->getBlock(new Vector3(303, 38, -137)), '0 queueing', 2, false, false);
 		$this->queueBlocks[] = new ClassicBattleQueueBlock($this, $level->getBlock(new Vector3(305, 38, -137)), '0 queueing', 2, false, false);
+		$this->resetBlocksTask = new ResetBlocksTask($this);
+		$this->getServer()->getScheduler()->scheduleRepeatingTask($this->resetBlocksTask, 40);
 		$this->tpMgr = new TeleportManager($this);
 		$this->getServer()->getCommandMap()->registerAll("c", [
 			new TeleportHereCommand($this),
@@ -91,10 +96,16 @@ class ClassicPlugin extends BasePlugin{
 		$this->getServer()->getScheduler()->scheduleRepeatingTask(new BattleTask($this), 20);
 		$this->getServer()->getScheduler()->scheduleRepeatingTask(new QueueTask($this), 400);
 		if($RESEND_ADD_PLAYER > 0){
-			// $this->getServer()->getScheduler()->scheduleDelayedRepeatingTask(new ClassicResendPlayersTask($this), $RESEND_ADD_PLAYER, $RESEND_ADD_PLAYER);
+			$this->getServer()->getScheduler()->scheduleDelayedRepeatingTask(new ClassicResendPlayersTask($this), $RESEND_ADD_PLAYER, $RESEND_ADD_PLAYER);
 			// have temporary replacement
 		}
 		new FireballTask($this);
+	}
+	public function onDisable(){
+		parent::onDisable();
+		foreach($this->resetBlocksTask->blocks as $block){
+			$block[0]->getLevel()->setBlock($block[0], $block[1]);
+		}
 	}
 	public function getLoginQueryImpl(){
 		return ClassicLoginDataQuery::class;
