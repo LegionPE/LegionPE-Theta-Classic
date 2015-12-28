@@ -21,7 +21,7 @@ use legionpe\theta\classic\kit\power\ShieldPower;
 use legionpe\theta\classic\kit\power\StrengthPower;
 use pocketmine\item\Item;
 
-class PyroKit extends ClassicKit{
+class KnightKit extends ClassicKit{
 	public function __construct($level){
 		$this->setName("Knight");
 		$this->setDescription("I have shiny silver armour!");
@@ -62,14 +62,14 @@ class PyroKit extends ClassicKit{
 		switch($level){
 			case 1:
 				$items = [
-					Item::get(Item::WOODEN_SWORD),
+					Item::get(Item::GOLDEN_SWORD),
 					Item::get(Item::APPLE)
 				];
 				$armorItems = [
 					Item::get(Item::LEATHER_CAP),
-					Item::get(Item::CHAIN_CHESTPLATE),
-					Item::get(Item::CHAIN_LEGGINGS),
-					Item::get(Item::LEATHER_BOOTS)
+					Item::get(Item::GOLD_CHESTPLATE),
+					Item::get(Item::LEATHER_PANTS),
+					Item::get(Item::GOLD_BOOTS)
 				];
 				$this->setItems($items, $armorItems);
 				$powers = [
@@ -80,14 +80,14 @@ class PyroKit extends ClassicKit{
 				break;
 			case 2:
 				$items = [
-					Item::get(Item::STONE_SWORD),
-					Item::get(Item::APPLE)
+					Item::get(Item::GOLDEN_SWORD),
+					Item::get(Item::COOKED_CHICKEN)
 				];
 				$armorItems = [
-					Item::get(Item::CHAIN_HELMET),
-					Item::get(Item::CHAIN_CHESTPLATE),
-					Item::get(Item::CHAIN_LEGGINGS),
-					Item::get(Item::LEATHER_BOOTS)
+					Item::get(Item::GOLD_HELMET),
+					Item::get(Item::GOLD_CHESTPLATE),
+					Item::get(Item::GOLD_LEGGINGS),
+					Item::get(Item::GOLD_BOOTS)
 				];
 				$this->setItems($items, $armorItems);
 				$powers = [
@@ -99,13 +99,13 @@ class PyroKit extends ClassicKit{
 			case 3:
 				$items = [
 					Item::get(Item::STONE_SWORD),
-					Item::get(Item::APPLE)
+					Item::get(Item::COOKED_CHICKEN)
 				];
 				$armorItems = [
 					Item::get(Item::CHAIN_HELMET),
-					Item::get(Item::CHAIN_CHESTPLATE),
-					Item::get(Item::CHAIN_LEGGINGS),
-					Item::get(Item::LEATHER_BOOTS)
+					Item::get(Item::GOLD_CHESTPLATE),
+					Item::get(Item::GOLD_LEGGINGS),
+					Item::get(Item::CHAIN_BOOTS)
 				];
 				$this->setItems($items, $armorItems);
 				$powers = [
@@ -118,13 +118,13 @@ class PyroKit extends ClassicKit{
 			case 4:
 				$items = [
 					Item::get(Item::STONE_SWORD),
-					Item::get(Item::COOKED_CHICKEN)
+					Item::get(Item::STEAK)
 				];
 				$armorItems = [
-					Item::get(Item::GOLD_HELMET),
-					Item::get(Item::GOLD_CHESTPLATE),
-					Item::get(Item::GOLD_LEGGINGS),
-					Item::get(Item::GOLD_BOOTS)
+					Item::get(Item::CHAIN_HELMET),
+					Item::get(Item::CHAIN_CHESTPLATE),
+					Item::get(Item::CHAIN_LEGGINGS),
+					Item::get(Item::CHAIN_BOOTS)
 				];
 				$this->setItems($items, $armorItems);
 				$powers = [

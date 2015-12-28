@@ -79,7 +79,7 @@ class PyroKit extends ClassicKit{
 				break;
 			case 2:
 				$items = [
-					Item::get(Item::STONE_SWORD),
+					Item::get(Item::GOLDEN_SWORD),
 					Item::get(Item::APPLE)
 				];
 				$armorItems = [
@@ -98,8 +98,8 @@ class PyroKit extends ClassicKit{
 				break;
 			case 3:
 				$items = [
-					Item::get(Item::STONE_SWORD),
-					Item::get(Item::COOKED_CHICKEN)
+					Item::get(Item::GOLDEN_SWORD),
+					Item::get(Item::APPLE)
 				];
 				$armorItems = [
 					Item::get(Item::GOLD_HELMET),

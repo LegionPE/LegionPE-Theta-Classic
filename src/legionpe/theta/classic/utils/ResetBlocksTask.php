@@ -17,6 +17,8 @@ namespace legionpe\theta\classic\utils;
 
 use pocketmine\block\Block;
 use pocketmine\level\Position;
+use pocketmine\math\Vector3;
+use pocketmine\Player;
 use pocketmine\scheduler\PluginTask;
 use legionpe\theta\classic\ClassicPlugin;
 
@@ -34,10 +36,16 @@ class ResetBlocksTask extends PluginTask{
 	}
 	public function onRun($ticks){
 		foreach($this->blocks as $block){
-			$block[0]->getLevel()->setBlock($block[0], $block[1]);
+			$continue = true;
+			if($block[2] instanceof Player){
+				if($block[2]->getPosition()->equals($block[0])){
+					$continue = false;
+				}
+			}
+			if($continue) $block[0]->getLevel()->setBlock($block[0], $block[1]);
 		}
 	}
-	public function addBlock(Position $position, Block $block){
-		$this->blocks[] = [$position, $block];
+	public function addBlock(Position $position, Block $block, Player $player = null){
+		$this->blocks[] = [$position, $block, $player];
 	}
 }
