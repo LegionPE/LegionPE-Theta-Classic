@@ -18,6 +18,7 @@ namespace legionpe\theta\classic\utils;
 use pocketmine\block\Block;
 use pocketmine\level\Position;
 use pocketmine\math\Vector3;
+use pocketmine\network\protocol\UpdateBlockPacket;
 use pocketmine\Player;
 use pocketmine\scheduler\PluginTask;
 use legionpe\theta\classic\ClassicPlugin;
@@ -38,11 +39,11 @@ class ResetBlocksTask extends PluginTask{
 		foreach($this->blocks as $block){
 			$continue = true;
 			if($block[2] instanceof Player){
-				if($block[2]->getPosition()->equals($block[0])){
+				if($block[2]->getPosition()->distance($block[0]) < 3){
 					$continue = false;
 				}
 			}
-			if($continue) $block[0]->getLevel()->setBlock($block[0], $block[1]);
+			if($continue) $block[0]->getLevel()->sendBlocks($this->plugin->getServer()->getOnlinePlayers(), [$block[1]], UpdateBlockPacket::FLAG_ALL_PRIORITY);
 		}
 	}
 	public function addBlock(Position $position, Block $block, Player $player = null){

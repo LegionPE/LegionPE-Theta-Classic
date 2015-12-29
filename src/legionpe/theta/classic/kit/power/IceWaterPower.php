@@ -21,6 +21,7 @@ use pocketmine\block\Block;
 use pocketmine\item\Item;
 use pocketmine\level\Position;
 use pocketmine\math\Vector3;
+use pocketmine\network\protocol\UpdateBlockPacket;
 
 class IceWaterPower extends ClassicKitPower{
 	/** @var \pocketmine\item\Item */
@@ -74,22 +75,13 @@ class IceWaterPower extends ClassicKitPower{
 			$x = $player->getX();
 			$y = $player->getFloorY() - 1;
 			$z = $player->getZ();
-			$block = $level->getBlock(new Vector3($x, $y + 1, $z));
-			if($block->getId() === Block::STILL_WATER or $block->getId() === Block::WATER){
-				for($i = ($y + 1); $i < ($y + 6); $i++){
-					if($level->getBlock(new Vector3($x, $i, $z))->getId() === Block::ICE){
-						$session->getPlayer()->teleport(new Vector3($x, $i + 1, $z));
-						break;
-					}
-				}
-			}
 			for($lX = ($x - 2); $lX < ($x + 2); $lX++){
-				for($lY = ($y + 2); $lY > ($y - 3); $lY--){
+				for($lY = $y; $lY > ($y - 1); $lY--){
 					for($lZ = ($z - 2); $lZ < ($z + 2); $lZ++){
 						$block = $level->getBlock(new Vector3($lX, $lY, $lZ));
 						if($block->getId() === Block::STILL_WATER and $level->getBlock(new Vector3($lX, $lY + 1, $lZ))->getId() === Block::AIR){
 							$this->task->addBlock(new Position($block->getFloorX(), $block->getFloorY(), $block->getFloorZ(), $block->getLevel()), $block, $player);
-							$level->setBlock(new Vector3($lX, $lY, $lZ), Block::get(Block::ICE));
+							$block->getLevel()->sendBlocks($this->getServer()->getOnlinePlayers(), [Block::get(Block::PACKED_ICE, 0, new Position($lX, $lY, $lZ))], UpdateBlockPacket::FLAG_ALL_PRIORITY);
 						}
 					}
 				}
