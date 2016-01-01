@@ -23,9 +23,10 @@ use legionpe\theta\classic\kit\power\StrengthPower;
 use legionpe\theta\classic\utils\ResetBlocksTask;
 use pocketmine\item\Item;
 
-class PyroKit extends ClassicKit{
+class FrozoneKit extends ClassicKit{
 	/** @var \legionpe\theta\classic\utils\ResetBlocksTask */
 	private $task;
+	public $id = self::KIT_ID_FROZONE;
 	public function __construct($level, ResetBlocksTask $task){
 		$this->setName("Frozone");
 		$this->setDescription("Ice.");

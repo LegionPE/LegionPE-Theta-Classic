@@ -15,6 +15,7 @@
 
 namespace legionpe\theta\classic\shop;
 
+use legionpe\theta\classic\ClassicSession;
 use pocketmine\network\protocol\MobArmorEquipmentPacket;
 use pocketmine\network\protocol\MobEquipmentPacket;
 use pocketmine\network\protocol\SetEntityDataPacket;
@@ -24,35 +25,34 @@ use pocketmine\entity\Entity;
 use pocketmine\level\Position;
 use pocketmine\level\particle\FloatingTextParticle;
 use legionpe\theta\classic\kit\ClassicKit;
-use legionpe\theta\Session;
 use pocketmine\network\protocol\AddPlayerPacket;
 
 class KitStand{
-	/** @var Session */
-	private $session;
+	/** @var ClassicSession */
+	protected $session;
 	/** @var ClassicKit */
-	private $kit;
+	protected $kit;
 	/** @var int */
-	private $npcEid;
+	protected $npcEid;
 	/** @var Position */
-	private $npcPos;
+	protected $npcPos;
 	/** @var int */
-	private $yaw;
+	protected $yaw;
 	/** @var Position */
-	private $nextPos = null;
+	protected $nextPos = null;
 	/** @var Position */
-	private $backPos = null;
+	protected $backPos = null;
 	/** @var FloatingTextParticle */
-	private $floatingPowers = null;
+	protected $floatingPowers = null;
 	/**
-	 * @param Session $session
+	 * @param ClassicSession $session
 	 * @param ClassicKit $kit
 	 * @param Position $npcPos
 	 * @param int $yaw
 	 * @param Position $next
 	 * @param Position $back
 	 */
-	public function __construct(Session $session, ClassicKit $kit, Position $npcPos, $yaw, Position $next, Position $back){
+	public function __construct(ClassicSession $session, ClassicKit $kit, Position $npcPos, $yaw, Position $next, Position $back){
 		$this->session = $session;
 		$this->kit = $kit;
 		$this->level = $session->getPlayer()->getLevel();
@@ -64,7 +64,7 @@ class KitStand{
 		$pk = new AddPlayerPacket();
 		$this->npcEid = Entity::$entityCount++;
 		$pk->uuid = UUID::fromData($this->npcEid, "", "");
-		$pk->username = TextFormat::GREEN . $this->kit->getName() . TextFormat::WHITE . " - " . TextFormat::AQUA . "level " . TextFormat::GREEN . $this->kit->level . "\n" . TextFormat::GREEN . "Description: " . TextFormat::AQUA . $this->kit->getDescription();
+		$pk->username = TextFormat::AQUA . ($session->getKitLevel($kit) >= $kit->level ? "Unlocked" : "$" . $kit->getPrice()) . "\n" . TextFormat::GREEN . $this->kit->getName() . TextFormat::WHITE . " - " . TextFormat::AQUA . "level " . TextFormat::GREEN . $this->kit->level . "\n" . TextFormat::GREEN . "Description: " . TextFormat::AQUA . $this->kit->getDescription();
 		$pk->eid = $this->npcEid;
 		$pk->x = $npcPos->getX();
 		$pk->y = $npcPos->getY();
@@ -85,7 +85,30 @@ class KitStand{
 		$this->floatingPowers = new FloatingTextParticle($this->getFloatingTextPositionOppositeNpc(2, 0, 0, 0 , 1.5), $powers, TextFormat::GREEN . "Powers: ");
 		$player->getLevel()->addParticle($this->floatingPowers, [$player]);
 	}
-
+	/**
+	 * @return ClassicKit
+	 */
+	public function getKit(){
+		return $this->kit;
+	}
+	/**
+	 * @return int
+	 */
+	public function getEid(){
+		return $this->npcEid;
+	}
+	public function next(){
+		if($this->kit->level <= $this->kit->maxLevel){
+			$this->kit->setLevel(++$this->kit->level);
+			$this->update();
+		}
+	}
+	public function back(){
+		if($this->kit->level !== 1){
+			$this->kit->setLevel(--$this->kit->level);
+			$this->update();
+		}
+	}
 	private function getFloatingTextPositionOppositeNpc($left, $right, $front, $back, $y){
 		$npcX = $this->npcPos->getX();
 		$npcZ = $this->npcPos->getZ();
@@ -102,7 +125,7 @@ class KitStand{
 		}
 		return $position;
 	}
-	private function update(){
+	public function update(){
 		$player = $this->session->getPlayer();
 		$pk = new MobArmorEquipmentPacket();
 		$pk->eid = $this->npcEid;
@@ -116,7 +139,7 @@ class KitStand{
 		$player->dataPacket($pk);
 		$pk = new SetEntityDataPacket();
 		$pk->eid = $this->npcEid;
-		$pk->metadata = [Entity::DATA_NAMETAG => [Entity::DATA_TYPE_STRING, TextFormat::GREEN . $this->kit->getName() . TextFormat::WHITE . " - " . TextFormat::AQUA . "level " . TextFormat::GREEN . $this->kit->level . "\n" . TextFormat::GREEN . "Description: " . TextFormat::AQUA . $this->kit->getDescription()]];
+		$pk->metadata = [Entity::DATA_NAMETAG => [Entity::DATA_TYPE_STRING, TextFormat::AQUA . ($this->session->getKitLevel($this->kit) >= $this->kit->level ? "Unlocked" : "$" . $this->kit->getPrice()) . "\n" . TextFormat::GREEN . $this->kit->getName() . TextFormat::WHITE . " - " . TextFormat::AQUA . "level " . TextFormat::GREEN . $this->kit->level . "\n" . TextFormat::GREEN . "Description: " . TextFormat::AQUA . $this->kit->getDescription()]];
 		$player->dataPacket($pk);
 		$powers = "";
 		foreach($this->kit->getPowers() as $power){

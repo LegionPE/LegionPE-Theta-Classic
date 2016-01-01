@@ -22,6 +22,7 @@ use legionpe\theta\classic\kit\power\StrengthPower;
 use pocketmine\item\Item;
 
 class KnightKit extends ClassicKit{
+	public $id = self::KIT_ID_KNIGHT;
 	public function __construct($level){
 		$this->setName("Knight");
 		$this->setDescription("I have shiny silver armour!");

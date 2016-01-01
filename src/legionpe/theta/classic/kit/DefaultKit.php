@@ -22,6 +22,7 @@ use legionpe\theta\classic\kit\power\StrengthPower;
 use pocketmine\item\Item;
 
 class DefaultKit extends ClassicKit{
+	public $id = self::KIT_ID_DEFAULT;
 	public function __construct($level){
 		$this->setName("Default");
 		$this->setDescription("Default kit.");

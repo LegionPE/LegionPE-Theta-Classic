@@ -23,6 +23,7 @@ use legionpe\theta\classic\kit\power\NoLavaDamagePower;
 use pocketmine\item\Item;
 
 class PyroKit extends ClassicKit{
+	public $id = self::KIT_ID_PYRO;
 	public function __construct($level){
 		$this->setName("Pyro");
 		$this->setDescription("I like to play with fire.");

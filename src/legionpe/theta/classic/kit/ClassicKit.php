@@ -18,9 +18,12 @@ namespace legionpe\theta\classic\kit;
 use legionpe\theta\classic\ClassicSession;
 
 abstract class ClassicKit{
+	CONST KIT_ID_DEFAULT = 0, KIT_ID_FROZONE = 1, KIT_ID_KNIGHT = 2, KIT_ID_PYRO = 3;
 	/** @var string */
 	protected $name;
 	public $level;
+	public $id;
+	public $maxLevel = 4;
 	/** @var int */
 	private $price;
 	/** @var string */
@@ -34,6 +37,22 @@ abstract class ClassicKit{
 	public abstract function setLevel($level);
 	public abstract function equip(ClassicSession $session);
 
+	/**
+	 * @param $id
+	 * @return mixed
+	 */
+	public static function getKitClassById($id){
+		switch($id){
+			case self::KIT_ID_DEFAULT:
+				return DefaultKit::class;
+			case self::KIT_ID_FROZONE:
+				return FrozoneKit::class;
+			case self::KIT_ID_KNIGHT:
+				return KnightKit::class;
+			case self::KIT_ID_PYRO:
+				return PyroKit::class;
+		}
+	}
 	/**
 	 * @param string $name
 	 */

@@ -20,6 +20,12 @@ use legionpe\theta\classic\battle\ClassicBattle;
 use legionpe\theta\classic\battle\ClassicBattleKit;
 use legionpe\theta\classic\battle\queue\ClassicBattleQueue;
 use legionpe\theta\classic\kit\ClassicKit;
+use legionpe\theta\classic\kit\DefaultKit;
+use legionpe\theta\classic\kit\FrozoneKit;
+use legionpe\theta\classic\kit\KnightKit;
+use legionpe\theta\classic\kit\PyroKit;
+use legionpe\theta\classic\shop\CurrentKitStand;
+use legionpe\theta\classic\shop\KitStand;
 use legionpe\theta\Friend;
 use legionpe\theta\lang\Phrases;
 use legionpe\theta\query\SetFriendQuery;
@@ -28,6 +34,7 @@ use legionpe\theta\utils\MUtils;
 use legionpe\theta\utils\SpawnGhastParticle;
 use pocketmine\block\Block;
 use pocketmine\entity\Arrow;
+use pocketmine\level\Position;
 use pocketmine\network\protocol\UpdateAttributesPacket;
 use pocketmine\entity\Effect;
 use pocketmine\entity\Egg;
@@ -74,6 +81,7 @@ class ClassicSession extends Session{
 	public $battleLastRequest = 0, $battleLastSentRequest = 0;
 	/** @var kit\ClassicKit|null */
 	public $currentKit = null;
+	public $kitData = [];
 	/** @var int */
 	public $timesHitWithoutResponse = 0;
 	/** @var bool */
@@ -93,6 +101,10 @@ class ClassicSession extends Session{
 	private $lastRespawnTime;
 	/** @var EntityDamageByEntityEvent|null */
 	private $lastFallLavaCause = null;
+	/** @var shop\KitStand */
+	public $kitStands = [];
+	/** @var shop\CurrentKitStand */
+	public $currentKitStand;
 	private $counter = 0;
 	private $invincible = false, $movementBlocked = false;
 	private $combatModeExpiry = 0;
@@ -103,7 +115,6 @@ class ClassicSession extends Session{
 			$this->setLoginDatum("pvp_init", time());
 		}
 		if($main instanceof ClassicPlugin){
-			$battles = $main->getBattles();
 			if(count($battles) !== 0){
 				foreach($battles as $battle){
 					foreach($battle->getSessions() as $session){
@@ -112,6 +123,9 @@ class ClassicSession extends Session{
 				}
 			}
 		}
+	}
+	public function getKitLevel(ClassicKit $kit){
+		return $this->kitData[$kit->id];
 	}
 	public function onTeleport(EntityTeleportEvent $event){
 		if($this->battle instanceof ClassicBattle){
@@ -422,6 +436,18 @@ class ClassicSession extends Session{
 	}
 	public function login($method){
 		parent::login($method);
+		$currentKitStand = new CurrentKitStand($this, $this->currentKit, new Position(), 0, new Position(), new Position());
+		$this->currentKitStand = $currentKitStand;
+		$this->kitStands[$currentKitStand->getEid()] = $currentKitStand;
+		$default = new KitStand($this, new DefaultKit(1), new Position(), 0, new Position(), new Position());
+		$this->kitStands[$default->getEid()] = $default;
+		$frozone = new KitStand($this, new FrozoneKit(1, ($this->main instanceof ClassicPlugin ? $this->main->resetBlocksTask : null)), new Position(), 0, new Position(), new Position());
+		$this->kitStands[$frozone->getEid()] = $frozone;
+		$knight = new KitStand($this, new KnightKit(1), new Position(), 0, new Position(), new Position());
+		$this->kitStands[$knight->getEid()] = $knight;
+		$pyro = new KitStand($this, new PyroKit(1), new Position(), 0, new Position(), new Position());
+		$this->kitStands[$pyro->getEid()] = $pyro;
+
 		$this->onRespawn(new PlayerRespawnEvent($this->getPlayer(), $this->getPlayer()->getPosition()));
 		$this->getMain()->getServer()->getLevelByName("world_pvp")->addParticle(new FloatingTextParticle(new Vector3(304, 49, -150), $this->translate(Phrases::PVP_LEAVE_SPAWN_HINT)), [$this->getPlayer()]);
 		foreach($this->getMain()->getQueueBlocks() as $queueBlock){
