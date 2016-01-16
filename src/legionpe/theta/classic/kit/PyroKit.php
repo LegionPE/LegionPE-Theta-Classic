@@ -92,7 +92,7 @@ class PyroKit extends ClassicKit{
 				$this->setItems($items, $armorItems);
 				$powers = [
 					new FirePower("Fire", "Set players on fire when you hit them", $level, $orangeDye),
-					new NoLavaDamagePower("No lava damage", "You will not receive any damage when you're in lava", $level)
+					new NoLavaDamagePower("No lava", "You will not receive any damage when you're in lava", $level)
 				];
 				$this->setPowers($powers);
 				$this->setPrice(5000);
@@ -138,5 +138,6 @@ class PyroKit extends ClassicKit{
 				$this->setPrice(7000);
 				break;
 		}
+		$this->level = $level;
 	}
 }

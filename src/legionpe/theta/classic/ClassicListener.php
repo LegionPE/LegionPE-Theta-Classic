@@ -30,7 +30,7 @@ use pocketmine\network\protocol\InteractPacket;
 use pocketmine\utils\TextFormat;
 
 class ClassicListener extends BaseListener{
-	public function onPacketReceive(DataPacketReceiveEvent $event){
+	public function onPacketRecv(DataPacketReceiveEvent $event){
 		$packet = $event->getPacket();
 		if($packet instanceof InteractPacket){
 			if($packet->action === 2){
@@ -38,16 +38,22 @@ class ClassicListener extends BaseListener{
 				if($ses instanceof ClassicSession){
 					if(isset($ses->kitStands[$packet->target])){
 						$kit = $ses->kitStands[$packet->target]->getKit();
-						if($kit->getLevel() <= $kit->id){
+						if($kit->getLevel() <= $ses->getKitLevel($kit)){
 							$ses->currentKit = $kit;
 							$ses->sendMessage(TextFormat::AQUA . "You have selected the kit " . TextFormat::GREEN . $kit->getName() . "\n" . TextFormat::AQUA . "You can change the level of the kit at the 'current kit' stand.");
 							$ses->setLoginDatum("pvp_kit", $kit->id);
 						}else{
+							if($kit->getLevel() !== $ses->getKitLevel($kit) + 1){
+								$ses->sendMessage(TextFormat::AQUA . "To upgrade this kit, you have to choose level " . ($ses->getKitLevel($kit) + 1));
+								return;
+							}
 							if($ses->getCoins() >= $kit->getPrice()){
-								$ses->kitData[$kit->id] = $kit->getLevel();
+								$kitData[$kit->id] = $kit->getLevel();
+								$ses->setLoginDatum("kitData", $kitData);
+								$ses->setKitLevel($kit, $kit->getLevel());
 								$ses->setCoins($ses->getCoins() - $kit->getPrice());
 								$ses->kitStands[$packet->target]->update();
-								$ses->sendMessage(TextFormat::AQUA . "You have unlocked level " . TextFormat::RED . $kit->getLevel() . TextFormat::AQUA . " (kit {$kit->getName()} \nTo use this kit (and this level), please go to the 'current kit' stand.");
+								$ses->sendMessage(TextFormat::AQUA . "You have unlocked level " . TextFormat::RED . $kit->getLevel() . TextFormat::AQUA . " (kit {$kit->getName()} \nTo use this kit, please hit the NPC again.");
 							}
 						}
 					}

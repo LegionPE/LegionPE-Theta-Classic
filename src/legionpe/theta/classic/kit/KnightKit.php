@@ -136,5 +136,6 @@ class KnightKit extends ClassicKit{
 				$this->setPrice(12000);
 				break;
 		}
+		$this->level = $level;
 	}
 }

@@ -76,10 +76,8 @@ class ClassicPlugin extends BasePlugin{
 			[Item::get(276), $apple],
 			[]);
 		$this->queueManager = new QueueManager($this);
-		$this->queueBlocks[] = new ClassicBattleQueueBlock($this, $level->getBlock(new Vector3(297, 38, -137)), '0 queueing', 1, false, false);
-		$this->queueBlocks[] = new ClassicBattleQueueBlock($this, $level->getBlock(new Vector3(299, 38, -137)), '0 queueing', 1, false, false);
-		$this->queueBlocks[] = new ClassicBattleQueueBlock($this, $level->getBlock(new Vector3(303, 38, -137)), '0 queueing', 2, false, false);
-		$this->queueBlocks[] = new ClassicBattleQueueBlock($this, $level->getBlock(new Vector3(305, 38, -137)), '0 queueing', 2, false, false);
+		$this->queueBlocks[] = new ClassicBattleQueueBlock($this, $level->getBlock(new Vector3(299, 38, -116)), '0 queueing', 1, false, false);
+		$this->queueBlocks[] = new ClassicBattleQueueBlock($this, $level->getBlock(new Vector3(303, 38, -116)), '0 queueing', 2, false, false);
 		$this->resetBlocksTask = new ResetBlocksTask($this);
 		$this->getServer()->getScheduler()->scheduleRepeatingTask($this->resetBlocksTask, 40);
 		$this->tpMgr = new TeleportManager($this);

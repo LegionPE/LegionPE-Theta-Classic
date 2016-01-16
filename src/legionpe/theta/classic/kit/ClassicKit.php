@@ -54,6 +54,12 @@ abstract class ClassicKit{
 		}
 	}
 	/**
+	 * @return array
+	 */
+	public static function getKitIds(){
+		return [self::KIT_ID_DEFAULT, self::KIT_ID_FROZONE, self::KIT_ID_KNIGHT, self::KIT_ID_PYRO];
+	}
+	/**
 	 * @param string $name
 	 */
 	protected function setName($name){
@@ -100,13 +106,13 @@ abstract class ClassicKit{
 	/**
 	 * @return \pocketmine\item\Item[]
 	 */
-	protected function getItems(){
+	public function getItems(){
 		return $this->items;
 	}
 	/**
 	 * @return \pocketmine\item\Item[]
 	 */
-	protected function getArmorItems(){
+	public function getArmorItems(){
 		return $this->armorItems;
 	}
 	/**
@@ -120,5 +126,11 @@ abstract class ClassicKit{
 	 */
 	public function getPowers(){
 		return $this->powers;
+	}
+	/**
+	 * @return mixed
+	 */
+	public function getLevel(){
+		return $this->level;
 	}
 }

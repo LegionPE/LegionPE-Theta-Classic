@@ -80,7 +80,6 @@ class ClassicBattleKit{
 		}
 		$session->getPlayer()->setMaxHealth($this->maxHealth);
 		$session->getPlayer()->setHealth($this->maxHealth);
-		$session->getPlayer()->getAttribute()->addAttribute(AttributeManager::MAX_HEALTH, "generic.health", 0, $this->maxHealth, $this->maxHealth, $this->maxHealth, true);
 		//$ev = new EntityRegainHealthEvent($session->getPlayer(), 20, EntityRegainHealthEvent::CAUSE_MAGIC);
 		//$session->getPlayer()->heal(20, $ev);
 	}

@@ -16,6 +16,7 @@
 namespace legionpe\theta\classic\query;
 
 use legionpe\theta\BasePlugin;
+use legionpe\theta\classic\ClassicPlugin;
 use legionpe\theta\classic\ClassicSession;
 use legionpe\theta\config\Settings;
 use legionpe\theta\query\SaveSinglePlayerQuery;
@@ -23,9 +24,16 @@ use legionpe\theta\Session;
 use pocketmine\Server;
 
 class ClassicSaveSinglePlayerQuery extends SaveSinglePlayerQuery{
+	private $uid;
+	private $kitData;
 	private $kills;
 	private $userId;
 	private $rank;
+	public function __construct(ClassicPlugin $plugin, ClassicSession $session, $status){
+		$this->uid = $session->getUid();
+		$this->kitData = $session->getLoginDatum("kitData");
+		parent::__construct($plugin, $session, $status);
+	}
 	public function getColumns(Session $session, $status){
 		$this->userId = $session->getUid();
 		$cols = parent::getColumns($session, $status);
@@ -44,6 +52,9 @@ class ClassicSaveSinglePlayerQuery extends SaveSinglePlayerQuery{
 		$result = $db->query("SELECT COUNT(*) + 1 AS rank FROM users WHERE pvp_kills > $this->kills AND (config & $statsPublic) = $statsPublic");
 		$this->rank = $result->fetch_assoc()["rank"];
 		$result->close();
+		foreach($this->kitData as $kitid=>$kitlevel){
+			$db->query("INSERT INTO purchases_kit (uid, kitid, kitlevel) VALUES ($this->uid, $kitid, $kitlevel) ON DUPLICATE KEY UPDATE kitlevel=$kitlevel");
+		}
 	}
 	public function onCompletion(Server $server){
 		$main = BasePlugin::getInstance($server);

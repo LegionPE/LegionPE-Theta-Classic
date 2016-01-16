@@ -19,6 +19,7 @@ use legionpe\theta\classic\ClassicSession;
 use pocketmine\network\protocol\MobArmorEquipmentPacket;
 use pocketmine\network\protocol\MobEquipmentPacket;
 use pocketmine\network\protocol\SetEntityDataPacket;
+use pocketmine\utils\MainLogger;
 use pocketmine\utils\TextFormat;
 use pocketmine\utils\UUID;
 use pocketmine\entity\Entity;
@@ -38,10 +39,10 @@ class KitStand{
 	protected $npcPos;
 	/** @var int */
 	protected $yaw;
-	/** @var Position */
-	protected $nextPos = null;
-	/** @var Position */
-	protected $backPos = null;
+	/** @var Position[] */
+	protected $nextPos = [];
+	/** @var Position[] */
+	protected $backPos = [];
 	/** @var FloatingTextParticle */
 	protected $floatingPowers = null;
 	/**
@@ -49,12 +50,14 @@ class KitStand{
 	 * @param ClassicKit $kit
 	 * @param Position $npcPos
 	 * @param int $yaw
-	 * @param Position $next
-	 * @param Position $back
+	 * @param Position[] $next
+	 * @param Position[] $back
+	 * @param Position[] $floatingPos
 	 */
-	public function __construct(ClassicSession $session, ClassicKit $kit, Position $npcPos, $yaw, Position $next, Position $back){
+	public function __construct(ClassicSession $session, ClassicKit $kit, Position $npcPos, $yaw, $back, $next, Position $floatingPos){
 		$this->session = $session;
 		$this->kit = $kit;
+		$this->yaw = $yaw;
 		$this->level = $session->getPlayer()->getLevel();
 		$this->npcPos = $npcPos;
 		$this->nextPos = $next;
@@ -64,7 +67,7 @@ class KitStand{
 		$pk = new AddPlayerPacket();
 		$this->npcEid = Entity::$entityCount++;
 		$pk->uuid = UUID::fromData($this->npcEid, "", "");
-		$pk->username = TextFormat::AQUA . ($session->getKitLevel($kit) >= $kit->level ? "Unlocked" : "$" . $kit->getPrice()) . "\n" . TextFormat::GREEN . $this->kit->getName() . TextFormat::WHITE . " - " . TextFormat::AQUA . "level " . TextFormat::GREEN . $this->kit->level . "\n" . TextFormat::GREEN . "Description: " . TextFormat::AQUA . $this->kit->getDescription();
+		$pk->username = TextFormat::AQUA . ($session->getKitLevel($kit) >= $kit->level ? "Unlocked" : $kit->getPrice() . " coins") . "\n" . TextFormat::GREEN . $this->kit->getName() . TextFormat::WHITE . " - " . TextFormat::AQUA . "level " . TextFormat::GREEN . $this->kit->level;
 		$pk->eid = $this->npcEid;
 		$pk->x = $npcPos->getX();
 		$pk->y = $npcPos->getY();
@@ -77,12 +80,16 @@ class KitStand{
 		$pk->item = $kit->getItems()[0];
 		$pk->metadata = [];
 		$player->dataPacket($pk);
+		$pk = new MobArmorEquipmentPacket();
+		$pk->eid = $this->npcEid;
+		$pk->slots = $this->kit->getArmorItems();
+		$player->dataPacket($pk);
 		$powers = "";
 		foreach($this->kit->getPowers() as $power){
-			$powers .= TextFormat::RED . "- " . TextFormat::GREEN . $power->getName() . ": " .  TextFormat::AQUA . $power->getDescription() . "\n  " . TextFormat::GREEN . "Duration: " . TextFormat::AQUA . $power->getDuration() . "\n  " . TextFormat::GREEN . "Delay: " . TextFormat::AQUA . ($power->isPermanent ? "None, permanent power (always active)" :  $power->getDelay()) . "\n";
+			$powers .= TextFormat::RED . "- " . TextFormat::GREEN . $power->getName() . ": " .  TextFormat::AQUA . chunk_split($power->getDescription(), 24, "\n   " . TextFormat::AQUA) . TextFormat::GREEN . "Duration: " . TextFormat::AQUA . $power->getDuration() . "\n   " . TextFormat::GREEN . "Delay: " . TextFormat::AQUA . ($power->isPermanent ? "None, permanent power (always active)" :  $power->getDelay()) . "\n";
 
 		}
-		$this->floatingPowers = new FloatingTextParticle($this->getFloatingTextPositionOppositeNpc(2, 0, 0, 0 , 1.5), $powers, TextFormat::GREEN . "Powers: ");
+		$this->floatingPowers = new FloatingTextParticle($floatingPos, $powers, TextFormat::GREEN . "Powers: ");
 		$player->getLevel()->addParticle($this->floatingPowers, [$player]);
 	}
 	/**
@@ -114,13 +121,13 @@ class KitStand{
 		$npcZ = $this->npcPos->getZ();
 		$y += $this->npcPos->getZ();
 		$position = null;
-		if($this->yaw < 90){
+		if($this->yaw <= 90){
 			$position = new Position($npcX + $left - $right, $y, $npcZ + $front - $back, $this->npcPos->getLevel());
-		}elseif($this->yaw < 180){
+		}elseif($this->yaw <= 180){
 			$position = new Position($npcX - $front + $back, $y, $npcZ - $right + $left, $this->npcPos->getLevel());
-		}elseif($this->yaw < 180){
+		}elseif($this->yaw <= 270){
 			$position = new Position($npcX - $left + $right, $y, $npcZ - $front + $back, $this->npcPos->getLevel());
-		}elseif($this->yaw < 360){
+		}elseif($this->yaw <= -90){
 			$position = new Position($npcX + $front - $back, $y, $npcZ + $right - $left, $this->npcPos->getLevel());
 		}
 		return $position;
@@ -139,11 +146,11 @@ class KitStand{
 		$player->dataPacket($pk);
 		$pk = new SetEntityDataPacket();
 		$pk->eid = $this->npcEid;
-		$pk->metadata = [Entity::DATA_NAMETAG => [Entity::DATA_TYPE_STRING, TextFormat::AQUA . ($this->session->getKitLevel($this->kit) >= $this->kit->level ? "Unlocked" : "$" . $this->kit->getPrice()) . "\n" . TextFormat::GREEN . $this->kit->getName() . TextFormat::WHITE . " - " . TextFormat::AQUA . "level " . TextFormat::GREEN . $this->kit->level . "\n" . TextFormat::GREEN . "Description: " . TextFormat::AQUA . $this->kit->getDescription()]];
+		$pk->metadata = [Entity::DATA_NAMETAG => [Entity::DATA_TYPE_STRING, TextFormat::AQUA . ($this->session->getKitLevel($this->kit) >= $this->kit->level ? "Unlocked" : $this->kit->getPrice() . " coins") . "\n" . TextFormat::GREEN . $this->kit->getName() . TextFormat::WHITE . " - " . TextFormat::AQUA . "level " . TextFormat::GREEN . $this->kit->level]];
 		$player->dataPacket($pk);
 		$powers = "";
 		foreach($this->kit->getPowers() as $power){
-			$powers .= TextFormat::RED . "- " . TextFormat::GREEN . $power->getName() . ": " .  TextFormat::AQUA . $power->getDescription() . "\n  " . TextFormat::GREEN . "Duration: " . TextFormat::AQUA . $power->getDuration() . "\n  " . TextFormat::GREEN . "Delay: " . TextFormat::AQUA . ($power->isPermanent ? "None, permanent power (always active)" :  $power->getDelay()) . "\n";
+			$powers .= TextFormat::RED . "- " . TextFormat::GREEN . $power->getName() . ": " .  TextFormat::AQUA . chunk_split($power->getDescription(), 24, "\n   " . TextFormat::AQUA) . TextFormat::GREEN . "Duration: " . TextFormat::AQUA . $power->getDuration() . "\n   " . TextFormat::GREEN . "Delay: " . TextFormat::AQUA . ($power->isPermanent ? "None, always active" : $power->getDelay()) . "\n";
 
 		}
 		$this->floatingPowers->setText($powers);
@@ -155,5 +162,25 @@ class KitStand{
 		}else{
 			$player->dataPacket($encode);
 		}
+	}
+	public function isNextPosition(Position $position){
+		foreach($this->nextPos as $pos){
+			if($pos->x === $position->x and $pos->y === $position->y and $pos->z === $position->z and $pos->level->getId() === $pos->level->getId()){
+				var_dump("hit");
+				return true;
+				break;
+			}
+		}
+		return false;
+	}
+	public function isBackPosition(Position $position){
+		foreach($this->backPos as $pos){
+			if($pos->equals($position)){
+				var_dump("hit");
+				return true;
+				break;
+			}
+		}
+		return false;
 	}
 }

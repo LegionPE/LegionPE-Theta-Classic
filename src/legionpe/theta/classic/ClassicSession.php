@@ -101,7 +101,7 @@ class ClassicSession extends Session{
 	private $lastRespawnTime;
 	/** @var EntityDamageByEntityEvent|null */
 	private $lastFallLavaCause = null;
-	/** @var shop\KitStand */
+	/** @var shop\KitStand[] */
 	public $kitStands = [];
 	/** @var shop\CurrentKitStand */
 	public $currentKitStand;
@@ -115,17 +115,47 @@ class ClassicSession extends Session{
 			$this->setLoginDatum("pvp_init", time());
 		}
 		if($main instanceof ClassicPlugin){
-			if(count($battles) !== 0){
-				foreach($battles as $battle){
-					foreach($battle->getSessions() as $session){
-						$session->getPlayer()->hidePlayer($this->getPlayer());
-					}
+			foreach($main->getBattles() as $battle){
+				foreach($battle->getSessions() as $session){
+					$session->getPlayer()->hidePlayer($this->getPlayer());
 				}
 			}
 		}
 	}
+	public function setCurrentKit(ClassicKit $kit){
+		$this->currentKit = $kit;
+		$this->setLoginDatum('pvp_kit', $kit->id);
+	}
+	public function setCurrentKitById($id, $level){
+		$class = ClassicKit::getKitClassById($id);
+		switch($class){
+			case FrozoneKit::class:
+				if($this->main instanceof ClassicPlugin){
+					$this->currentKit = new $class($level, $this->main->resetBlocksTask);
+				}
+				break;
+			default:
+				$this->currentKit = new $class($level);
+		}
+		$this->setLoginDatum('pvp_kit', $this->currentKit->id);
+	}
 	public function getKitLevel(ClassicKit $kit){
-		return $this->kitData[$kit->id];
+		$kitData = $this->getLoginDatum('kitData');
+		return isset($kitData[$kit->id]) ? (int) $kitData[$kit->id] : ($kit->id === ClassicKit::KIT_ID_DEFAULT ? 1 : 0);
+	}
+	public function getKitLevelById($id){
+		$kitData = $this->getLoginDatum('kitData');
+		return isset($kitData[$id]) ? (int) $kitData[$id] : ($id === ClassicKit::KIT_ID_DEFAULT ? 1 : 0);
+	}
+	public function setKitLevel(ClassicKit $kit, $level){
+		$kitData = $this->getLoginDatum('kitData');
+		$kitData[$kit->id] = $level;
+		$this->setLoginDatum('kitData', $kitData);
+	}
+	public function setKitLevelById($id, $level){
+		$kitData = $this->getLoginDatum('kitData');
+		$kitData[$id] = $level;
+		$this->setLoginDatum('kitData', $kitData);
 	}
 	public function onTeleport(EntityTeleportEvent $event){
 		if($this->battle instanceof ClassicBattle){
@@ -406,11 +436,11 @@ class ClassicSession extends Session{
 		if(!parent::onMove($event) or $this->movementBlocked){
 			return false;
 		}
-		if(ClassicConsts::spawnPortal($this->getPlayer())){
+		/*if(ClassicConsts::spawnPortal($this->getPlayer())){
 			$this->getPlayer()->teleport(ClassicConsts::getRandomSpawnPosition($this->getMain()->getServer()));
 			$this->lastRespawnTime = microtime(true);
 			$this->getPlayer()->addEffect(Effect::getEffect(Effect::INVISIBILITY)->setDuration(ClassicConsts::RESPAWN_INVINCIBILITY * 20)->setVisible(false));
-		}
+		}*/
 		if(!ClassicConsts::isSpawn($this->getPlayer()->getPosition())){
 			if($this->currentKit instanceof ClassicKit){
 				foreach($this->currentKit->getPowers() as $power){
@@ -436,20 +466,107 @@ class ClassicSession extends Session{
 	}
 	public function login($method){
 		parent::login($method);
-		$currentKitStand = new CurrentKitStand($this, $this->currentKit, new Position(), 0, new Position(), new Position());
+		// $this->setCurrentKitById($this->getLoginDatum('pvp_kit'), $this->getKitLevelById($this->getLoginDatum('pvp_kit')));
+		$this->setCurrentKitById(ClassicKit::KIT_ID_DEFAULT, 1);
+		if($this->currentKit instanceof ClassicKit){
+			$this->currentKit->equip($this);
+		}
+
+		$level = $this->getPlayer()->getLevel();
+		$currentKitStand = new CurrentKitStand($this, $this->currentKit,
+			new Position(-2.5, 7, 1.5, $level),
+			0,
+			[
+				new Position(-4, 6, 1, $level),
+				new Position(-3, 6, 2, $level),
+				new Position(-2, 6, 1, $level),
+				new Position(-3, 6, 0, $level)
+			],
+			[
+				new Position(-4, 9, 1, $level),
+				new Position(-3, 9, 2, $level),
+				new Position(-2, 9, 1, $level),
+				new Position(-3, 9, 0, $level)
+			],
+			new Position(0.5, 9.5, 1, $level)
+		);
 		$this->currentKitStand = $currentKitStand;
 		$this->kitStands[$currentKitStand->getEid()] = $currentKitStand;
-		$default = new KitStand($this, new DefaultKit(1), new Position(), 0, new Position(), new Position());
+
+
+		$default = new KitStand($this, new DefaultKit(1),
+			new Position(-2.5, 7, 14.5, $level),
+			180,
+			[
+				new Position(-2, 6, 14, $level),
+				new Position(-3, 6, 13, $level),
+				new Position(-4, 6, 14, $level)
+			],
+			[
+				new Position(-2, 9, 14, $level),
+				new Position(-3, 9, 13, $level),
+				new Position(-4, 9, 14, $level)
+			],
+			new Position(-5.5, 9.5, 14, $level)
+		);
 		$this->kitStands[$default->getEid()] = $default;
-		$frozone = new KitStand($this, new FrozoneKit(1, ($this->main instanceof ClassicPlugin ? $this->main->resetBlocksTask : null)), new Position(), 0, new Position(), new Position());
-		$this->kitStands[$frozone->getEid()] = $frozone;
-		$knight = new KitStand($this, new KnightKit(1), new Position(), 0, new Position(), new Position());
+
+		/*$frozone = new KitStand($this, new FrozoneKit(1, $this->main->resetBlocksTask),
+			new Position(-2.5, 7, -11.5, $level),
+			0,
+			[
+				new Position(-1, 6, -11, $level),
+				new Position(-2, 6, -10, $level),
+				new Position(-3, 6, -11, $level)
+			],
+			[
+				new Position(-1, 9, -11, $level),
+				new Position(-2, 9, -10, $level),
+				new Position(-3, 9, -11, $level)
+			],
+			new Position(0, 8, -11, $level)
+		);
+		$this->kitStands[$frozone->getEid()] = $frozone;*/
+
+
+		$knight = new KitStand($this, new KnightKit(1),
+			new Position(-15.5, 7, 1.5, $level),
+			-90,
+			[
+				new Position(-16, 6, 2, $level),
+				new Position(-15, 6, 1, $level),
+				new Position(-16, 6, 0, $level)
+			],
+			[
+				new Position(-16, 9, 2, $level),
+				new Position(-15, 9, 1, $level),
+				new Position(-16, 9, 0, $level)
+			],
+			new Position(-15, 9.5, -2, $level)
+		);
 		$this->kitStands[$knight->getEid()] = $knight;
-		$pyro = new KitStand($this, new PyroKit(1), new Position(), 0, new Position(), new Position());
+
+		$pyro = new KitStand($this, new PyroKit(1),
+			new Position(10.5, 7, 1.5, $level),
+			90,
+			[
+				new Position(10, 6, 0, $level),
+				new Position(9, 6, 1, $level),
+				new Position(10, 6, 2, $level)
+			],
+			[
+				new Position(10, 9, 0, $level),
+				new Position(9, 9, 1, $level),
+				new Position(10, 9, 2, $level)
+			],
+			new Position(10, 9.5, 4.5, $level)
+		);
 		$this->kitStands[$pyro->getEid()] = $pyro;
 
-		$this->onRespawn(new PlayerRespawnEvent($this->getPlayer(), $this->getPlayer()->getPosition()));
-		$this->getMain()->getServer()->getLevelByName("world_pvp")->addParticle(new FloatingTextParticle(new Vector3(304, 49, -150), $this->translate(Phrases::PVP_LEAVE_SPAWN_HINT)), [$this->getPlayer()]);
+
+
+		//$this->onRespawn(new PlayerRespawnEvent($this->getPlayer(), $this->getPlayer()->getPosition()));
+		//$this->getMain()->getServer()->getLevelByName("world_pvp")->addParticle(new FloatingTextParticle(new Vector3(304, 49, -150), $this->translate(Phrases::PVP_LEAVE_SPAWN_HINT)), [$this->getPlayer()]);
 		foreach($this->getMain()->getQueueBlocks() as $queueBlock){
 			$queueBlock->addSession($this);
 		}
@@ -491,9 +608,12 @@ class ClassicSession extends Session{
 		$this->getPlayer()->setHealth(40); // float(20)
 		$event->setRespawnPosition($spawn = ClassicConsts::getSpawnPosition($this->getMain()->getServer()));
 		$this->getPlayer()->teleport($spawn);
+		if($this->currentKit instanceof ClassicKit){
+			$this->currentKit->equip($this);
+		}
 //		$this->getPlayer()->setNameTag($this->calculateNameTag(TextFormat::WHITE, $this->getPlayer()->getMaxHealth()));
-		$this->getPlayer()->getInventory()->clearAll();
-		$this->getPlayer()->getInventory()->sendArmorContents($this->getPlayer()->getInventory()->getViewers());
+		//$this->getPlayer()->getInventory()->clearAll();
+		//$this->getPlayer()->getInventory()->sendArmorContents($this->getPlayer()->getInventory()->getViewers());
 	}
 	public function onPlace(BlockPlaceEvent $event){
 		return false;
@@ -502,8 +622,10 @@ class ClassicSession extends Session{
 		if(!parent::onInteract($event)){
 			return false;
 		}
+		$block = $event->getBlock();
+		$this->getMain()->getLogger()->info("Touched {$block->x} {$block->y} {$block->z}");
 		foreach($this->getMain()->getQueueBlocks() as $queueBlock){
-			if($event->getBlock()->getX() === $queueBlock->getBlock()->getX() and $event->getBlock()->getY() === $queueBlock->getBlock()->getY() and $event->getBlock()->getZ() === $event->getBlock()->getZ()){
+			if($block->getX() === $queueBlock->getBlock()->getX() and $block->getY() === $queueBlock->getBlock()->getY() and $block->getZ() === $queueBlock->getBlock()->getZ()){
 				if(!$this->isQueueing){
 					$queue = new ClassicBattleQueue($this->getMain()->getQueueManager(), $this, false, false, $queueBlock->getType());
 					$this->getPlayer()->sendMessage(TextFormat::GOLD . "You are queueing for a " . TextFormat::RED . "Battle" . TextFormat::GOLD . " with type " . TextFormat::RED . "{$queueBlock->getType()}v{$queueBlock->getType()}");
@@ -512,6 +634,14 @@ class ClassicSession extends Session{
 				}else{
 					$this->getPlayer()->sendMessage(TextFormat::GOLD . "You are already queueing.");
 				}
+			}
+		}
+		$pos = new Position($block->getX(), $block->getY(), $block->getZ(), $event->getPlayer()->getLevel());
+		foreach($this->kitStands as $kitStand){
+			if($kitStand->isNextPosition($pos)){
+				$kitStand->next();
+			}elseif($kitStand->isBackPosition($pos)){
+				$kitStand->back();
 			}
 		}
 	}
@@ -716,7 +846,8 @@ class ClassicSession extends Session{
 	}
 
 	public function equip(){
-		$inv = $this->getPlayer()->getInventory();
+		$this->currentKit->equip($this);
+		/*$inv = $this->getPlayer()->getInventory();
 		if($inv === null){
 			return;
 		}
@@ -734,7 +865,7 @@ class ClassicSession extends Session{
 		$inv->setHotbarSlotIndex(1, 1);
 		$inv->setHotbarSlotIndex(2, 2);
 		$inv->setHotbarSlotIndex(3, 3);
-		$inv->sendContents([$this->getPlayer()]);
+		$inv->sendContents([$this->getPlayer()]);*/
 	}
 	public function halfSecondTick(){
 		parent::halfSecondTick();
@@ -744,7 +875,7 @@ class ClassicSession extends Session{
 				$amount = ClassicConsts::getAutoHeal($this);
 				$this->getPlayer()->heal($amount, new EntityRegainHealthEvent($this->getPlayer(), $amount, EntityRegainHealthEvent::CAUSE_REGEN));
 			}
-			$this->getPlayer()->setFood(19);
+			//$this->getPlayer()->setFood(19);
 			if($this->currentKit instanceof ClassicKit){
 				foreach($this->currentKit->getPowers() as $power){
 					if(!$power->isPermanent){
@@ -766,8 +897,8 @@ class ClassicSession extends Session{
 				$this->setInvincible(false);
 				$this->hasEquipped = true;
 				$this->equip();
-				$this->getPlayer()->setFood(19);
-				$this->getPlayer()->setFoodEnabled(false);
+				//$this->getPlayer()->setFood(19);
+				//$this->getPlayer()->setFoodEnabled(false);
 				// night vision not found
 				// $this->getPlayer()->addEffect(Effect::getEffect(Effect::NIGHT_VISION)->setVisible(false)->setAmplifier(0x7FFFFF));
 			}

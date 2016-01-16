@@ -15,6 +15,7 @@
 
 namespace legionpe\theta\classic\query;
 
+use legionpe\theta\classic\kit\ClassicKit;
 use legionpe\theta\query\LoginDataQuery;
 
 class ClassicLoginDataQuery extends LoginDataQuery{
@@ -35,5 +36,23 @@ class ClassicLoginDataQuery extends LoginDataQuery{
 		$r["battle_wins"] = self::COL_INT;
 		$r["battle_losses"] = self::COL_INT;
 		return $r;
+	}
+	protected function onAssocFetched(\mysqli $mysqli, array &$row){
+		parent::onAssocFetched($mysqli, $row);
+		$query = $mysqli->query("SELECT * FROM purchases_kit WHERE uid = {$row['uid']}");
+		$kitData = [];
+		while($queryRow = $query->fetch_assoc()){
+			$kitData[(int) $queryRow['kitid']] = (int) $queryRow['kitlevel'];
+		}
+		foreach(ClassicKit::getKitIds() as $id){
+			if(!isset($kitData[$id])){
+				if($id === ClassicKit::KIT_ID_DEFAULT){
+					$kitData[$id] = 1;
+				}else{
+					$kitData[$id] = 0;
+				}
+			}
+		}
+		$row['kitData'] = $kitData;
 	}
 }

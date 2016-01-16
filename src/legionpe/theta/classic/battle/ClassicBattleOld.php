@@ -70,7 +70,6 @@ class ClassicBattleOld{
 		$player->teleport($this->position);
 		$player->setMaxHealth($this->maxHealth);
 		$player->setHealth($this->health);
-		$player->getAttribute()->addAttribute(AttributeManager::MAX_HEALTH, "generic.health", 0, $this->maxHealth, $this->health, $this->health, true);
 		$player->setNameTag($this->nameTag);
 	}
 }

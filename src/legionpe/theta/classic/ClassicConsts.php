@@ -39,10 +39,10 @@ class ClassicConsts{
 		return ($player->y < 18) and self::isSpawnArea($player);
 	}
 	private static function isSpawnArea(Vector3 $v){
-		return (270 <= $v->x) and ($v->x <= 344) and (-179 <= $v->z) and ($v->z <= -115);
+		return (($v->x >= -22) and ($v->x <= 17) and ($v->z <= 21) and ($v->z >= -18) and ($v->y >= 11)) or (($v->y >= 6) and ($v->x <= 11) and ($v->x >= -16) and ($v->z >= -12) and ($v->z <= 15));
 	}
 	public static function getSpawnPosition(Server $server){
-		return new Position(304, 48, -153, $server->getLevelByName("world_pvp"));
+		return new Position(-2, 12, 1, $server->getLevelByName("world_pvp"));
 	}
 	public static function getRandomSpawnPosition(Server $server){
 		$spawns = [

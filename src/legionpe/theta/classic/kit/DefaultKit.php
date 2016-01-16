@@ -130,5 +130,6 @@ class DefaultKit extends ClassicKit{
 				$this->setPrice(7000);
 				break;
 		}
+		$this->level = $level;
 	}
 }

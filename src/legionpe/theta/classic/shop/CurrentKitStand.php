@@ -31,14 +31,15 @@ class CurrentKitStand extends KitStand{
 	 * @param ClassicKit $kit
 	 * @param Position $npcPos
 	 * @param int $yaw
-	 * @param Position $next
-	 * @param Position $back
+	 * @param Position[] $next
+	 * @param Position[] $back
+	 * @param Position[] $floatingPos
 	 */
-	public function __construct(ClassicSession $session, ClassicKit $kit, Position $npcPos, $yaw, Position $next, Position $back){
-		parent::__construct($session, $kit, $npcPos, $yaw, $next, $back);
+	public function __construct(ClassicSession $session, ClassicKit $kit, Position $npcPos, $yaw, $next, $back, Position $floatingPos){
+		parent::__construct($session, $kit, $npcPos, $yaw, $next, $back, $floatingPos);
 		$pk = new SetEntityDataPacket();
 		$pk->eid = $this->npcEid;
-		$pk->metadata = [Entity::DATA_NAMETAG => [Entity::DATA_TYPE_STRING, TextFormat::AQUA . TextFormat::GREEN . $this->kit->getName() . TextFormat::WHITE . " - " . TextFormat::AQUA . "level " . TextFormat::GREEN . $this->kit->level . "\n" . TextFormat::GREEN . "Description: " . TextFormat::AQUA . $this->kit->getDescription()]];
+		$pk->metadata = [Entity::DATA_NAMETAG => [Entity::DATA_TYPE_STRING, TextFormat::AQUA . TextFormat::GREEN . $this->kit->getName() . TextFormat::WHITE . " - " . TextFormat::AQUA . "level " . TextFormat::GREEN . $this->kit->level]];
 		$session->getPlayer()->dataPacket($pk);
 	}
 	public function next(){
@@ -53,7 +54,7 @@ class CurrentKitStand extends KitStand{
 			$this->update();
 		}
 	}
-	private function update(){
+	public function update(){
 		$player = $this->session->getPlayer();
 		$pk = new MobArmorEquipmentPacket();
 		$pk->eid = $this->npcEid;

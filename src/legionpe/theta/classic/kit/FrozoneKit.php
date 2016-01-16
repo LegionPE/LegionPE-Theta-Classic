@@ -141,5 +141,6 @@ class FrozoneKit extends ClassicKit{
 				$this->setPrice(10000);
 				break;
 		}
+		$this->level = $level;
 	}
 }
