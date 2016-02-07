@@ -67,6 +67,7 @@ use pocketmine\level\particle\FloatingTextParticle;
 use pocketmine\math\Vector3;
 use pocketmine\Player;
 use pocketmine\utils\TextFormat;
+use legionpe\theta\classic\battle\ClassicBattleArena;
 
 const ENABLE_HEALTHBAR = true;
 
@@ -77,6 +78,8 @@ class ClassicSession extends Session{
 	private $battle = null;
 	/** @var ClassicSession|null */
 	public $battleRequest = null, $battleRequestSentTo = null;
+	/** @var ClassicBattleArena */
+	public $battleArena = null;
 	/** @var int */
 	public $battleLastRequest = 0, $battleLastSentRequest = 0;
 	/** @var kit\ClassicKit|null */
@@ -105,6 +108,7 @@ class ClassicSession extends Session{
 	public $kitStands = [];
 	/** @var shop\CurrentKitStand */
 	public $currentKitStand;
+	private $prePrefix = "";
 	private $counter = 0;
 	private $invincible = false, $movementBlocked = false;
 	private $combatModeExpiry = 0;
@@ -172,12 +176,12 @@ class ClassicSession extends Session{
 		if($this->invincible){
 			return false;
 		}
-		if($event->getCause() === EntityDamageEvent::CAUSE_FALL){
+		/*if($event->getCause() === EntityDamageEvent::CAUSE_FALL){
 			return false;
-		}
-		if($event->getCause() === EntityDamageEvent::CAUSE_SUICIDE){
+		}*/
+		/*if($event->getCause() === EntityDamageEvent::CAUSE_SUICIDE){
 			return true;
-		}
+		}*/
 		if(ClassicConsts::isSpawn($this->getPlayer())){
 			return false;
 		}
@@ -198,62 +202,6 @@ class ClassicSession extends Session{
 					return false;
 				}
 				if($ses instanceof ClassicSession){
-					if($ses->getBattle() instanceof ClassicBattle and $this->getBattle() instanceof ClassicBattle){
-						if($ses->getBattle() === $this->getBattle()){
-							if($this->getBattle()->getSessionType($ses) !== ClassicBattle::PLAYER_STATUS_SPECTATING){
-								if($this->getBattle()->getSessionType($this) !== ClassicBattle::PLAYER_STATUS_SPECTATING){
-									if($this->getBattle()->getSessionTeam($this) !== $ses->getBattle()->getSessionTeam($ses)){
-										if($event->getDamage() >= $this->getPlayer()->getHealth()){
-											$sessionCount = count($this->getBattle()->getSessions());
-											$ses->sendMessage(TextFormat::GOLD . "You killed " . TextFormat::RED . $this->getPlayer()->getName());
-											$this->sendMessage(TextFormat::RED . $ses->getPlayer()->getName() . TextFormat::GOLD . " killed you with " . TextFormat::RED . ($this->getPlayer()->getHealth() / 2) . " hearts");
-											$event->setDamage(0);
-											if($sessionCount === 2){ // if the battle is a 1v1
-												$this->getBattle()->addRoundWinner($ses);
-												if($this->getBattle()->getRound() === $this->getBattle()->getMaxRounds()){
-													$this->getBattle()->setStatus(ClassicBattle::STATUS_ENDING, TextFormat::GOLD . TextFormat::GOLD . TextFormat::GOLD . "The Battle has ended.", $this->getBattle()->getOverallWinner());
-												}else{
-													$this->getBattle()->setStatus(ClassicBattle::STATUS_STARTING, TextFormat::GOLD . "Round winner: " . TextFormat::RED . $ses->getPlayer()->getName());
-												}
-											}else{
-												$this->getBattle()->setSessionType($this, ClassicBattle::PLAYER_STATUS_SPECTATING); // set the killed player to spectator mode
-												$spectatingPlayersCount = 0;
-												$winners = [];
-												$team = $this->getBattle()->getSessionTeam($this);
-												foreach($this->getBattle()->getTeams() as $killedTeam => $newSessions){
-													foreach($newSessions as $newSession){ // newSession = a session from the battle
-														if($team === $killedTeam){
-															if($this->getBattle()->getSessionType($newSession) === ClassicBattle::PLAYER_STATUS_SPECTATING){
-																$spectatingPlayersCount++;
-																if($newSession !== $this) $newSession->sendMessage(TextFormat::GREEN . $this->getPlayer()->getName() . TextFormat::GOLD . " was killed by " . TextFormat::RED . $ses->getPlayer()->getName());
-																/*
-	                                                              if the newSession team was equal to the team that the killed player was in and the newSession was in spectator mode, add one to the spectatingPlayersCount
-	                                                            */
-															}
-														}else{
-															$winners[] = $newSession->getPlayer()->getName();
-															$newSession->sendMessage(TextFormat::GREEN . $ses->getPlayer()->getName() . TextFormat::GOLD . " killed " . TextFormat::RED . $this->getPlayer()->getName());
-															// or add the player to the winners, so if this is the last round then we know who the winners are
-														}
-													}
-												}
-												if($spectatingPlayersCount === $sessionCount / 2){ // if the amount of spectating players (from the killed player team) is equal to the amount of players in one team
-													$this->getBattle()->addRoundWinner($ses);
-													if($this->getBattle()->getRound() === $this->getBattle()->getMaxRounds()){ // battle ends
-														$this->getBattle()->setStatus(ClassicBattle::STATUS_ENDING, TextFormat::GOLD . TextFormat::GOLD . "The Battle has ended.", $this->getBattle()->getOverallWinner());
-													}else{
-														$this->getBattle()->setStatus(ClassicBattle::STATUS_STARTING, TextFormat::GOLD . "Round winner: " . TextFormat::RED . implode(", ", $winners));
-													}
-												}
-											}
-										}
-										return true;
-									}
-								}
-							}
-							return false;
-						}
-					}
 					$this->setCombatMode();
 					$ses->setCombatMode();
 					if($ses->isInvincible()){
@@ -320,6 +268,9 @@ class ClassicSession extends Session{
 		if($deficit > 0){
 			$event->setDamage($event->getDamage() - $deficit);
 		}
+		if($this->getBattle() instanceof ClassicBattle){
+			$this->getBattle()->EntityDamageEvent($event);
+		}
 		return true;
 	}
 	public function onDeath(PlayerDeathEvent $event){
@@ -336,6 +287,7 @@ class ClassicSession extends Session{
 		$this->setMaximumStreak(max($streak, $maxStreak));
 		$cause = $this->getPlayer()->getLastDamageCause();
 		$this->addDeath();
+		$this->getMain()->getLogger()->info($event->getEntity()->getName() . " died. Cause: " . $event->getEntity()->getLastDamageCause()->getEventName());
 		if(!($cause instanceof EntityDamageEvent)){
 			$this->send(Phrases::PVP_DEATH_GENERIC);
 			return true;
@@ -349,7 +301,7 @@ class ClassicSession extends Session{
 					$kn = $ks->getInGameName();
 					$ks->setCombatMode(false);
 					$amount = ClassicConsts::getKillHeal($ks);
-					$killer->heal($amount, new EntityRegainHealthEvent($killer, $amount, EntityRegainHealthEvent::CAUSE_CUSTOM));
+					//$killer->heal($amount, new EntityRegainHealthEvent($killer, $amount, EntityRegainHealthEvent::CAUSE_CUSTOM));
 				}
 			}
 			if(!isset($kn)){
@@ -466,14 +418,25 @@ class ClassicSession extends Session{
 	}
 	public function login($method){
 		parent::login($method);
-		// $this->setCurrentKitById($this->getLoginDatum('pvp_kit'), $this->getKitLevelById($this->getLoginDatum('pvp_kit')));
-		$this->setCurrentKitById(ClassicKit::KIT_ID_DEFAULT, 1);
-		if($this->currentKit instanceof ClassicKit){
-			$this->currentKit->equip($this);
+		if($this->isDonator()){
+			$this->prePrefix .= TextFormat::YELLOW . "Donator";
 		}
+		if($this->isDonatorPlus()){
+			$this->prePrefix .= "+";
+		}
+		if($this->isVIP()){
+			$this->prePrefix = TextFormat::GOLD . "VIP";
+		}
+		if($this->isVIPPlus()){
+			$this->prePrefix .= "+";
+		}
+		// $this->setCurrentKitById($this->getLoginDatum('pvp_kit'), $this->getKitLevelById($this->getLoginDatum('pvp_kit')));
+		$this->setCurrentKitById(ClassicKit::KIT_ID_KNIGHT, 3);
+		$this->currentKit->equip($this);
+		//$this->onRespawn(new PlayerRespawnEvent($this->getPlayer(), $this->getPlayer()->getPosition()));
 
 		$level = $this->getPlayer()->getLevel();
-		$currentKitStand = new CurrentKitStand($this, $this->currentKit,
+		$currentKitStand = new CurrentKitStand($this,
 			new Position(-2.5, 7, 1.5, $level),
 			0,
 			[
@@ -564,8 +527,6 @@ class ClassicSession extends Session{
 		$this->kitStands[$pyro->getEid()] = $pyro;
 
 
-
-		//$this->onRespawn(new PlayerRespawnEvent($this->getPlayer(), $this->getPlayer()->getPosition()));
 		//$this->getMain()->getServer()->getLevelByName("world_pvp")->addParticle(new FloatingTextParticle(new Vector3(304, 49, -150), $this->translate(Phrases::PVP_LEAVE_SPAWN_HINT)), [$this->getPlayer()]);
 		foreach($this->getMain()->getQueueBlocks() as $queueBlock){
 			$queueBlock->addSession($this);
@@ -623,9 +584,8 @@ class ClassicSession extends Session{
 			return false;
 		}
 		$block = $event->getBlock();
-		$this->getMain()->getLogger()->info("Touched {$block->x} {$block->y} {$block->z}");
 		foreach($this->getMain()->getQueueBlocks() as $queueBlock){
-			if($block->getX() === $queueBlock->getBlock()->getX() and $block->getY() === $queueBlock->getBlock()->getY() and $block->getZ() === $queueBlock->getBlock()->getZ()){
+			if($block->equals($queueBlock->getBlock())){
 				if(!$this->isQueueing){
 					$queue = new ClassicBattleQueue($this->getMain()->getQueueManager(), $this, false, false, $queueBlock->getType());
 					$this->getPlayer()->sendMessage(TextFormat::GOLD . "You are queueing for a " . TextFormat::RED . "Battle" . TextFormat::GOLD . " with type " . TextFormat::RED . "{$queueBlock->getType()}v{$queueBlock->getType()}");
@@ -661,33 +621,37 @@ class ClassicSession extends Session{
 	public function onPickupArrow(InventoryPickupArrowEvent $event){
 		return parent::onPickupArrow($event);
 	}
-	public function onItemHold(PlayerItemHeldEvent $event){
+	public function onHoldItem(PlayerItemHeldEvent $event){
 		if(!parent::onHoldItem($event)){
 			return false;
 		}
 		if($this->currentKit instanceof ClassicKit){
 			foreach($this->currentKit->getPowers() as $power){
 				if(isset($power->item)){
-					if($event->getItem()->equals($power->item)){
-						if($power->isActive()){
-							$this->getPlayer()->sendTip(TextFormat::RED . "This power is already active.");
-						}else{
-							foreach($this->currentKit->getPowers() as $powerTwo){
-								if($powerTwo->isActive() and !$powerTwo->isPermanent){
-									$this->getPlayer()->sendTip(TextFormat::RED . "You currently have another power active.");
-									return false;
-									break;
+					if($power->item instanceof Item){
+						if($event->getItem()->getId() === $power->item->getId() and $event->getItem()->getDamage() === $power->item->getDamage()){
+							if($power->isActive()){
+								$this->getPlayer()->sendPopup(TextFormat::RED . "This power is already active. ");
+							}else{
+								foreach($this->currentKit->getPowers() as $powerTwo){
+									if($powerTwo->isActive() and !$powerTwo->isPermanent){
+										$this->getPlayer()->sendTip(TextFormat::RED . "You currently have another power active.");
+										return false;
+										break;
+									}
+								}
+								$time = $power->getTimeTillNextActivate();
+								if($time <= 0){
+									$power->setActive(true);
+									$this->getPlayer()->sendTip(TextFormat::GREEN . $power->getName() . " has been activated.");
+								}else{
+									$this->getPlayer()->sendTip(TextFormat::RED . $time . " seconds left before you can use this power.");
 								}
 							}
-							$time = $power->getTimeTillNextActivate();
-							if($time <= 0){
-								$power->setActive(true);
-							}else{
-								$this->getPlayer()->sendTip(TextFormat::RED . $time . " seconds left before you can use this power.");
-							}
+							return false;
+							break;
 						}
-						return false;
-						break;
+						$event->getPlayer()->getInventory()->setHotbarSlotIndex(0, 0);
 					}
 				}
 			}
@@ -873,18 +837,9 @@ class ClassicSession extends Session{
 			$this->counter = 0;
 			if($this->getPlayer()->getHealth() > 0 and $this->getPlayer()->getHealth() !== $this->getPlayer()->getMaxHealth()){
 				$amount = ClassicConsts::getAutoHeal($this);
-				$this->getPlayer()->heal($amount, new EntityRegainHealthEvent($this->getPlayer(), $amount, EntityRegainHealthEvent::CAUSE_REGEN));
+				//$this->getPlayer()->heal($amount, new EntityRegainHealthEvent($this->getPlayer(), $amount, EntityRegainHealthEvent::CAUSE_REGEN));
 			}
 			//$this->getPlayer()->setFood(19);
-			if($this->currentKit instanceof ClassicKit){
-				foreach($this->currentKit->getPowers() as $power){
-					if(!$power->isPermanent){
-						if($power->isActive()){ // updates
-							$this->getPlayer()->sendTip(TextFormat::RED . $power->getName() . TextFormat::GREEN . " power time left: " . ($power->getDuration() - $power->getTimeActive()));
-						}
-					}
-				}
-			}
 		}
 		if($this->isPlaying()){
 			$respawn = (int) (ClassicConsts::RESPAWN_INVINCIBILITY - microtime(true) + $this->lastRespawnTime);
@@ -903,6 +858,15 @@ class ClassicSession extends Session{
 				// $this->getPlayer()->addEffect(Effect::getEffect(Effect::NIGHT_VISION)->setVisible(false)->setAmplifier(0x7FFFFF));
 			}
 		}
+		if($this->currentKit instanceof ClassicKit){
+			foreach($this->currentKit->getPowers() as $power){
+				if(!$power->isPermanent){
+					if($power->isActive()){ // updates
+						$this->getPlayer()->sendTip(TextFormat::RED . $power->getName() . TextFormat::GREEN . " power time left: " . ($power->getDuration() - $power->getTimeActive()));
+					}
+				}
+			}
+		}
 		$nameTag = $this->calculateNameTag();
 		if($nameTag !== $this->getPlayer()->getNameTag()){
 			if(!($this->getBattle() instanceof ClassicBattle)){
@@ -912,7 +876,8 @@ class ClassicSession extends Session{
 	}
 	protected function chatPrefix(){
 		if($this->isStatsPublic() and $this->globalRank > 0 and $this->getKills() > 0){
-			return Phrases::VAR_symbol . "{" . Phrases::VAR_em . $this->getKills() . Phrases::VAR_em2 . "#" . $this->globalRank . Phrases::VAR_symbol . "}";
+			//return Phrases::VAR_symbol . "{" . Phrases::VAR_em . $this->getKills() . Phrases::VAR_em2 . "#" . $this->globalRank . Phrases::VAR_symbol . "}";
+			return $this->prePrefix . TextFormat::GRAY . "[" . ClassicConsts::getKillsTag($this->getKills()) . TextFormat::GRAY . "]{" . TextFormat::GOLD . "#" . $this->globalRank . TextFormat::GRAY . "}";
 		}
 		return "";
 	}

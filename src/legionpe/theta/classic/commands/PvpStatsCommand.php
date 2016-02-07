@@ -21,6 +21,7 @@ use legionpe\theta\command\SessionCommand;
 use legionpe\theta\Friend;
 use legionpe\theta\lang\Phrases;
 use legionpe\theta\Session;
+use pocketmine\utils\TextFormat;
 
 class PvpStatsCommand extends SessionCommand{
 	public function __construct(BasePlugin $main){
@@ -29,6 +30,9 @@ class PvpStatsCommand extends SessionCommand{
 	protected function run(array $args, Session $sender){
 		/** @var ClassicSession $sender */
 		if(isset($args[0])){
+			if(!$sender->isVIP()){
+				return TextFormat::RED . "You have to be VIP to view someone else's stats.";
+			}
 			$session = $this->getSession($name = array_shift($args));
 			if($session === null){
 				return $this->notOnline($sender, $name);

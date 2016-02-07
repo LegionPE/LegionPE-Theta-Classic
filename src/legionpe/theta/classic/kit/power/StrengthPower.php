@@ -29,19 +29,19 @@ class StrengthPower extends ClassicKitPower{
 		switch($level){
 			case 1:
 				$this->delay = 120;
-				$this->duration = 10;
+				$this->duration = 5;
 				break;
 			case 2:
 				$this->delay = 120;
-				$this->duration = 15;
+				$this->duration = 5;
 				break;
 			case 3:
 				$this->delay = 90;
-				$this->duration = 15;
+				$this->duration = 5;
 				break;
 			case 4:
 				$this->delay = 90;
-				$this->duration = 15;
+				$this->duration = 10;
 				break;
 		}
 	}

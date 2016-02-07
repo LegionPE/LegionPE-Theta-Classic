@@ -18,6 +18,7 @@ namespace legionpe\theta\classic\commands;
 use legionpe\theta\BasePlugin;
 use legionpe\theta\classic\battle\ClassicBattle;
 use legionpe\theta\classic\battle\ClassicBattleKit;
+use legionpe\theta\classic\ClassicPlugin;
 use legionpe\theta\classic\ClassicSession;
 use legionpe\theta\command\SessionCommand;
 use legionpe\theta\Session;
@@ -25,10 +26,13 @@ use pocketmine\item\Item;
 
 class BattleCommand extends SessionCommand{
 	public function __construct(BasePlugin $main){
-		parent::__construct($main, "battle", "Send a battle request", "/battle <player>", ["11"]);
+		parent::__construct($main, "battle", "Send a battle request", "/battle <player> <spawn|flyingship|flyingcastle>");
 	}
 	protected function run(array $args, Session $host){
-		if(!isset($args[0])){
+		if(!isset($args[0]) or !isset($args[1])){
+			return false;
+		}
+		if(!($this->getMain() instanceof ClassicPlugin)){
 			return false;
 		}
 		if(!($host instanceof ClassicSession)){
@@ -52,7 +56,7 @@ class BattleCommand extends SessionCommand{
 								$arena = $host->getMain()->getBattleArenas();
 								shuffle($arena);
 								$arena = $arena[0];
-								$battle = new ClassicBattle($host->getMain(), [[$host], [$host->battleRequest]], 3, 60, $kit, $arena);
+								$battle = new ClassicBattle($host->getMain(), [[$host], [$host->battleRequest]], 3, 60, $kit, $host->battleArena);
 								foreach($battle->getSessions() as $session){
 									$session->battleRequestSentTo = null;
 									$session->battleRequest = null;
@@ -78,6 +82,10 @@ class BattleCommand extends SessionCommand{
 				}
 			}
 		}
+		if(!isset($host->getMain()->battleArenas[$args[1]])){
+			return "Arena not found. Arenas: " . implode("|", $host->getMain()->battleArenas);
+		}
+		$arena = $host->getMain()->battleArenas[$args[1]];
 		if(!$host->isDonator()){
 			return "You have to be Donator to use this command.";
 		}
@@ -103,6 +111,7 @@ class BattleCommand extends SessionCommand{
 		$host->battleLastSentRequest = time();
 		$opponent->battleRequest = $host;
 		$opponent->battleLastRequest = time();
+		$opponent->battleArena = $arena;
 		$opponent->sendMessage("You have received a request from {$host->getPlayer()->getName()} to Battle.\nTo accept this request, type /battle {$host->getPlayer()->getName()}");
 		$host->sendMessage("Request sent to {$opponent->getPlayer()->getName()}");
 		return true;

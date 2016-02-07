@@ -108,7 +108,7 @@ class ClassicBattleQueueBlock{
 	 * @param ClassicSession $session
 	 */
 	public function addSession(ClassicSession $session){
-		$particle = new FloatingTextParticle(new Vector3($this->block->getFloorX(), $this->block->getFloorY(), $this->block->getFloorZ()), $this->text, TextFormat::RED . "Battles " . TextFormat::GOLD . "({$this->type}v{$this->type})");
+		$particle = new FloatingTextParticle(new Vector3($this->block->getFloorX(), $this->block->getFloorY() + 2, $this->block->getFloorZ()), $this->text, TextFormat::RED . "Battles " . TextFormat::GOLD . "({$this->type}v{$this->type})");
 		$this->block->getLevel()->addParticle($particle, [$session->getPlayer()]);
 		$this->floatingTextParticles[$session->getPlayer()->getName()] = $particle;
 	}

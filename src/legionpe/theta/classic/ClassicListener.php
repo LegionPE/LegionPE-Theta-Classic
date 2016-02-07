@@ -30,6 +30,7 @@ use pocketmine\network\protocol\InteractPacket;
 use pocketmine\utils\TextFormat;
 
 class ClassicListener extends BaseListener{
+	private $lastTouch = [];
 	public function onPacketRecv(DataPacketReceiveEvent $event){
 		$packet = $event->getPacket();
 		if($packet instanceof InteractPacket){
@@ -37,23 +38,38 @@ class ClassicListener extends BaseListener{
 				$ses = $this->getMain()->getSession($event->getPlayer());
 				if($ses instanceof ClassicSession){
 					if(isset($ses->kitStands[$packet->target])){
+						$kitStand = $ses->kitStands[$packet->target];
 						$kit = $ses->kitStands[$packet->target]->getKit();
 						if($kit->getLevel() <= $ses->getKitLevel($kit)){
 							$ses->currentKit = $kit;
-							$ses->sendMessage(TextFormat::AQUA . "You have selected the kit " . TextFormat::GREEN . $kit->getName() . "\n" . TextFormat::AQUA . "You can change the level of the kit at the 'current kit' stand.");
+							$ses->currentKitStand->update();
+							$ses->sendMessage(TextFormat::AQUA . "You have selected the kit " . TextFormat::GREEN . $kit->getName());
+							if($kitStand !== $ses->currentKitStand) $ses->sendMessage(TextFormat::AQUA . "You can change the level of the kit at the 'current kit' stand.");
 							$ses->setLoginDatum("pvp_kit", $kit->id);
 						}else{
 							if($kit->getLevel() !== $ses->getKitLevel($kit) + 1){
-								$ses->sendMessage(TextFormat::AQUA . "To upgrade this kit, you have to choose level " . ($ses->getKitLevel($kit) + 1));
+								$ses->sendMessage(TextFormat::AQUA . "To upgrade this kit, you have to choose level " . ($ses->getKitLevel($kit) + 1) . ".");
 								return;
 							}
 							if($ses->getCoins() >= $kit->getPrice()){
-								$kitData[$kit->id] = $kit->getLevel();
-								$ses->setLoginDatum("kitData", $kitData);
-								$ses->setKitLevel($kit, $kit->getLevel());
-								$ses->setCoins($ses->getCoins() - $kit->getPrice());
-								$ses->kitStands[$packet->target]->update();
-								$ses->sendMessage(TextFormat::AQUA . "You have unlocked level " . TextFormat::RED . $kit->getLevel() . TextFormat::AQUA . " (kit {$kit->getName()} \nTo use this kit, please hit the NPC again.");
+								if(!isset($this->lastTouch[$ses->getUid()])){
+									$this->lastTouch[$ses->getUid()] = [time(), $kitStand->getEid()];
+									$ses->sendMessage(TextFormat::AQUA . "Hit the NPC again to purchase and unlock the kit.");
+									return;
+								}
+								if(time() - $this->lastTouch[$ses->getUid()][0] <= 5 and $this->lastTouch[$ses->getUid()][1] === $kitStand->getEid()){
+									$kitData[$kit->id] = $kit->getLevel();
+									$ses->setLoginDatum("kitData", $kitData);
+									$ses->setKitLevel($kit, $kit->getLevel());
+									$ses->setCoins($ses->getCoins() - $kit->getPrice());
+									$ses->kitStands[$packet->target]->update();
+									$ses->sendMessage(TextFormat::AQUA . "You spent {$kit->getPrice()} ({$ses->getCoins()} left) to unlocked level " . TextFormat::RED . $kit->getLevel() . TextFormat::AQUA . " (kit {$kit->getName()}) \nTo use this kit, please hit the NPC again.");
+								}else{
+									$this->lastTouch[$ses->getUid()] = [time(), $kitStand->getEid()];
+									$ses->sendMessage(TextFormat::AQUA . "Hit the NPC again to purchase and unlock the kit.");
+								}
+							}else{
+								$ses->sendMessage(TextFormat::AQUA . "You do not have enough coins to unlock this level.");
 							}
 						}
 					}

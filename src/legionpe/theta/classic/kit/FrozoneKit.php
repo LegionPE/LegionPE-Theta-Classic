@@ -46,11 +46,10 @@ class FrozoneKit extends ClassicKit{
 		$count = 0;
 		foreach($this->getPowers() as $power){
 			if(isset($power->item)){
-				$inventory->setItem(15 + (++$count), $power->item);
-				$inventory->setHotbarSlotIndex(6 + $count, 15 + $count);
+				$inventory->setItem(15 + $count, clone $power->item);
+				$inventory->setHotbarSlotIndex(5 - $count, 15 + $count++);
 			}
 		}
-		$inventory->setHotbarSlotIndex(5, 5);
 		$inventory->setArmorContents($this->getArmorItems());
 		$inventory->sendContents($session->getPlayer());
 		$inventory->sendArmorContents($session->getPlayer());

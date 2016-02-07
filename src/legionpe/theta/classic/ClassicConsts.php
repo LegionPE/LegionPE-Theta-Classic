@@ -32,6 +32,25 @@ class ClassicConsts{
 	const AUTO_HEAL_AMPLIFIER = 2;
 	const KILL_HEAL_AMPLIFIER = 3;
 	const COMBAT_MODE_COOLDOWN = 10;
+	public static $killTags = [
+		0=>"Newbie",
+		25=>"Fighter",
+		75=>"Knight",
+		150=>"Dangerous",
+		200=>"Ninja",
+		300=>"Beast",
+		450=>"Elite",
+		600=>"Warrior",
+		800=>"Thief",
+		1000=>"Killer",
+		1200=>"Addict",
+		1400=>"Unstoppable",
+		1600=>"Pro",
+		1750=>"Hardcore",
+		2000=>"Master",
+		2300=>"Legend",
+		3000=>"God"
+	];
 	public static function isSpawn(Vector3 $v){
 		return ($v->y >= 18) and self::isSpawnArea($v);
 	}
@@ -94,6 +113,19 @@ class ClassicConsts{
 	}
 	public static function get1v1GuestPos(Server $server){
 		return new Position(214, 16, 23, $server->getLevelByName("world_pvp"));
+	}
+	/**
+	 * @param $kills
+	 * @return string
+	 */
+	public static function getKillsTag($kills){
+		$tag = "";
+		foreach(self::$killTags as $killCount=>$killTag){
+			if($kills >= $killCount){
+				$tag = $killTag;
+			}
+		}
+		return $tag;
 	}
 
 	/**

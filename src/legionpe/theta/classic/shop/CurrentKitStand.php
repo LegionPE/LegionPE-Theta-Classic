@@ -16,6 +16,7 @@
 namespace legionpe\theta\classic\shop;
 
 use pocketmine\entity\Entity;
+use pocketmine\network\protocol\AddPlayerPacket;
 use pocketmine\network\protocol\MobArmorEquipmentPacket;
 use pocketmine\network\protocol\MobEquipmentPacket;
 use pocketmine\network\protocol\SetEntityDataPacket;
@@ -23,7 +24,7 @@ use pocketmine\utils\TextFormat;
 use legionpe\theta\classic\ClassicSession;
 use legionpe\theta\classic\kit\ClassicKit;
 use pocketmine\level\Position;
-
+use pocketmine\utils\UUID;
 
 class CurrentKitStand extends KitStand{
 	/**
@@ -35,12 +36,36 @@ class CurrentKitStand extends KitStand{
 	 * @param Position[] $back
 	 * @param Position[] $floatingPos
 	 */
-	public function __construct(ClassicSession $session, ClassicKit $kit, Position $npcPos, $yaw, $next, $back, Position $floatingPos){
-		parent::__construct($session, $kit, $npcPos, $yaw, $next, $back, $floatingPos);
-		$pk = new SetEntityDataPacket();
+	public function __construct(ClassicSession $session, Position $npcPos, $yaw, $next, $back, Position $floatingPos){
+		$this->session = $session;
+		$this->kit = $session->currentKit;
+		$this->yaw = $yaw;
+		$this->level = $session->getPlayer()->getLevel();
+		$this->npcPos = $npcPos;
+		$this->nextPos = $next;
+		$this->backPos = $back;
+
+		$player = $session->getPlayer();
+		$pk = new AddPlayerPacket();
+		$this->npcEid = Entity::$entityCount++;
+		$pk->uuid = UUID::fromData($this->npcEid, "", "");
+		$pk->username = TextFormat::AQUA . TextFormat::GREEN . $this->kit->getName() . TextFormat::WHITE . " - " . TextFormat::AQUA . "level " . TextFormat::GREEN . $this->kit->level;
 		$pk->eid = $this->npcEid;
-		$pk->metadata = [Entity::DATA_NAMETAG => [Entity::DATA_TYPE_STRING, TextFormat::AQUA . TextFormat::GREEN . $this->kit->getName() . TextFormat::WHITE . " - " . TextFormat::AQUA . "level " . TextFormat::GREEN . $this->kit->level]];
-		$session->getPlayer()->dataPacket($pk);
+		$pk->x = $npcPos->getX();
+		$pk->y = $npcPos->getY();
+		$pk->z = $npcPos->getZ();
+		$pk->speedX = 0;
+		$pk->speedY = 0;
+		$pk->speedZ = 0;
+		$pk->yaw = $yaw;
+		$pk->pitch = 0;
+		$pk->item = $this->kit->getItems()[0];
+		$pk->metadata = [];
+		$player->dataPacket($pk);
+		$pk = new MobArmorEquipmentPacket();
+		$pk->eid = $this->npcEid;
+		$pk->slots = $this->kit->getArmorItems();
+		$player->dataPacket($pk);
 	}
 	public function next(){
 		if($this->kit->level < $this->session->getKitLevel($this->kit)){
@@ -55,6 +80,7 @@ class CurrentKitStand extends KitStand{
 		}
 	}
 	public function update(){
+		$this->kit = $this->session->currentKit;
 		$player = $this->session->getPlayer();
 		$pk = new MobArmorEquipmentPacket();
 		$pk->eid = $this->npcEid;
@@ -68,21 +94,7 @@ class CurrentKitStand extends KitStand{
 		$player->dataPacket($pk);
 		$pk = new SetEntityDataPacket();
 		$pk->eid = $this->npcEid;
-		$pk->metadata = [Entity::DATA_NAMETAG => [Entity::DATA_TYPE_STRING, TextFormat::AQUA . TextFormat::GREEN . $this->kit->getName() . TextFormat::WHITE . " - " . TextFormat::AQUA . "level " . TextFormat::GREEN . $this->kit->level . "\n" . TextFormat::GREEN . "Description: " . TextFormat::AQUA . $this->kit->getDescription()]];
+		$pk->metadata = [Entity::DATA_NAMETAG => [Entity::DATA_TYPE_STRING, TextFormat::AQUA . TextFormat::GREEN . $this->kit->getName() . TextFormat::WHITE . " - " . TextFormat::AQUA . "level " . TextFormat::GREEN . $this->kit->level]];
 		$player->dataPacket($pk);
-		$powers = "";
-		foreach($this->kit->getPowers() as $power){
-			$powers .= TextFormat::RED . "- " . TextFormat::GREEN . $power->getName() . ": " .  TextFormat::AQUA . $power->getDescription() . "\n  " . TextFormat::GREEN . "Duration: " . TextFormat::AQUA . $power->getDuration() . "\n  " . TextFormat::GREEN . "Delay: " . TextFormat::AQUA . ($power->isPermanent ? "None, permanent power (always active)" :  $power->getDelay()) . "\n";
-
-		}
-		$this->floatingPowers->setText($powers);
-		$encode = $this->floatingPowers->encode();
-		if(is_array($encode)){
-			foreach($encode as $packet){
-				$player->dataPacket($packet);
-			}
-		}else{
-			$player->dataPacket($encode);
-		}
 	}
 }

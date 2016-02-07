@@ -68,16 +68,24 @@ class ClassicPlugin extends BasePlugin{
 	public function onEnable(){
 		parent::onEnable();
 		$level = $this->getServer()->getLevelByName('world_pvp');
-		$this->battleArenas['cave'] = new ClassicBattleArena('Cave', $level, [[new Vector3(212, 16, 23), new Vector3(215, 16, 23)], [new Vector3(200, 16, 2), new Vector3(195, 16, 4)]], [[140, 140], [-35, -35]]);
+		$this->battleArenas['spawn'] = new ClassicBattleArena('Spawn', $level, [[new Vector3(-14.5, 38, 341.5), new Vector3(-16.5, 38, 341.5)], [new Vector3(-14.5, 38, 377.5), new Vector3(-16.5, 38, 377.5)]], [[0, 0], [-180, -180]]);
+		$this->battleArenas['flyingship'] = new ClassicBattleArena('Flying ship', $level, [[new Vector3(-54.5, 52, 485.5), new Vector3(-54.5, 52, 487.5)], [new Vector3(-4.5, 52, 487.5), new Vector3(-4.5, 52, 485)]], [[-90, -90], [90, 90]]);
+		$this->battleArenas['flyingcastle'] = new ClassicBattleArena('Flying castle', $level, [[new Vector3(-114.5, 38, 337.5), new Vector3(-115.5, 38, 336.5)], [new Vector3(-142.5, 38, 363.5), new Vector3(-141.5, 38, 364)]], [[45, 45], [-135, -135]]);
 		$apple = Item::get(260);
 		$apple->setCount(6);
-		$this->battleKits['default kit'] = new ClassicBattleKit('Default kit',
+		$this->battleKits['defaultkit'] = new ClassicBattleKit('Default kit',
 			[Item::get(306), Item::get(307), Item::get(308), Item::get(309)],
 			[Item::get(276), $apple],
 			[]);
+		$this->battleKits['diamondkit'] = new ClassicBattleKit('Diamond kit',
+			[Item::get(310), Item::get(311), Item::get(312), Item::get(313)],
+			[Item::get(267), $apple],
+			[]);
 		$this->queueManager = new QueueManager($this);
-		$this->queueBlocks[] = new ClassicBattleQueueBlock($this, $level->getBlock(new Vector3(299, 38, -116)), '0 queueing', 1, false, false);
-		$this->queueBlocks[] = new ClassicBattleQueueBlock($this, $level->getBlock(new Vector3(303, 38, -116)), '0 queueing', 2, false, false);
+		$this->queueBlocks[] = new ClassicBattleQueueBlock($this, $level->getBlock(new Vector3(-5, 13, -5)), '0 queueing', 1, false, false);
+		$this->queueBlocks[] = new ClassicBattleQueueBlock($this, $level->getBlock(new Vector3(-1, 13, -5)), '0 queueing', 1, false, false);
+		$this->queueBlocks[] = new ClassicBattleQueueBlock($this, $level->getBlock(new Vector3(-1, 13, 7)), '0 queueing', 2, false, false);
+		$this->queueBlocks[] = new ClassicBattleQueueBlock($this, $level->getBlock(new Vector3(-5, 13, 7)), '0 queueing', 2, false, false);
 		$this->resetBlocksTask = new ResetBlocksTask($this);
 		$this->getServer()->getScheduler()->scheduleRepeatingTask($this->resetBlocksTask, 40);
 		$this->tpMgr = new TeleportManager($this);
@@ -93,10 +101,10 @@ class ClassicPlugin extends BasePlugin{
 		$RESEND_ADD_PLAYER = $this->getResendAddPlayerFreq();
 		$this->getServer()->getScheduler()->scheduleRepeatingTask(new BattleTask($this), 20);
 		$this->getServer()->getScheduler()->scheduleRepeatingTask(new QueueTask($this), 400);
-		if($RESEND_ADD_PLAYER > 0){
-			$this->getServer()->getScheduler()->scheduleDelayedRepeatingTask(new ClassicResendPlayersTask($this), $RESEND_ADD_PLAYER, $RESEND_ADD_PLAYER);
+		//if($RESEND_ADD_PLAYER > 0){
+		//	$this->getServer()->getScheduler()->scheduleDelayedRepeatingTask(new ClassicResendPlayersTask($this), $RESEND_ADD_PLAYER, $RESEND_ADD_PLAYER);
 			// have temporary replacement
-		}
+		//}
 		new FireballTask($this);
 	}
 	public function onDisable(){
@@ -104,6 +112,9 @@ class ClassicPlugin extends BasePlugin{
 		foreach($this->resetBlocksTask->blocks as $block){
 			$block[0]->getLevel()->setBlock($block[0], $block[1]);
 		}
+	}
+	public function getBasicListenerClass(){
+		return ClassicListener::class;
 	}
 	public function getLoginQueryImpl(){
 		return ClassicLoginDataQuery::class;

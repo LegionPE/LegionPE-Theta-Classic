@@ -24,6 +24,7 @@ use legionpe\theta\command\SessionCommand;
 use legionpe\theta\Friend;
 use legionpe\theta\lang\Phrases;
 use legionpe\theta\Session;
+use pocketmine\utils\TextFormat;
 
 class TeleportToCommand extends SessionCommand{
 	public function __construct(BasePlugin $main){
@@ -43,6 +44,11 @@ class TeleportToCommand extends SessionCommand{
 		$target = $this->getSession($name = array_shift($args));
 		if(!($target instanceof ClassicSession)){
 			return $this->notOnline($sender, $name);
+		}
+		if($sender->getMode() === Session::MODE_SPECTATING){
+			if(!$sender->isVIP()){
+				return TextFormat::RED . "You have to be a VIP to teleport to players while spectating.";
+			}
 		}
 		if(ClassicConsts::isSpawn($target->getPlayer())){
 			return $sender->translate(Phrases::CMD_TPR_TO_FAIL_SPAWN);

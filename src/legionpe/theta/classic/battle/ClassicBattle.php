@@ -17,6 +17,8 @@ namespace legionpe\theta\classic\battle;
 
 use legionpe\theta\classic\ClassicPlugin;
 use legionpe\theta\classic\ClassicSession;
+use pocketmine\event\entity\EntityDamageByEntityEvent;
+use pocketmine\event\entity\EntityDamageEvent;
 use pocketmine\math\Vector3;
 use pocketmine\Player;
 use pocketmine\utils\TextFormat;
@@ -180,6 +182,76 @@ class ClassicBattle{
 	 */
 	public function getDuration(){
 		return $this->roundDuration;
+	}
+	/**
+	 * @param EntityDamageEvent $event
+	 */
+	public function EntityDamageEvent(EntityDamageEvent $event){
+		$victim = $this->plugin->getSession($event->getEntity());
+		$cancel = true;
+		if(!($victim instanceof ClassicSession)) return;
+		if($event instanceof EntityDamageByEntityEvent){
+			$attacker = $this->plugin->getSession($event->getDamager());
+			if($attacker instanceof ClassicSession){
+				if($this->getSessionType($attacker) !== self::PLAYER_STATUS_SPECTATING){
+					if($this->getSessionTeam($attacker) !== $this->getSessionTeam($victim)){
+						if($event->getDamage() >= $victim->getPlayer()->getHealth()){
+							$event->setDamage(0);
+							$this->kill($victim, $attacker);
+							$cancel = false;
+						}
+					}
+				}
+			}
+		}elseif($event->getCause() === EntityDamageEvent::CAUSE_VOID){
+			$this->kill($victim, "void");
+		}elseif($event->getCause() === EntityDamageEvent::CAUSE_FIRE or $event->getCause() === EntityDamageEvent::CAUSE_FIRE_TICK or $event->getCause() === EntityDamageEvent::CAUSE_FALL){
+			if($event->getDamage() >= $victim->getPlayer()->getHealth()){
+				$this->kill($victim, "something else than the enemy, still need to write this piece of code");
+			}
+		}
+		$event->setCancelled($cancel);
+	}
+	/**
+	 * @param ClassicSession $session
+	 * @param ClassicSession|string $killer
+	 */
+	public function kill(ClassicSession $session, $killer = null){
+		$this->setSessionType($session, self::PLAYER_STATUS_SPECTATING);
+		$session->sendMessage(TextFormat::GOLD . "You were killed by " . TextFormat::RED . ($killer instanceof ClassicSession ? $killer->getPlayer()->getName() : $killer));
+		$sesTeam = $this->getSessionTeam($session);
+		$sesCount = 0;
+		$aliveTeam = [];
+		$teamUsernames = [];
+		foreach($this->teams as $team=>$sessions){
+			foreach($sessions as $teamSession){
+				$sesCount++;
+				$isOnTeam = $sesTeam === $team ? true : false;
+				if(!isset($aliveTeam[$team])) $aliveTeam[$team] = 0;
+				if($this->getSessionType($teamSession) === self::PLAYER_STATUS_PLAYING) $aliveTeam[$team]++;
+				if(!isset($teamUsernames[$team])) $teamUsernames[$team] = [];
+				$teamUsernames[$team][] = $teamSession->getPlayer()->getName();
+				if($teamSession !== $session and ($killer instanceof ClassicSession ? $killer === $teamSession : true)){
+					$teamSession->sendMessage(($isOnTeam ? TextFormat::GREEN : TextFormat::RED) . $session->getPlayer()->getName() . TextFormat::GOLD . " was killed by " . ($killer instanceof ClassicSession ? ($isOnTeam ? TextFormat::RED : TextFormat::GREEN) . $killer->getPlayer()->getName() : TextFormat::AQUA . $killer));
+				}
+			}
+		}
+		$winningTeam = null;
+		foreach($aliveTeam as $team=>$aliveSessions){
+			if($aliveSessions === 0){
+				$winningTeam = null;
+			}else{
+				$winningTeam = $team;
+			}
+		}
+		if(!is_null($winningTeam)){
+			$this->roundWinners[] = $winningTeam;
+			if($this->getRound() === $this->getMaxRounds()){
+				$this->setStatus(self::STATUS_ENDING, TextFormat::GOLD . "The Battle has ended." . implode(", ", $teamUsernames[$winningTeam]), $this->getOverallWinner());
+			}else{
+				$this->setStatus(self::STATUS_STARTING, TextFormat::GOLD . "Round ended. Winners: " . implode(", ", $teamUsernames[$winningTeam]));
+			}
+		}
 	}
 	/**
 	 * @param ClassicSession $session
