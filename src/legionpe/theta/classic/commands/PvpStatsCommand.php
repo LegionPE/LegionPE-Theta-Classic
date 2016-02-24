@@ -16,6 +16,7 @@
 namespace legionpe\theta\classic\commands;
 
 use legionpe\theta\BasePlugin;
+use legionpe\theta\classic\ClassicConsts;
 use legionpe\theta\classic\ClassicSession;
 use legionpe\theta\command\SessionCommand;
 use legionpe\theta\Friend;
@@ -56,6 +57,7 @@ class PvpStatsCommand extends SessionCommand{
 			"deaths" => $deaths,
 			"kd" => ($deaths === 0) ? "N/A" : round($kills / $deaths, 3),
 			"rank" => $session->getGlobalRank(),
+			"next-killstag" => ClassicConsts::getNextKillsTag($session->getKills())
 		];
 	}
 }

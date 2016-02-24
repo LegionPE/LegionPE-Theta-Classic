@@ -127,7 +127,15 @@ class ClassicConsts{
 		}
 		return $tag;
 	}
-
+	public static function getNextKillsTag($kills){
+		$currentTag = array_search(self::getKillsTag($kills), self::$killTags);
+		reset(self::$killTags);
+		while(current(self::$killTags) !== $currentTag){
+			next(self::$killTags);
+		}
+		$nextTag = next(self::$killTags);
+		return $nextTag === false ? "none" : $nextTag;
+	}
 	/**
 	 * @param Server $server
 	 * @return Location[]
