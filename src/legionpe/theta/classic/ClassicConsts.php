@@ -31,7 +31,7 @@ class ClassicConsts{
 	const TELEPORT_DELAY_TICKS = 100;
 	const AUTO_HEAL_AMPLIFIER = 2;
 	const KILL_HEAL_AMPLIFIER = 3;
-	const COMBAT_MODE_COOLDOWN = 10;
+	const COMBAT_MODE_COOLDOWN = 25;
 	public static $killTags = [
 		0=>"Newbie",
 		25=>"Fighter",
@@ -52,7 +52,7 @@ class ClassicConsts{
 		3000=>"God"
 	];
 	public static function isSpawn(Vector3 $v){
-		return ($v->y >= 18) and self::isSpawnArea($v);
+		return self::isSpawnArea($v);
 	}
 	public static function spawnPortal(Player $player){
 		return ($player->y < 18) and self::isSpawnArea($player);
@@ -128,13 +128,14 @@ class ClassicConsts{
 		return $tag;
 	}
 	public static function getNextKillsTag($kills){
-		$currentTag = array_search(self::getKillsTag($kills), self::$killTags);
-		reset(self::$killTags);
-		while(current(self::$killTags) !== $currentTag){
-			next(self::$killTags);
+		$nextTag = "";
+		foreach(self::$killTags as $killCount=>$killTag){
+			if($kills < $killCount){
+				$nextTag = $killTag;
+				break;
+			}
 		}
-		$nextTag = next(self::$killTags);
-		return $nextTag === false ? "none" : $nextTag;
+		return $nextTag;
 	}
 	/**
 	 * @param Server $server

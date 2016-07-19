@@ -130,6 +130,11 @@ abstract class ClassicKitPower{
 		return false;
 	}
 
+	public function reset(){
+		$this->isActive = false;
+		$this->lastActivate = 0;
+	}
+
 	public abstract function onGeneral(ClassicSession $session);
 	public abstract function onDamageByEntity(ClassicSession $damager, ClassicSession $damaged, &$damage);
 	public abstract function onDamage(ClassicSession $session, &$damage, $event);

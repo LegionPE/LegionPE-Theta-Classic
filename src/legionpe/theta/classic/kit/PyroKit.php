@@ -60,9 +60,11 @@ class PyroKit extends ClassicKit{
 		$orangeDye->setDamage(14);
 		switch($level){
 			case 1:
+				$food = Item::get(Item::MELON_SLICE);
+				$food->setCount(64);
 				$items = [
 					Item::get(Item::WOODEN_SWORD),
-					Item::get(Item::MELON_SLICE)
+					$food
 				];
 				$armorItems = [
 					Item::get(Item::CHAIN_HELMET),
@@ -75,12 +77,14 @@ class PyroKit extends ClassicKit{
 					new FirePower("Fire", "Set players on fire when you hit them", $level, $orangeDye)
 				];
 				$this->setPowers($powers);
-				$this->setPrice(3500);
+				$this->setPrice(1500);
 				break;
 			case 2:
+				$food = Item::get(Item::APPLE);
+				$food->setCount(64);
 				$items = [
 					Item::get(Item::GOLDEN_SWORD),
-					Item::get(Item::APPLE)
+					$food
 				];
 				$armorItems = [
 					Item::get(Item::CHAIN_HELMET),
@@ -94,12 +98,14 @@ class PyroKit extends ClassicKit{
 					new NoLavaDamagePower("No lava", "You will not receive any damage when you're in lava", $level)
 				];
 				$this->setPowers($powers);
-				$this->setPrice(5000);
+				$this->setPrice(3000);
 				break;
 			case 3:
+				$food = Item::get(Item::APPLE);
+				$food->setCount(64);
 				$items = [
 					Item::get(Item::GOLDEN_SWORD),
-					Item::get(Item::APPLE)
+					$food
 				];
 				$armorItems = [
 					Item::get(Item::GOLD_HELMET),
@@ -114,12 +120,14 @@ class PyroKit extends ClassicKit{
 					new NoFireDamagePower("No fire", "You will not receive any damage when on fire", $level)
 				];
 				$this->setPowers($powers);
-				$this->setPrice(5500);
+				$this->setPrice(4000);
 				break;
 			case 4:
+				$food = Item::get(Item::COOKED_CHICKEN);
+				$food->setCount(64);
 				$items = [
 					Item::get(Item::STONE_SWORD),
-					Item::get(Item::COOKED_CHICKEN)
+					$food
 				];
 				$armorItems = [
 					Item::get(Item::GOLD_HELMET),
@@ -134,7 +142,7 @@ class PyroKit extends ClassicKit{
 					new NoFireDamagePower("No fire", "You will not receive any damage when on fire", $level)
 				];
 				$this->setPowers($powers);
-				$this->setPrice(7000);
+				$this->setPrice(5000);
 				break;
 		}
 		$this->level = $level;

@@ -57,9 +57,11 @@ class DefaultKit extends ClassicKit{
 	public function setLevel($level){
 		switch($level){
 			case 1:
+				$food = Item::get(Item::MELON_SLICE);
+				$food->setCount(64);
 				$items = [
 					Item::get(Item::WOODEN_SWORD),
-					Item::get(Item::MELON_SLICE)
+					$food
 				];
 				$armorItems = [
 					Item::get(Item::LEATHER_CAP),
@@ -75,9 +77,11 @@ class DefaultKit extends ClassicKit{
 				$this->setPrice(0);
 				break;
 			case 2:
+				$food = Item::get(Item::MELON_SLICE);
+				$food->setCount(64);
 				$items = [
 					Item::get(Item::GOLD_SWORD),
-					Item::get(Item::MELON_SLICE)
+					$food
 				];
 				$armorItems = [
 					Item::get(Item::LEATHER_CAP),
@@ -90,12 +94,14 @@ class DefaultKit extends ClassicKit{
 
 				];
 				$this->setPowers($powers);
-				$this->setPrice(3000);
+				$this->setPrice(700);
 				break;
 			case 3:
+				$food = Item::get(Item::BREAD);
+				$food->setCount(64);
 				$items = [
 					Item::get(Item::STONE_SWORD),
-					Item::get(Item::RAW_CHICKEN)
+					$food
 				];
 				$armorItems = [
 					Item::get(Item::GOLD_HELMET),
@@ -108,12 +114,14 @@ class DefaultKit extends ClassicKit{
 
 				];
 				$this->setPowers($powers);
-				$this->setPrice(5000);
+				$this->setPrice(2000);
 				break;
 			case 4:
+				$food = Item::get(Item::COOKED_CHICKEN);
+				$food->setCount(64);
 				$items = [
 					Item::get(Item::STONE_SWORD),
-					Item::get(Item::COOKED_CHICKEN)
+					$food
 				];
 				$armorItems = [
 					Item::get(Item::GOLD_HELMET),
@@ -126,7 +134,7 @@ class DefaultKit extends ClassicKit{
 
 				];
 				$this->setPowers($powers);
-				$this->setPrice(7000);
+				$this->setPrice(3000);
 				break;
 		}
 		$this->level = $level;

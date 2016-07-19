@@ -41,11 +41,10 @@ class ClassicListener extends BaseListener{
 						$kitStand = $ses->kitStands[$packet->target];
 						$kit = $ses->kitStands[$packet->target]->getKit();
 						if($kit->getLevel() <= $ses->getKitLevel($kit)){
-							$ses->currentKit = $kit;
-							$ses->currentKitStand->update();
 							$ses->sendMessage(TextFormat::AQUA . "You have selected the kit " . TextFormat::GREEN . $kit->getName());
 							if($kitStand !== $ses->currentKitStand) $ses->sendMessage(TextFormat::AQUA . "You can change the level of the kit at the 'current kit' stand.");
-							$ses->setLoginDatum("pvp_kit", $kit->id);
+							$ses->setCurrentKit($kit);
+							$ses->currentKit->equip($ses);
 						}else{
 							if($kit->getLevel() !== $ses->getKitLevel($kit) + 1){
 								$ses->sendMessage(TextFormat::AQUA . "To upgrade this kit, you have to choose level " . ($ses->getKitLevel($kit) + 1) . ".");
@@ -58,12 +57,10 @@ class ClassicListener extends BaseListener{
 									return;
 								}
 								if(time() - $this->lastTouch[$ses->getUid()][0] <= 5 and $this->lastTouch[$ses->getUid()][1] === $kitStand->getEid()){
-									$kitData[$kit->id] = $kit->getLevel();
-									$ses->setLoginDatum("kitData", $kitData);
 									$ses->setKitLevel($kit, $kit->getLevel());
 									$ses->setCoins($ses->getCoins() - $kit->getPrice());
 									$ses->kitStands[$packet->target]->update();
-									$ses->sendMessage(TextFormat::AQUA . "You spent {$kit->getPrice()} ({$ses->getCoins()} left) to unlocked level " . TextFormat::RED . $kit->getLevel() . TextFormat::AQUA . " (kit {$kit->getName()}) \nTo use this kit, please hit the NPC again.");
+									$ses->sendMessage(TextFormat::AQUA . "You spent {$kit->getPrice()} ({$ses->getCoins()} left) to unlock level " . TextFormat::RED . $kit->getLevel() . TextFormat::AQUA . " (kit {$kit->getName()}) \nTo use this kit, please hit the NPC again.");
 								}else{
 									$this->lastTouch[$ses->getUid()] = [time(), $kitStand->getEid()];
 									$ses->sendMessage(TextFormat::AQUA . "Hit the NPC again to purchase and unlock the kit.");
@@ -101,12 +98,12 @@ class ClassicListener extends BaseListener{
 			}, $event->getEntity()), 1);
 		}
 	}
-	public function onBlockSpread(BlockSpreadEvent $event){
+	/*public function onBlockSpread(BlockSpreadEvent $event){
 		// people placing lava in battles
 		$block = $event->getSource();
 		$event->getBlock()->getLevel()->setBlock(new Vector3($block->getX(), $block->getY(), $block->getZ()), Block::get(0));
 		$event->setCancelled();
-	}
+	}*/
 	public function onExplosionPrime(ExplosionPrimeEvent $event){
 		$event->setCancelled();
 	}

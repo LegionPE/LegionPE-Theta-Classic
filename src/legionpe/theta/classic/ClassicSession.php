@@ -128,7 +128,9 @@ class ClassicSession extends Session{
 	}
 	public function setCurrentKit(ClassicKit $kit){
 		$this->currentKit = $kit;
+		if($this->currentKitStand instanceof CurrentKitStand) $this->currentKitStand->update();
 		$this->setLoginDatum('pvp_kit', $kit->id);
+		echo $this->getLoginDatum('pvp_kit');
 	}
 	public function setCurrentKitById($id, $level){
 		$class = ClassicKit::getKitClassById($id);
@@ -141,15 +143,16 @@ class ClassicSession extends Session{
 			default:
 				$this->currentKit = new $class($level);
 		}
+		if($this->currentKitStand instanceof CurrentKitStand) $this->currentKitStand->update();
 		$this->setLoginDatum('pvp_kit', $this->currentKit->id);
 	}
 	public function getKitLevel(ClassicKit $kit){
 		$kitData = $this->getLoginDatum('kitData');
-		return isset($kitData[$kit->id]) ? (int) $kitData[$kit->id] : ($kit->id === ClassicKit::KIT_ID_DEFAULT ? 1 : 0);
+		return isset($kitData[$kit->id]) ? (int) $kitData[$kit->id] : ($kit->id == ClassicKit::KIT_ID_DEFAULT ? 1 : 0);
 	}
 	public function getKitLevelById($id){
 		$kitData = $this->getLoginDatum('kitData');
-		return isset($kitData[$id]) ? (int) $kitData[$id] : ($id === ClassicKit::KIT_ID_DEFAULT ? 1 : 0);
+		return isset($kitData[$id]) ? (int) $kitData[$id] : ($id == ClassicKit::KIT_ID_DEFAULT ? 1 : 0);
 	}
 	public function setKitLevel(ClassicKit $kit, $level){
 		$kitData = $this->getLoginDatum('kitData');
@@ -191,6 +194,12 @@ class ClassicSession extends Session{
 				$power->onDamage($this, $damage, $event);
 			}
 		}
+		if($this->getBattle() instanceof ClassicBattle){
+			$this->getBattle()->EntityDamageEvent($event);
+		}
+		/*foreach($this->kitStands as $kitStand){
+			$kitStand->remove();
+		}*/
 		if($event instanceof EntityDamageByEntityEvent){
 			$fromEnt = $event->getDamager();
 			if($fromEnt instanceof Player){
@@ -202,6 +211,9 @@ class ClassicSession extends Session{
 					return false;
 				}
 				if($ses instanceof ClassicSession){
+					if($ses->getBattle() === null){
+						$ses->currentKit->equip($ses);
+					}
 					$this->setCombatMode();
 					$ses->setCombatMode();
 					if($ses->isInvincible()){
@@ -264,19 +276,17 @@ class ClassicSession extends Session{
 		}
 //		$this->getPlayer()->setNameTag($this->calculateNameTag(TextFormat::WHITE, $this->getPlayer()->getHealth() - $event->getFinalDamage()));
 		$event->setDamage($damage);
-		$deficit = $event->getFinalDamage() - $this->getPlayer()->getHealth();
+		/*$deficit = $event->getFinalDamage() - $this->getPlayer()->getHealth();
 		if($deficit > 0){
 			$event->setDamage($event->getDamage() - $deficit);
-		}
-		if($this->getBattle() instanceof ClassicBattle){
-			$this->getBattle()->EntityDamageEvent($event);
-		}
+		}*/
 		return true;
 	}
 	public function onDeath(PlayerDeathEvent $event){
 		if(!parent::onDeath($event)){
 			return false;
 		}
+
 		$this->hasEquipped = false;
 		$this->setCombatMode(false);
 		$event->setDeathMessage("");
@@ -287,7 +297,12 @@ class ClassicSession extends Session{
 		$this->setMaximumStreak(max($streak, $maxStreak));
 		$cause = $this->getPlayer()->getLastDamageCause();
 		$this->addDeath();
-		$this->getMain()->getLogger()->info($event->getEntity()->getName() . " died. Cause: " . $event->getEntity()->getLastDamageCause()->getEventName());
+		foreach($this->currentKit->getPowers() as $power){
+			if(!$power->isPermanent){
+				$power->setActive(false);
+				$power->reset();
+			}
+		}
 		if(!($cause instanceof EntityDamageEvent)){
 			$this->send(Phrases::PVP_DEATH_GENERIC);
 			return true;
@@ -302,6 +317,7 @@ class ClassicSession extends Session{
 					$ks->setCombatMode(false);
 					$amount = ClassicConsts::getKillHeal($ks);
 					//$killer->heal($amount, new EntityRegainHealthEvent($killer, $amount, EntityRegainHealthEvent::CAUSE_CUSTOM));
+					$killer->heal(8, new EntityRegainHealthEvent($killer, $amount, EntityRegainHealthEvent::CAUSE_CUSTOM));
 				}
 			}
 			if(!isset($kn)){
@@ -400,6 +416,9 @@ class ClassicSession extends Session{
 				}
 			}
 		}
+		if($event->getTo()->getY() < 0 and (!$this->battle instanceof ClassicBattle)){
+			$this->getPlayer()->kill();
+		}
 		if($this->battle instanceof ClassicBattle){
 			if($this->battle->getStatus() === ClassicBattle::STATUS_STARTING){
 				if($event->getTo()->getX() != $event->getFrom()->getX() or $event->getTo()->getZ() != $event->getFrom()->getZ()){
@@ -430,11 +449,23 @@ class ClassicSession extends Session{
 		if($this->isVIPPlus()){
 			$this->prePrefix .= "+";
 		}
-		// $this->setCurrentKitById($this->getLoginDatum('pvp_kit'), $this->getKitLevelById($this->getLoginDatum('pvp_kit')));
-		$this->setCurrentKitById(ClassicKit::KIT_ID_KNIGHT, 3);
+		if($this->getKitLevelById(ClassicKit::KIT_ID_DEFAULT) == 0) $this->setKitLevelById(ClassicKit::KIT_ID_DEFAULT, 1);
+		$this->setCurrentKitById((int) $this->getLoginDatum('pvp_kit'), (int) $this->getKitLevelById((int) $this->getLoginDatum('pvp_kit')));
 		$this->currentKit->equip($this);
 		//$this->onRespawn(new PlayerRespawnEvent($this->getPlayer(), $this->getPlayer()->getPosition()));
 
+		$this->spawnNpcs();
+		//$this->getMain()->getServer()->getLevelByName("world_pvp")->addParticle(new FloatingTextParticle(new Vector3(304, 49, -150), $this->translate(Phrases::PVP_LEAVE_SPAWN_HINT)), [$this->getPlayer()]);
+		foreach($this->getMain()->getQueueBlocks() as $queueBlock){
+			$queueBlock->addSession($this);
+		}
+	}
+	public function removeNpcs(){
+		foreach($this->kitStands as $kitStand){
+			$kitStand->remove();
+		}
+	}
+	public function spawnNpcs(){
 		$level = $this->getPlayer()->getLevel();
 		$currentKitStand = new CurrentKitStand($this,
 			new Position(-2.5, 7, 1.5, $level),
@@ -455,8 +486,6 @@ class ClassicSession extends Session{
 		);
 		$this->currentKitStand = $currentKitStand;
 		$this->kitStands[$currentKitStand->getEid()] = $currentKitStand;
-
-
 		$default = new KitStand($this, new DefaultKit(1),
 			new Position(-2.5, 7, 14.5, $level),
 			180,
@@ -473,25 +502,6 @@ class ClassicSession extends Session{
 			new Position(-5.5, 9.5, 14, $level)
 		);
 		$this->kitStands[$default->getEid()] = $default;
-
-		/*$frozone = new KitStand($this, new FrozoneKit(1, $this->main->resetBlocksTask),
-			new Position(-2.5, 7, -11.5, $level),
-			0,
-			[
-				new Position(-1, 6, -11, $level),
-				new Position(-2, 6, -10, $level),
-				new Position(-3, 6, -11, $level)
-			],
-			[
-				new Position(-1, 9, -11, $level),
-				new Position(-2, 9, -10, $level),
-				new Position(-3, 9, -11, $level)
-			],
-			new Position(0, 8, -11, $level)
-		);
-		$this->kitStands[$frozone->getEid()] = $frozone;*/
-
-
 		$knight = new KitStand($this, new KnightKit(1),
 			new Position(-15.5, 7, 1.5, $level),
 			-90,
@@ -525,20 +535,6 @@ class ClassicSession extends Session{
 			new Position(10, 9.5, 4.5, $level)
 		);
 		$this->kitStands[$pyro->getEid()] = $pyro;
-
-
-		//$this->getMain()->getServer()->getLevelByName("world_pvp")->addParticle(new FloatingTextParticle(new Vector3(304, 49, -150), $this->translate(Phrases::PVP_LEAVE_SPAWN_HINT)), [$this->getPlayer()]);
-		foreach($this->getMain()->getQueueBlocks() as $queueBlock){
-			$queueBlock->addSession($this);
-		}
-		if(IS_HALLOWEEN_MODE){
-			foreach(ClassicConsts::getGhastLocations($this->getMain()->getServer()) as $loc){
-				$particle = new SpawnGhastParticle($loc->x, $loc->y, $loc->z);
-				$particle->yaw = $loc->yaw;
-				$particle->pitch = $loc->pitch;
-				$loc->getLevel()->addParticle($particle, [$this->getPlayer()]);
-			}
-		}
 	}
 	public function onClientDisconnect(){
 		if($this->isCombatMode()){
@@ -575,6 +571,9 @@ class ClassicSession extends Session{
 //		$this->getPlayer()->setNameTag($this->calculateNameTag(TextFormat::WHITE, $this->getPlayer()->getMaxHealth()));
 		//$this->getPlayer()->getInventory()->clearAll();
 		//$this->getPlayer()->getInventory()->sendArmorContents($this->getPlayer()->getInventory()->getViewers());
+		/*foreach($this->kitStands as $kitStand){
+			$kitStand->add();
+		}*/
 	}
 	public function onPlace(BlockPlaceEvent $event){
 		return false;
@@ -635,7 +634,7 @@ class ClassicSession extends Session{
 							}else{
 								foreach($this->currentKit->getPowers() as $powerTwo){
 									if($powerTwo->isActive() and !$powerTwo->isPermanent){
-										$this->getPlayer()->sendTip(TextFormat::RED . "You currently have another power active.");
+										$this->getPlayer()->sendPopup(TextFormat::RED . "You currently have another power active.");
 										return false;
 										break;
 									}
@@ -643,7 +642,7 @@ class ClassicSession extends Session{
 								$time = $power->getTimeTillNextActivate();
 								if($time <= 0){
 									$power->setActive(true);
-									$this->getPlayer()->sendTip(TextFormat::GREEN . $power->getName() . " has been activated.");
+									$this->getPlayer()->sendPopup(TextFormat::GREEN . $power->getName() . " has been activated.");
 								}else{
 									$this->getPlayer()->sendTip(TextFormat::RED . $time . " seconds left before you can use this power.");
 								}
@@ -651,7 +650,10 @@ class ClassicSession extends Session{
 							return false;
 							break;
 						}
-						$event->getPlayer()->getInventory()->setHotbarSlotIndex(0, 0);
+						$inv = $event->getPlayer()->getInventory();
+						$inv->setHotbarSlotIndex(0, 0);
+						$inv->sendContents($event->getPlayer());
+						$inv->sendHeldItem($event->getPlayer());
 					}
 				}
 			}
@@ -696,7 +698,7 @@ class ClassicSession extends Session{
 			$this->setLoginDatum("pvp_curstreak", $streak = 1);
 		}
 		$ceilStreak = ceil($streak / 5) * 5;
-		$coins = round(ClassicConsts::COINS_ON_KILL * 3.322 * log($ceilStreak + 1, 10) * $ceilStreak ** -0.2);
+		$coins = 20;
 		$this->grantTeamPoints(floor($coins));
 		list($add, $final) = $this->grantCoins($coins);
 		$this->lastKillTime = microtime(true);
@@ -708,17 +710,6 @@ class ClassicSession extends Session{
 			"coins" => $final,
 			"added" => $add
 		]);
-		$rand = mt_rand(0, 999);
-		if($rand < 1){
-			$bonus = mt_rand(5000, 10000);
-		}elseif($rand < 6){
-			$bonus = mt_rand(1000, 5000);
-		}elseif($rand < 16){
-			$bonus = mt_rand(500, 1000);
-		}
-		if(isset($bonus)){
-			$this->grantCoins($bonus, true);
-		}
 	}
 	public function addDeath(){
 		$deaths = $this->incrementLoginDatum("pvp_deaths");
@@ -877,7 +868,8 @@ class ClassicSession extends Session{
 	protected function chatPrefix(){
 		if($this->isStatsPublic() and $this->globalRank > 0 and $this->getKills() > 0){
 			//return Phrases::VAR_symbol . "{" . Phrases::VAR_em . $this->getKills() . Phrases::VAR_em2 . "#" . $this->globalRank . Phrases::VAR_symbol . "}";
-			return $this->prePrefix . TextFormat::GRAY . "[" . ClassicConsts::getKillsTag($this->getKills()) . TextFormat::GRAY . "]{" . TextFormat::GOLD . "#" . $this->globalRank . TextFormat::GRAY . "}";
+			//return $this->prePrefix . TextFormat::GRAY . "[" . ClassicConsts::getKillsTag($this->getKills()) . TextFormat::GRAY . "]{" . TextFormat::GOLD . "#" . $this->globalRank . TextFormat::GRAY . "}";
+			return TextFormat::GRAY . "[" . ClassicConsts::getKillsTag($this->getKills()) . TextFormat::GRAY . "][" . TextFormat::YELLOW . $this->getKills() . TextFormat::GRAY . "]";
 		}
 		return "";
 	}

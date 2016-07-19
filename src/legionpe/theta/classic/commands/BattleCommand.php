@@ -29,7 +29,7 @@ class BattleCommand extends SessionCommand{
 		parent::__construct($main, "battle", "Send a battle request", "/battle <player> <spawn|flyingship|flyingcastle>");
 	}
 	protected function run(array $args, Session $host){
-		if(!isset($args[0]) or !isset($args[1])){
+		if(!isset($args[0])){
 			return false;
 		}
 		if(!($this->getMain() instanceof ClassicPlugin)){
@@ -56,7 +56,7 @@ class BattleCommand extends SessionCommand{
 								$arena = $host->getMain()->getBattleArenas();
 								shuffle($arena);
 								$arena = $arena[0];
-								$battle = new ClassicBattle($host->getMain(), [[$host], [$host->battleRequest]], 3, 60, $kit, $host->battleArena);
+								$battle = new ClassicBattle($host->getMain(), [[$host], [$host->battleRequest]], 3, 120, $kit, $host->battleArena);
 								foreach($battle->getSessions() as $session){
 									$session->battleRequestSentTo = null;
 									$session->battleRequest = null;
@@ -82,8 +82,11 @@ class BattleCommand extends SessionCommand{
 				}
 			}
 		}
+		if(!isset($args[1])){
+			return false;
+		}
 		if(!isset($host->getMain()->battleArenas[$args[1]])){
-			return "Arena not found. Arenas: " . implode("|", $host->getMain()->battleArenas);
+			return "Arena not found. Arenas: " . implode("|", array_keys($host->getMain()->battleArenas));
 		}
 		$arena = $host->getMain()->battleArenas[$args[1]];
 		if(!$host->isDonator()){

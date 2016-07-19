@@ -18,6 +18,7 @@ namespace legionpe\theta\classic\query;
 use legionpe\theta\BasePlugin;
 use legionpe\theta\classic\ClassicPlugin;
 use legionpe\theta\classic\ClassicSession;
+use legionpe\theta\classic\kit\ClassicKit;
 use legionpe\theta\config\Settings;
 use legionpe\theta\query\SaveSinglePlayerQuery;
 use legionpe\theta\Session;
@@ -45,6 +46,7 @@ class ClassicSaveSinglePlayerQuery extends SaveSinglePlayerQuery{
 		$cols["pvp_deaths"] = $session->getDeaths();
 		$cols["pvp_curstreak"] = 0;
 		$cols["pvp_maxstreak"] = $session->getMaximumStreak();
+		if($session->currentKit instanceof ClassicKit) $cols["pvp_kit"] = $session->currentKit->id;
 		return $cols;
 	}
 	public function onPostQuery(\mysqli $db){
@@ -52,8 +54,17 @@ class ClassicSaveSinglePlayerQuery extends SaveSinglePlayerQuery{
 		$result = $db->query("SELECT COUNT(*) + 1 AS rank FROM users WHERE pvp_kills > $this->kills AND (config & $statsPublic) = $statsPublic");
 		$this->rank = $result->fetch_assoc()["rank"];
 		$result->close();
-		foreach($this->kitData as $kitid=>$kitlevel){
-			$db->query("INSERT INTO purchases_kit (uid, kitid, kitlevel) VALUES ($this->uid, $kitid, $kitlevel) ON DUPLICATE KEY UPDATE kitlevel=$kitlevel");
+		if(isset($this->kitData)){
+			if(count($this->kitData) > 0){
+				foreach($this->kitData as $kitid => $kitlevel){
+					$query = $db->query("SELECT * FROM purchases_kit WHERE uid=".$this->uid." AND kitid=".$kitid);
+					if($query->num_rows === 0){
+						$newquery = $db->query("INSERT INTO purchases_kit VALUES ($this->uid, $kitid, $kitlevel)");
+					}else{
+						$newquery = $db->query("UPDATE purchases_kit SET kitlevel=".$kitlevel." WHERE uid=".$this->uid." AND kitid=".$kitid);
+					}
+				}
+			}
 		}
 	}
 	public function onCompletion(Server $server){

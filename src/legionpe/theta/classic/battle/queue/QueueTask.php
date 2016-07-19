@@ -69,7 +69,7 @@ class QueueTask extends PluginTask{
 						$teams[$team][] = $queues[$pIndex++]->getSession();
 					}
 				}
-				new ClassicBattle($this->main, $teams, 3, 60, $kit, $arena);
+				new ClassicBattle($this->main, $teams, 3, 120, $kit, $arena);
 			}
 		}
 	}

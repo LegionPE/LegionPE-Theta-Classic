@@ -19,7 +19,9 @@ use pocketmine\entity\Entity;
 use pocketmine\network\protocol\AddPlayerPacket;
 use pocketmine\network\protocol\MobArmorEquipmentPacket;
 use pocketmine\network\protocol\MobEquipmentPacket;
+use pocketmine\network\protocol\RemoveEntityPacket;
 use pocketmine\network\protocol\SetEntityDataPacket;
+use pocketmine\Server;
 use pocketmine\utils\TextFormat;
 use legionpe\theta\classic\ClassicSession;
 use legionpe\theta\classic\kit\ClassicKit;
@@ -36,7 +38,7 @@ class CurrentKitStand extends KitStand{
 	 * @param Position[] $back
 	 * @param Position[] $floatingPos
 	 */
-	public function __construct(ClassicSession $session, Position $npcPos, $yaw, $next, $back, Position $floatingPos){
+	public function __construct(ClassicSession $session, Position $npcPos, $yaw, $back, $next, Position $floatingPos){
 		$this->session = $session;
 		$this->kit = $session->currentKit;
 		$this->yaw = $yaw;
@@ -66,17 +68,51 @@ class CurrentKitStand extends KitStand{
 		$pk->eid = $this->npcEid;
 		$pk->slots = $this->kit->getArmorItems();
 		$player->dataPacket($pk);
+		$this->update();
+	}
+	public function add(){
+		$pk = new AddPlayerPacket();
+		$this->npcEid = Entity::$entityCount++;
+		$pk->uuid = UUID::fromData($this->npcEid, "", "");
+		$pk->username = TextFormat::AQUA . TextFormat::GREEN . $this->kit->getName() . TextFormat::WHITE . " - " . TextFormat::AQUA . "level " . TextFormat::GREEN . $this->kit->level;
+		$pk->eid = $this->npcEid;
+		$pk->x = $this->npcPos->getX();
+		$pk->y = $this->npcPos->getY();
+		$pk->z = $this->npcPos->getZ();
+		$pk->speedX = 0;
+		$pk->speedY = 0;
+		$pk->speedZ = 0;
+		$pk->yaw = $this->yaw;
+		$pk->pitch = 0;
+		$pk->item = $this->kit->getItems()[0];
+		$pk->metadata = [];
+		$this->session->getPlayer()->dataPacket($pk);
+		$pk = new MobArmorEquipmentPacket();
+		$pk->eid = $this->npcEid;
+		$pk->slots = $this->kit->getArmorItems();
+		$this->session->getPlayer()->dataPacket($pk);
+		$this->floatingPowers->setInvisible(false);
+		$this->update();
+	}
+	public function remove(){
+		$pk = new RemoveEntityPacket();
+		$pk->eid = $this->npcEid;
+		$this->session->getPlayer()->dataPacket($pk);
 	}
 	public function next(){
 		if($this->kit->level < $this->session->getKitLevel($this->kit)){
 			$this->kit->setLevel(++$this->kit->level);
 			$this->update();
+			$this->session->sendMessage(TextFormat::GREEN . "The level of your current kit has been increased.");
+			$this->session->currentKit->equip($this->session);
 		}
 	}
 	public function back(){
 		if($this->kit->level !== 1){
 			$this->kit->setLevel(--$this->kit->level);
 			$this->update();
+			$this->session->sendMessage(TextFormat::GREEN . "The level of your current kit has been decreased.");
+			$this->session->currentKit->equip($this->session);
 		}
 	}
 	public function update(){
@@ -94,7 +130,7 @@ class CurrentKitStand extends KitStand{
 		$player->dataPacket($pk);
 		$pk = new SetEntityDataPacket();
 		$pk->eid = $this->npcEid;
-		$pk->metadata = [Entity::DATA_NAMETAG => [Entity::DATA_TYPE_STRING, TextFormat::AQUA . TextFormat::GREEN . $this->kit->getName() . TextFormat::WHITE . " - " . TextFormat::AQUA . "level " . TextFormat::GREEN . $this->kit->level]];
+		$pk->metadata = [Entity::DATA_NAMETAG => [Entity::DATA_TYPE_STRING, TextFormat::AQUA . TextFormat::GREEN . $this->kit->getName() . TextFormat::WHITE . " - " . TextFormat::AQUA . "level " . TextFormat::GREEN . $this->kit->level], Entity::DATA_LEAD_HOLDER => [Entity::DATA_TYPE_LONG, -1], Entity::DATA_LEAD => [Entity::DATA_TYPE_INT, 0]];
 		$player->dataPacket($pk);
 	}
 }

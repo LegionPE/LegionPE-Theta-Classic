@@ -61,9 +61,11 @@ class KnightKit extends ClassicKit{
 		$orangeDye->setDamage(14);
 		switch($level){
 			case 1:
+				$food = Item::get(Item::APPLE);
+				$food->setCount(64);
 				$items = [
 					Item::get(Item::GOLDEN_SWORD),
-					Item::get(Item::APPLE)
+					$food
 				];
 				$armorItems = [
 					Item::get(Item::LEATHER_CAP),
@@ -76,12 +78,14 @@ class KnightKit extends ClassicKit{
 					new ShieldPower("Shield", "Prevent damage when being hit", $level, $blueDye)
 				];
 				$this->setPowers($powers);
-				$this->setPrice(5000);
+				$this->setPrice(3000);
 				break;
 			case 2:
+				$food = Item::get(Item::COOKED_CHICKEN);
+				$food->setCount(64);
 				$items = [
 					Item::get(Item::GOLDEN_SWORD),
-					Item::get(Item::COOKED_CHICKEN)
+					$food
 				];
 				$armorItems = [
 					Item::get(Item::GOLD_HELMET),
@@ -94,12 +98,14 @@ class KnightKit extends ClassicKit{
 					new ShieldPower("Shield", "Prevent damage when being hit", $level, $blueDye)
 				];
 				$this->setPowers($powers);
-				$this->setPrice(7000);
+				$this->setPrice(4000);
 				break;
 			case 3:
+				$food = Item::get(Item::COOKED_CHICKEN);
+				$food->setCount(64);
 				$items = [
 					Item::get(Item::STONE_SWORD),
-					Item::get(Item::COOKED_CHICKEN)
+					$food
 				];
 				$armorItems = [
 					Item::get(Item::CHAIN_HELMET),
@@ -113,12 +119,14 @@ class KnightKit extends ClassicKit{
 					new StrengthPower("Strength", "Extra damage while hitting a player", $level, $orangeDye)
 				];
 				$this->setPowers($powers);
-				$this->setPrice(8000);
+				$this->setPrice(5000);
 				break;
 			case 4:
+				$food = Item::get(Item::STEAK);
+				$food->setCount(64);
 				$items = [
 					Item::get(Item::STONE_SWORD),
-					Item::get(Item::STEAK)
+					$food
 				];
 				$armorItems = [
 					Item::get(Item::CHAIN_HELMET),
@@ -132,7 +140,7 @@ class KnightKit extends ClassicKit{
 					new StrengthPower("Strength", "Extra damage while hitting a player", $level, $orangeDye)
 				];
 				$this->setPowers($powers);
-				$this->setPrice(12000);
+				$this->setPrice(7000);
 				break;
 		}
 		$this->level = $level;

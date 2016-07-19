@@ -31,7 +31,7 @@ class ClassicBattleKit{
 	/** @var Effect[] */
 	private $effects = [];
 	/** @var int */
-	private $maxHealth = 40;
+	private $maxHealth = 35;
 
 	/**
 	 * @param string $name

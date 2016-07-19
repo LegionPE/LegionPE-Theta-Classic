@@ -29,19 +29,19 @@ class FirePower extends ClassicKitPower{
 		switch($level){
 			case 1:
 				$this->delay = 120;
-				$this->duration = 20;
+				$this->duration = 15;
 				break;
 			case 2:
 				$this->delay = 90;
-				$this->duration = 20;
+				$this->duration = 15;
 				break;
 			case 3:
 				$this->delay = 90;
-				$this->duration = 30;
+				$this->duration = 20;
 				break;
 			case 4:
 				$this->delay = 90;
-				$this->duration = 30;
+				$this->duration = 25;
 				break;
 		}
 	}
@@ -56,7 +56,7 @@ class FirePower extends ClassicKitPower{
 	}
 	public function onAttack(ClassicSession $attacker, ClassicSession $victim, &$damage){
 		if($this->isActive()){
-			$victim->getPlayer()->setOnFire($this->getLevel());
+			$victim->getPlayer()->setOnFire(2);
 		}
 	}
 	public function onHeal(ClassicSession $owner, &$health){

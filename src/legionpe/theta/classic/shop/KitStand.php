@@ -18,6 +18,7 @@ namespace legionpe\theta\classic\shop;
 use legionpe\theta\classic\ClassicSession;
 use pocketmine\network\protocol\MobArmorEquipmentPacket;
 use pocketmine\network\protocol\MobEquipmentPacket;
+use pocketmine\network\protocol\RemoveEntityPacket;
 use pocketmine\network\protocol\SetEntityDataPacket;
 use pocketmine\utils\MainLogger;
 use pocketmine\utils\TextFormat;
@@ -91,6 +92,37 @@ class KitStand{
 		}
 		$this->floatingPowers = new FloatingTextParticle($floatingPos, $powers, TextFormat::GREEN . "Powers: ");
 		$player->getLevel()->addParticle($this->floatingPowers, [$player]);
+		$this->update();
+	}
+	public function remove(){
+		$pk = new RemoveEntityPacket();
+		$pk->eid = $this->npcEid;
+		$this->session->getPlayer()->dataPacket($pk);
+		$this->floatingPowers->setInvisible(true);
+	}
+	public function add(){
+		$pk = new AddPlayerPacket();
+		$this->npcEid = Entity::$entityCount++;
+		$pk->uuid = UUID::fromData($this->npcEid, "", "");
+		$pk->username = TextFormat::AQUA . ($this->session->getKitLevel($this->kit) >= $this->kit->level ? "Unlocked" : $this->kit->getPrice() . " coins") . "\n" . TextFormat::GREEN . $this->kit->getName() . TextFormat::WHITE . " - " . TextFormat::AQUA . "level " . TextFormat::GREEN . $this->kit->level;
+		$pk->eid = $this->npcEid;
+		$pk->x = $this->npcPos->getX();
+		$pk->y = $this->npcPos->getY();
+		$pk->z = $this->npcPos->getZ();
+		$pk->speedX = 0;
+		$pk->speedY = 0;
+		$pk->speedZ = 0;
+		$pk->yaw = $this->yaw;
+		$pk->pitch = 0;
+		$pk->item = $this->kit->getItems()[0];
+		$pk->metadata = [];
+		$this->session->getPlayer()->dataPacket($pk);
+		$pk = new MobArmorEquipmentPacket();
+		$pk->eid = $this->npcEid;
+		$pk->slots = $this->kit->getArmorItems();
+		$this->session->getPlayer()->dataPacket($pk);
+		$this->floatingPowers->setInvisible(false);
+		$this->update();
 	}
 	/**
 	 * @return ClassicKit
@@ -105,7 +137,7 @@ class KitStand{
 		return $this->npcEid;
 	}
 	public function next(){
-		if($this->kit->level <= $this->kit->maxLevel){
+		if($this->kit->level < $this->kit->maxLevel){
 			$this->kit->setLevel(++$this->kit->level);
 			$this->update();
 		}
@@ -146,7 +178,7 @@ class KitStand{
 		$player->dataPacket($pk);
 		$pk = new SetEntityDataPacket();
 		$pk->eid = $this->npcEid;
-		$pk->metadata = [Entity::DATA_NAMETAG => [Entity::DATA_TYPE_STRING, TextFormat::AQUA . ($this->session->getKitLevel($this->kit) >= $this->kit->level ? "Unlocked" : $this->kit->getPrice() . " coins") . "\n" . TextFormat::GREEN . $this->kit->getName() . TextFormat::WHITE . " - " . TextFormat::AQUA . "level " . TextFormat::GREEN . $this->kit->level]];
+		$pk->metadata = [Entity::DATA_NAMETAG => [Entity::DATA_TYPE_STRING, TextFormat::AQUA . ($this->session->getKitLevel($this->kit) >= $this->kit->level ? "Unlocked" : $this->kit->getPrice() . " coins") . "\n" . TextFormat::GREEN . $this->kit->getName() . TextFormat::WHITE . " - " . TextFormat::AQUA . "level " . TextFormat::GREEN . $this->kit->level], Entity::DATA_LEAD_HOLDER => [Entity::DATA_TYPE_LONG, -1], Entity::DATA_LEAD => [Entity::DATA_TYPE_INT, 0]];
 		$player->dataPacket($pk);
 		$powers = "";
 		foreach($this->kit->getPowers() as $power){
@@ -166,7 +198,6 @@ class KitStand{
 	public function isNextPosition(Position $position){
 		foreach($this->nextPos as $pos){
 			if($pos->x === $position->x and $pos->y === $position->y and $pos->z === $position->z and $pos->level->getId() === $pos->level->getId()){
-				var_dump("hit");
 				return true;
 				break;
 			}
@@ -176,7 +207,6 @@ class KitStand{
 	public function isBackPosition(Position $position){
 		foreach($this->backPos as $pos){
 			if($pos->equals($position)){
-				var_dump("hit");
 				return true;
 				break;
 			}

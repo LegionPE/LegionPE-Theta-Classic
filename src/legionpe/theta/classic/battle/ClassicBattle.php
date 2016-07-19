@@ -189,27 +189,33 @@ class ClassicBattle{
 	public function EntityDamageEvent(EntityDamageEvent $event){
 		$victim = $this->plugin->getSession($event->getEntity());
 		$cancel = true;
-		if(!($victim instanceof ClassicSession)) return;
+		if(!($victim instanceof ClassicSession)){
+			return;
+		}
+		if($this->getSessionType($victim) !== self::PLAYER_STATUS_PLAYING) return;
 		if($event instanceof EntityDamageByEntityEvent){
 			$attacker = $this->plugin->getSession($event->getDamager());
 			if($attacker instanceof ClassicSession){
 				if($this->getSessionType($attacker) !== self::PLAYER_STATUS_SPECTATING){
 					if($this->getSessionTeam($attacker) !== $this->getSessionTeam($victim)){
+						$cancel = false;
 						if($event->getDamage() >= $victim->getPlayer()->getHealth()){
 							$event->setDamage(0);
 							$this->kill($victim, $attacker);
-							$cancel = false;
+							$cancel = true;
 						}
 					}
 				}
 			}
 		}elseif($event->getCause() === EntityDamageEvent::CAUSE_VOID){
 			$this->kill($victim, "void");
+			$this->arena->teleportToSpawnpoint($this->getSessionType($victim), 0, $victim);
 		}elseif($event->getCause() === EntityDamageEvent::CAUSE_FIRE or $event->getCause() === EntityDamageEvent::CAUSE_FIRE_TICK or $event->getCause() === EntityDamageEvent::CAUSE_FALL){
 			if($event->getDamage() >= $victim->getPlayer()->getHealth()){
 				$this->kill($victim, "something else than the enemy, still need to write this piece of code");
 			}
 		}
+		$this->updateNameTags($victim);
 		$event->setCancelled($cancel);
 	}
 	/**
@@ -236,18 +242,17 @@ class ClassicBattle{
 				}
 			}
 		}
-		$winningTeam = null;
-		foreach($aliveTeam as $team=>$aliveSessions){
-			if($aliveSessions === 0){
-				$winningTeam = null;
-			}else{
-				$winningTeam = $team;
+		$winningTeam = [];
+		foreach($aliveTeam as $team=>$alive){
+			if($alive > 0){
+				$winningTeam[] = $team;
 			}
 		}
+		$winningTeam = count($winningTeam) > 1 ? null : $winningTeam[0];
 		if(!is_null($winningTeam)){
 			$this->roundWinners[] = $winningTeam;
 			if($this->getRound() === $this->getMaxRounds()){
-				$this->setStatus(self::STATUS_ENDING, TextFormat::GOLD . "The Battle has ended." . implode(", ", $teamUsernames[$winningTeam]), $this->getOverallWinner());
+				$this->setStatus(self::STATUS_ENDING, TextFormat::GOLD . "The Battle has ended. Winners: " . $this->getOverallWinner());
 			}else{
 				$this->setStatus(self::STATUS_STARTING, TextFormat::GOLD . "Round ended. Winners: " . implode(", ", $teamUsernames[$winningTeam]));
 			}
@@ -337,6 +342,7 @@ class ClassicBattle{
 				foreach($this->getSessions() as $session){
 					if($session->getPlayer()->isOnline()){ // check if player online, because maybe the battle stopped because a player left
 						$this->old[$session->getPlayer()->getName()]->restore();
+						$this->setSessionType($session, self::PLAYER_STATUS_PLAYING);
 						$session->setBattle(null);
 						$coins = ($this->getWinningTeam() === $this->getSessionTeam($session) ? 34 : $this->getRoundsWon($session) * 6);
 						$session->grantCoins($coins, false, false);
