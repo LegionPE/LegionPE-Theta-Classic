@@ -52,16 +52,14 @@ class QueueTask extends PluginTask{
 					$kit = $queue->getKit();
 				}else{
 					$kits = $this->main->getBattleKits();
-					shuffle($kits);
-					$kit = $kits[0];
+					$kit = $kits[mt_rand(1, count($kits)) - 1];
 				}
 				$arena = null;
 				if($queue->getArenaType() === ClassicBattleQueue::TYPE_FIXED){
 					$arena = $queue->getArena();
 				}else{
 					$arenas = $this->main->getBattleArenas();
-					shuffle($arenas);
-					$arena = $arenas[0];
+					$arena = $arenas[mt_rand(1, count($arenas)) - 1];
 				}
 				$teams = [[], []];
 				for($team = 0; $team < 2; $team++){
